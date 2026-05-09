@@ -127,12 +127,10 @@ function Explanations({ card, stage }) {
 }
 
 /* ── One full code card ── */
-function CodeLearnCard({ stage, card, cardIdx, totalCards }) {
+function CodeLearnCard({ stage, card, cardIdx, totalCards, onSolved }) {
   const nonFixed = card.slots.filter(s => !s.fixed);
   const [sel,    setSel]    = useState(nonFixed.map(() => 0));
   const [status, setStatus] = useState(null); // null | ok | err
-  const [likes,  setLikes]  = useState(Math.floor(Math.random() * 5000 + 200));
-  const [liked,  setLiked]  = useState(false);
   const [saved,  setSaved]  = useState(false);
 
   const pct = Math.round(((cardIdx + 1) / totalCards) * 100);
@@ -142,7 +140,16 @@ function CodeLearnCard({ stage, card, cardIdx, totalCards }) {
   const check = () => {
     const ok = nonFixed.every((s, i) => sel[i] === s.correct);
     setStatus(ok ? "ok" : "err");
-    if (!ok) setTimeout(() => setStatus(null), 1500);
+    if (ok) {
+      onSolved(true);
+    } else {
+      setTimeout(() => setStatus(null), 1500);
+    }
+  };
+
+  const handleSave = () => {
+    setSaved(!saved);
+    // Real save logic would go here
   };
 
   return (
@@ -162,10 +169,16 @@ function CodeLearnCard({ stage, card, cardIdx, totalCards }) {
       {/* Scrollable body */}
       <div style={{ flex: 1, overflowY: "auto" }}>
         {/* Card title */}
-        <div style={{ padding: "0 16px 12px", background: "#f2f2f7" }}>
-          <div style={{ fontSize: 11, color: stage.color, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 4 }}>💻 실습</div>
-          <h2 style={{ fontSize: 18, fontWeight: 900, letterSpacing: -0.4, lineHeight: 1.3, color: "#000" }}>{card.title}</h2>
-          <p style={{ fontSize: 13, color: "#8e8e93", marginTop: 6, lineHeight: 1.6 }}>{card.description}</p>
+        <div style={{ padding: "0 16px 12px", background: "#f2f2f7", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 11, color: stage.color, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 4 }}>💻 실습</div>
+            <h2 style={{ fontSize: 18, fontWeight: 900, letterSpacing: -0.4, lineHeight: 1.3, color: "#000" }}>{card.title}</h2>
+            <p style={{ fontSize: 13, color: "#8e8e93", marginTop: 6, lineHeight: 1.6 }}>{card.description}</p>
+          </div>
+          <div className="cf-action-btn" onClick={handleSave} style={{ marginTop: 10 }}>
+            <div className="cf-action-icon" style={{ width: 38, height: 38, fontSize: 18, color: saved ? stage.color : "#000" }}>{saved ? "🔖" : "📌"}</div>
+            <span className="cf-action-label" style={{ fontSize: 9 }}>{saved ? "저장됨" : "저장"}</span>
+          </div>
         </div>
 
         {/* Code card — CFeed style */}
@@ -179,20 +192,6 @@ function CodeLearnCard({ stage, card, cardIdx, totalCards }) {
             </div>
             {/* Code with inline slots */}
             <CodeWithSlots card={card} color={stage.color} sel={sel} onSel={pick} />
-          </div>
-
-          {/* Side actions */}
-          <div style={{ position: "absolute", right: -14, top: "50%", transform: "translateY(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-            <div className="cf-action-btn" onClick={() => { setLiked(l => !l); setLikes(n => liked ? n - 1 : n + 1); }}>
-              <div className="cf-action-icon" style={{ color: liked ? "#ff2d55" : "#000" }}>
-                {liked ? "❤️" : "🤍"}
-              </div>
-              <span className="cf-action-label">{(likes / 1000).toFixed(1)}k</span>
-            </div>
-            <div className="cf-action-btn" onClick={() => setSaved(s => !s)}>
-              <div className="cf-action-icon">{saved ? "🔖" : "📌"}</div>
-              <span className="cf-action-label">저장</span>
-            </div>
           </div>
         </div>
 
@@ -226,6 +225,18 @@ function ConceptLearnCard({ stage, card, cardIdx, totalCards }) {
   const [flipped, setFlipped] = useState(false);
   const pct = Math.round(((cardIdx + 1) / totalCards) * 100);
 
+  // Function to highlight keywords in content
+  const highlight = (text) => {
+    return text.split("\n").map((line, i) => (
+      <span key={i} style={{ display: "block", marginBottom: 8 }}>
+        {line.split(/(세미콜론|;|printf|변수|상자|int|float|char|if|for|while|배열|포인터|메모리 주소|&|\*|구조체|파일|fopen|fclose|fprintf|연결 리스트|노드)/g).map((part, j) => {
+          const isKeyword = /(세미콜론|;|printf|변수|상자|int|float|char|if|for|while|배열|포인터|메모리 주소|&|\*|구조체|파일|fopen|fclose|fprintf|연결 리스트|노드)/.test(part);
+          return isKeyword ? <b key={j} style={{ color: stage.color, fontWeight: 800 }}>{part}</b> : part;
+        })}
+      </span>
+    ));
+  };
+
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", background: "#f2f2f7" }}>
       <div style={{ height: 3, background: "rgba(0,0,0,0.06)" }}>
@@ -248,8 +259,8 @@ function ConceptLearnCard({ stage, card, cardIdx, totalCards }) {
         </div>
 
         {/* Content */}
-        <div style={{ background: "#fff", borderRadius: 16, padding: "16px", marginBottom: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
-          <p style={{ fontSize: 15, color: "#3c3c43", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{card.content}</p>
+        <div style={{ background: "#fff", borderRadius: 16, padding: "20px 16px", marginBottom: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
+          <div style={{ fontSize: 15, color: "#3c3c43", lineHeight: 1.8 }}>{highlight(card.content)}</div>
         </div>
 
         {/* Tip flip */}
@@ -268,9 +279,20 @@ function ConceptLearnCard({ stage, card, cardIdx, totalCards }) {
 }
 
 /* ── Project card ── */
-function ProjectLearnCard({ stage, card, cardIdx, totalCards, onBadge }) {
+function ProjectLearnCard({ stage, card, cardIdx, totalCards, onBadge, onSolved }) {
   const [claimed, setClaimed] = useState(false);
+  const [userInput, setUserInput] = useState("");
+  const [showResult, setShowResult] = useState(false);
   const pct = Math.round(((cardIdx + 1) / totalCards) * 100);
+
+  const handleRun = () => {
+    if (userInput.trim().length > 0) {
+      setShowResult(true);
+      onSolved(true);
+    } else {
+      alert("정보를 입력해봐! 직접 적어보는 게 중요해 😊");
+    }
+  };
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", background: "#f2f2f7" }}>
@@ -288,22 +310,39 @@ function ProjectLearnCard({ stage, card, cardIdx, totalCards, onBadge }) {
         <h2 style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.5, lineHeight: 1.3, color: "#000", marginBottom: 10 }}>{card.title}</h2>
         <p style={{ fontSize: 14, color: "#8e8e93", lineHeight: 1.7, marginBottom: 16 }}>{card.description}</p>
 
-        <div style={{ margin: "0 0 16px" }}>
-          <div className="cf-card">
-            <div className="cf-dots"><div className="cf-dot red" /><div className="cf-dot yellow" /><div className="cf-dot green" /></div>
-            <div className="ios-code" style={{ borderRadius: 0, maxHeight: 240, overflow: "auto" }}>
-              {card.example.split("\n").map((line, i) => (
-                <div key={i} style={{ display: "flex", gap: 12 }}>
-                  <span style={{ color: "#4d5566", minWidth: 18, textAlign: "right", userSelect: "none", fontSize: 11, flexShrink: 0 }}>{i + 1}</span>
-                  <span style={{ color: "#abb2bf" }}>{line}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+        {/* Input for interactivity */}
+        <div style={{ background: "#fff", borderRadius: 16, padding: 16, marginBottom: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
+          <div style={{ fontSize: 12, color: stage.color, fontWeight: 700, marginBottom: 8 }}>직접 입력해보기</div>
+          <input
+            className="ios-input"
+            value={userInput}
+            onChange={(e) => setUserInput(e.target.value)}
+            placeholder="예: 홍길동, 서울중학교, 게임..."
+            style={{ marginBottom: 12 }}
+          />
+          <button
+            className="ios-btn ios-btn-tint ios-btn-sm"
+            style={{ width: "100%", borderRadius: 10 }}
+            onClick={handleRun}
+          >
+            ▶ 실행해보기
+          </button>
         </div>
 
+        {showResult && (
+          <div style={{ margin: "0 0 16px", animation: "iosPop 0.3s ease" }}>
+            <div className="cf-card">
+              <div className="cf-dots"><div className="cf-dot red" /><div className="cf-dot yellow" /><div className="cf-dot green" /></div>
+              <div className="ios-code" style={{ borderRadius: 0, background: "#1c1c1e", color: "#fff", padding: 16 }}>
+                {`> 실행 결과:\n------------------\n입력하신 정보: ${userInput}\n성공적으로 처리되었습니다!\n------------------`}
+              </div>
+            </div>
+          </div>
+        )}
+
         <button
-          style={{ width: "100%", padding: "16px", borderRadius: 16, background: claimed ? "rgba(52,199,89,0.12)" : `linear-gradient(135deg, ${stage.color}, ${stage.color}bb)`, color: claimed ? "var(--green)" : "#fff", fontWeight: 800, fontSize: 17, border: "none", cursor: "pointer", boxShadow: claimed ? "none" : `0 4px 16px ${stage.color}44`, transition: "all 0.3s" }}
+          disabled={!showResult}
+          style={{ width: "100%", padding: "16px", borderRadius: 16, background: claimed ? "rgba(52,199,89,0.12)" : showResult ? `linear-gradient(135deg, ${stage.color}, ${stage.color}bb)` : "#ccc", color: claimed ? "var(--green)" : "#fff", fontWeight: 800, fontSize: 17, border: "none", cursor: showResult ? "pointer" : "default", boxShadow: claimed || !showResult ? "none" : `0 4px 16px ${stage.color}44`, transition: "all 0.3s" }}
           onClick={() => { setClaimed(true); onBadge(card.badge); }}
         >
           {claimed ? `${card.badge} 획득!` : `🏆 ${card.badge} 획득하기`}
@@ -318,16 +357,24 @@ export default function LearnPage({ initialStage = 0, onBadge, onComplete }) {
   const [stageIdx, setStageIdx] = useState(initialStage);
   const [cardIdx,  setCardIdx]  = useState(0);
   const [key,      setKey]      = useState(0);
+  const [solved,   setSolved]   = useState(false);
   const touchY = useRef(null);
   const isScrolling = useRef(false);
 
-  useEffect(() => { setStageIdx(initialStage); setCardIdx(0); }, [initialStage]);
+  useEffect(() => { setStageIdx(initialStage); setCardIdx(0); setSolved(false); }, [initialStage]);
+  useEffect(() => { setSolved(false); }, [cardIdx]);
 
   const stage = stages[stageIdx];
   const total = stage.cards.length;
   const card  = stage.cards[cardIdx];
 
   const go = (d) => {
+    // If going forward, check if solved (for non-concept cards)
+    if (d > 0 && card.type !== "concept" && !solved) {
+      alert("문제를 풀어야 다음으로 넘어갈 수 있어! 😉");
+      return;
+    }
+
     setKey(k => k + 1);
     if (d > 0) {
       if (cardIdx < total - 1)               { setCardIdx(c => c + 1); }
@@ -366,9 +413,10 @@ export default function LearnPage({ initialStage = 0, onBadge, onComplete }) {
     <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative", paddingBottom: "var(--nav-h)" }}
       onTouchStart={onTS} onTouchEnd={onTE} onWheel={onWheel}>
 
-      {/* Category tabs */}
-      <div style={{ background: "#fff", borderBottom: "1px solid rgba(0,0,0,0.08)", padding: "10px 16px", flexShrink: 0 }}>
-        <div className="ios-hscroll">
+      {/* Category tabs with Logo */}
+      <div style={{ background: "#fff", borderBottom: "1px solid rgba(0,0,0,0.08)", padding: "10px 16px", flexShrink: 0, display: "flex", alignItems: "center", gap: 16 }}>
+        <span style={{ fontSize: 20, fontWeight: 900, letterSpacing: -1.2, color: "var(--blue)" }}>easyC</span>
+        <div className="ios-hscroll" style={{ flex: 1 }}>
           {stages.map((st, i) => (
             <button key={st.id} className={`cf-tab ${i === stageIdx ? "active" : "inactive"}`}
               style={i === stageIdx ? { background: st.color } : {}}
@@ -382,8 +430,8 @@ export default function LearnPage({ initialStage = 0, onBadge, onComplete }) {
       {/* Card */}
       <div key={key} style={{ flex: 1, overflow: "hidden", animation: "iosFadeScale 0.24s ease" }}>
         {card.type === "concept" && <ConceptLearnCard stage={stage} card={card} cardIdx={cardIdx} totalCards={total} />}
-        {card.type === "code"    && <CodeLearnCard    stage={stage} card={card} cardIdx={cardIdx} totalCards={total} />}
-        {card.type === "project" && <ProjectLearnCard stage={stage} card={card} cardIdx={cardIdx} totalCards={total} onBadge={onBadge} />}
+        {card.type === "code"    && <CodeLearnCard    stage={stage} card={card} cardIdx={cardIdx} totalCards={total} onSolved={setSolved} />}
+        {card.type === "project" && <ProjectLearnCard stage={stage} card={card} cardIdx={cardIdx} totalCards={total} onBadge={onBadge} onSolved={setSolved} />}
       </div>
 
       {/* Side nav dots */}

@@ -41,6 +41,9 @@ function Drum({ options, selected, onSelect, fixed, color }) {
 }
 
 export default function SlotCodePicker({ slots, color = "var(--blue)", onResult }) {
+  // Initialize with index 0 to avoid pre-filling the correct answer if it's at index 0 in curriculum
+  // To be even safer, we could add a placeholder, but let's just use the first option as default.
+  // The curriculum should be updated to ensure the first option isn't always the correct one.
   const [sel,      setSel]      = useState(slots.map(() => 0));
   const [result,   setResult]   = useState(null);
   const [showHint, setShowHint] = useState(false);
