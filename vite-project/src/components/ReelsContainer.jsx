@@ -7,7 +7,7 @@ import DrC from "./DrC";
 const CARD_TYPES = { concept: "개념", project: "프로젝트" };
 const CARD_ICONS = { concept: "💡", code: "💻", project: "🚀" };
 
-function ProjectCard({ card, color, onBadge, isLastCard, onGoToCode }) {
+function ProjectCard({ card, color, onBadge }) {
   const [claimed, setClaimed] = useState(false);
 
   return (
@@ -51,40 +51,15 @@ function ProjectCard({ card, color, onBadge, isLastCard, onGoToCode }) {
       >
         {claimed ? `${card.badge} 획득!` : `${card.badge} 배지 받기`}
       </button>
-
-      {/* "Go to Code" button appears after claiming the last badge of the last stage */}
-      {isLastCard && claimed && (
-        <button
-          style={{
-            padding: "16px",
-            borderRadius: 14,
-            background: "var(--blue)",
-            color: "#fff",
-            fontSize: 16,
-            fontWeight: 800,
-            border: "none",
-            cursor: "pointer",
-            marginTop: 10,
-            boxShadow: "0 4px 15px rgba(0, 122, 255, 0.4)",
-            animation: "iosPop 0.5s ease-out"
-          }}
-          onClick={onGoToCode}
-        >
-          🚀 코딩하러 가기
-        </button>
-      )}
     </div>
   );
 }
 
 // Single full-screen card (one swipe unit)
-function ReelsCard({ stageIdx, cardIdx, totalCards, onDrC, onBadge, onGoToCode }) {
+function ReelsCard({ stageIdx, cardIdx, totalCards, onDrC, onBadge }) {
   const stage = stages[stageIdx];
   const card = stage.cards[cardIdx];
   const progress = ((cardIdx + 1) / totalCards) * 100;
-  
-  // Check if this is the last card of the last stage
-  const isLastCard = stageIdx === stages.length - 1 && cardIdx === totalCards - 1;
 
   return (
     <div style={styles.reelsCard}>
@@ -142,13 +117,7 @@ function ReelsCard({ stageIdx, cardIdx, totalCards, onDrC, onBadge, onGoToCode }
           <CodeCard card={card} color={stage.color} onDrC={onDrC} />
         )}
         {card.type === "project" && (
-          <ProjectCard 
-            card={card} 
-            color={stage.color} 
-            onBadge={onBadge} 
-            isLastCard={isLastCard} 
-            onGoToCode={onGoToCode}
-          />
+          <ProjectCard card={card} color={stage.color} onBadge={onBadge} />
         )}
       </div>
     </div>
@@ -202,7 +171,7 @@ function StageMap({ onSelect, badges }) {
   );
 }
 
-export default function ReelsContainer({ onGoToCode }) {
+export default function ReelsContainer() {
   const [screen, setScreen] = useState("map"); // map | reels
   const [stageIdx, setStageIdx] = useState(0);
   const [cardIdx, setCardIdx] = useState(0);
@@ -242,6 +211,7 @@ export default function ReelsContainer({ onGoToCode }) {
   const handleTouchEnd = (e) => {
     if (touchStartY.current === null) return;
     const dy = touchStartY.current - e.changedTouches[0].clientY;
+    // Increase swipe threshold to 120px to prevent accidental skipping while reading
     if (Math.abs(dy) > 120) {
       dy > 0 ? goNext() : goPrev();
     }
@@ -249,6 +219,7 @@ export default function ReelsContainer({ onGoToCode }) {
   };
 
   const handleWheel = (e) => {
+    // Increase wheel threshold to 50 to prevent accidental skipping
     if (Math.abs(e.deltaY) > 50) {
       e.deltaY > 0 ? goNext() : goPrev();
     }
@@ -291,7 +262,6 @@ export default function ReelsContainer({ onGoToCode }) {
           totalCards={totalCards}
           onDrC={openDrC}
           onBadge={handleBadge}
-          onGoToCode={onGoToCode}
         />
       </div>
 
@@ -351,7 +321,7 @@ const styles = {
     flexDirection: "column",
     position: "relative",
     background: "#000",
-    overflow: "hidden",
+    overflow: "#000",
   },
   reelsWrap: {
     flex: 1,
