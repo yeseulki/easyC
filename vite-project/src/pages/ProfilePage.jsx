@@ -15,7 +15,7 @@ const LEVELS = [
 ];
 const getLevel = n => [...LEVELS].reverse().find(l => n >= l.min) || LEVELS[0];
 
-export default function ProfilePage({ badges, progress, savedItems = [] }) {
+export default function ProfilePage({ badges, progress, savedItems = [], onNavigate }) {
   const done  = progress.completedStages || [];
   const pct   = Math.round((done.length / stages.length) * 100);
   const level = getLevel(badges.length);
@@ -82,7 +82,11 @@ export default function ProfilePage({ badges, progress, savedItems = [] }) {
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {savedItems.map((item, i) => (
-                <div key={i} style={{ background: "#fff", borderRadius: 14, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                <div 
+                  key={i} 
+                  style={{ background: "#fff", borderRadius: 14, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", cursor: "pointer" }}
+                  onClick={() => onNavigate("learn", { stageIdx: item.stageIdx, cardIdx: item.cardIdx })}
+                >
                   <div style={{ width: 36, height: 36, borderRadius: 8, background: "rgba(0,122,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🔖</div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 14, fontWeight: 700, color: "var(--label)" }}>{item.title}</div>
