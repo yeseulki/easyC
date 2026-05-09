@@ -1,148 +1,164 @@
-import { stages } from "../data/curriculum";
-
-const FEATURES = [
-  { icon: "🎰", color: "#ff9500", bg: "rgba(255,149,0,0.1)",  title: "슬롯 코딩",    sub: "코드 안에서 직접 조합" },
-  { icon: "🗺️", color: "#5856d6", bg: "rgba(88,86,214,0.1)", title: "메모리 맵",    sub: "포인터를 눈으로 확인" },
-  { icon: "📂", color: "#4CAF50", bg: "rgba(76,175,80,0.1)",  title: "심화 학습",    sub: "구조체부터 연결 리스트까지" },
-  { icon: "🚀", color: "#34c759", bg: "rgba(52,199,89,0.1)",  title: "미니 프로젝트",sub: "만들며 배우는 커리큘럼" },
-];
+﻿import { stages } from "../data/curriculum";
 
 export default function HomePage({ onNavigate, progress }) {
   const done = progress.completedStages || [];
   const pct  = Math.round((done.length / stages.length) * 100);
 
   return (
-    <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", background: "#f2f2f7" }}>
-
-      {/* CFeed-style header */}
-      <div className="cf-nav">
-        <div className="cf-nav-top">
-          <span className="cf-logo">easy<span style={{ color: "var(--blue)" }}>C</span></span>
-          <span className="cf-beta">Beta</span>
+    <div className="fade-in" style={{ display: "flex", flexDirection: "column" }}>
+      
+      {/* Hero Tile (Light) */}
+      <section style={{ 
+        background: "var(--canvas)", 
+        padding: "var(--spacing-section) var(--spacing-lg)",
+        textAlign: "center",
+        minHeight: "85vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        overflow: "hidden"
+      }}>
+        <h1 className="hero-display" style={{ marginBottom: "var(--spacing-xs)", color: "var(--ink)" }}>
+          easyC
+        </h1>
+        <p className="tagline" style={{ color: "var(--ink)", marginBottom: "var(--spacing-xl)", maxWidth: 700, opacity: 0.8 }}>
+          The photography-first way to master C programming. <br/>
+          Designed for simplicity. Engineered for depth.
+        </p>
+        <div style={{ display: "flex", gap: "var(--spacing-md)", marginBottom: 60 }}>
+          <button className="button-primary" onClick={() => onNavigate("learn")}>
+            Learn more
+          </button>
+          <button className="button-secondary" onClick={() => onNavigate("code")} style={{ border: "none", color: "var(--primary)" }}>
+            Try it now &gt;
+          </button>
         </div>
-        <div className="cf-tabs">
-          {["전체", "기초", "조건/반복", "배열/함수", "포인터", "심화"].map((t, i) => (
-            <button key={t} className={`cf-tab ${i === 0 ? "active" : "inactive"}`}
-              onClick={() => onNavigate("learn", { stageIdx: i === 0 ? 0 : [0, 0, 2, 3, 4, 5][i] })}>
-              {t}
-            </button>
-          ))}
+        
+        {/* Mock Product Render */}
+        <div style={{ 
+          width: "110%", 
+          maxWidth: 1000, 
+          aspectRatio: "21/9", 
+          background: "linear-gradient(180deg, #f5f5f7 0%, #ffffff 100%)", 
+          borderRadius: "var(--rounded-lg) var(--rounded-lg) 0 0",
+          boxShadow: "rgba(0, 0, 0, 0.22) 0px 10px 40px -10px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 120,
+          position: "relative",
+          bottom: -80
+        }}>
+          💻
         </div>
-      </div>
+      </section>
 
-      {/* Scrollable content */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "16px 16px var(--nav-h)" }}>
-
-        {/* Hero card */}
-        <div style={s.heroCard}>
-          <div style={s.heroBlob1} /><div style={s.heroBlob2} />
-          <div style={{ position: "relative", zIndex: 1 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "#007aff", letterSpacing: 0.5, marginBottom: 12 }}>⚡ C언어 학습 플랫폼</div>
-            <h1 style={s.heroTitle}>
-              <span style={{ color: "rgba(0,0,0,0.35)", fontWeight: 300, fontSize: 32, display: "block", marginBottom: 2, letterSpacing: -0.8 }}>What is</span>
-              <span style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-                <span style={{ background: "linear-gradient(135deg,#007aff,#5856d6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", fontSize: 58, fontWeight: 900, letterSpacing: -2.5 }}>#C</span>
-                <span style={{ fontSize: 58, fontWeight: 900, letterSpacing: -2.5, color: "#000" }}>?</span>
-              </span>
-            </h1>
-            <p style={{ fontSize: 14, color: "rgba(60,60,67,0.55)", lineHeight: 1.65, marginBottom: 20, fontWeight: 400 }}>
-              중학생도 즐길 수 있는 C언어 플랫폼 🎵
-            </p>
-            <div style={{ display: "flex", gap: 10 }}>
-              <button style={{ flex: 1, padding: "13px 0", background: "var(--blue)", color: "#fff", borderRadius: 14, fontWeight: 700, fontSize: 15, border: "none", cursor: "pointer", boxShadow: "0 4px 14px rgba(0,122,255,0.3)" }} onClick={() => onNavigate("learn")}>
-                학습 시작하기 →
-              </button>
-            </div>
-            {done.length > 0 && (
-              <div style={{ marginTop: 14, background: "rgba(0,122,255,0.06)", border: "0.5px solid rgba(0,122,255,0.2)", borderRadius: 12, padding: "12px 14px", cursor: "pointer" }} onClick={() => onNavigate("learn")}>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, fontWeight: 600, marginBottom: 7, color: "#000" }}>
-                  <span>계속 학습하기</span><span style={{ color: "var(--blue)" }}>{pct}%</span>
-                </div>
-                <div style={{ height: 5, background: "rgba(0,0,0,0.08)", borderRadius: 3, overflow: "hidden" }}>
-                  <div style={{ height: "100%", width: `${pct}%`, background: "var(--blue)", borderRadius: 3 }} />
-                </div>
+      {/* Stats Tile (Dark) */}
+      <section style={{ 
+        background: "var(--surface-tile-1)", 
+        color: "var(--body-on-dark)",
+        padding: "var(--spacing-section) var(--spacing-lg)",
+        textAlign: "center",
+        minHeight: "70vh",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center"
+      }}>
+        <div style={{ maxWidth: 980, margin: "0 auto" }}>
+          <h2 className="display-lg" style={{ marginBottom: 20 }}>Remarkably powerful.</h2>
+          <p className="tagline" style={{ color: "var(--body-muted)", marginBottom: 60 }}>Everything you need to master the language of the machine.</p>
+          
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 60 }}>
+            {[
+              { n: "5", l: "Curriculum Stages", c: "var(--primary-on-dark)" }, 
+              { n: "15", l: "Detailed Lessons", c: "#2997ff" }, 
+              { n: "5", l: "Real-world Projects", c: "#2997ff" }, 
+              { n: "AI", l: "Dr.C Assistant", c: "#2997ff" }
+            ].map(st => (
+              <div key={st.l} style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 56, fontWeight: 600, color: st.c, letterSpacing: "-0.02em" }}>{st.n}</div>
+                <div style={{ fontSize: 17, color: "var(--body-on-dark)", fontWeight: 600, marginTop: 12 }}>{st.l}</div>
               </div>
-            )}
+            ))}
           </div>
         </div>
+      </section>
 
-        {/* Stats row */}
-        <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
-          {[{ n: "8", l: "단계", c: "#007aff" }, { n: "25+", l: "카드", c: "#5856d6" }, { n: "8", l: "프로젝트", c: "#34c759" }, { n: "100%", l: "자율학습", c: "#ff9500" }].map(st => (
-            <div key={st.l} style={{ flex: 1, background: "#fff", borderRadius: 14, padding: "14px 0", textAlign: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
-              <div style={{ fontSize: 20, fontWeight: 900, color: st.c, letterSpacing: -0.5 }}>{st.n}</div>
-              <div style={{ fontSize: 11, color: "#8e8e93", marginTop: 2, fontWeight: 500 }}>{st.l}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* Stage grid */}
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: -0.5, marginBottom: 12, color: "#000" }}>커리큘럼</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+      {/* Stages Tile (Parchment) */}
+      <section style={{ 
+        background: "var(--canvas-parchment)", 
+        padding: "var(--spacing-section) var(--spacing-lg)",
+        textAlign: "center"
+      }}>
+        <div style={{ maxWidth: 1024, margin: "0 auto" }}>
+          <h2 className="display-lg" style={{ marginBottom: 60 }}>Curriculum</h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "var(--spacing-lg)" }}>
             {stages.map((stage, i) => {
-              const completed = done.includes(stage.id);
+              const completed = done.includes(stage.id); 
               return (
-                <div key={stage.id} style={{ background: "#fff", border: `1px solid ${completed ? stage.color + "55" : "rgba(0,0,0,0.07)"}`, borderRadius: 18, padding: "16px", cursor: "pointer", boxShadow: completed ? `0 2px 12px ${stage.color}22` : "0 1px 4px rgba(0,0,0,0.06)" }}
-                  onClick={() => onNavigate("learn", { stageIdx: i })}>
-                  <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <span style={{ fontSize: 26 }}>{stage.emoji}</span>
-                    {completed
-                      ? <span style={{ fontSize: 11, color: stage.color, fontWeight: 700, background: stage.color + "15", padding: "3px 8px", borderRadius: 100 }}>완료 ✓</span>
-                      : <span style={{ fontSize: 18, fontWeight: 900, color: "rgba(0,0,0,0.07)", letterSpacing: -1 }}>{`0${stage.id}`}</span>
-                    }
+                <div key={stage.id} style={{ 
+                  background: "var(--canvas)", 
+                  borderRadius: "var(--rounded-lg)", 
+                  padding: "40px",
+                  textAlign: "left",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  minHeight: 280,
+                  transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+                }} className="card-hover">
+                  <div>
+                    <div style={{ fontSize: 40, marginBottom: 20 }}>{stage.emoji}</div>
+                    <h3 className="body-strong" style={{ fontSize: 24, marginBottom: 8 }}>{stage.title}</h3>
+                    <p style={{ fontSize: 17, color: "var(--ink-muted-80)", lineHeight: 1.4 }}>{stage.subtitle}</p>
                   </div>
-                  <div style={{ marginTop: 10, fontSize: 14, fontWeight: 800, letterSpacing: -0.3, color: "#000" }}>{stage.title}</div>
-                  <div style={{ fontSize: 12, color: stage.color, marginTop: 3, fontWeight: 600 }}>{stage.subtitle}</div>
-                  <div style={{ fontSize: 11, color: "#8e8e93", marginTop: 8 }}>카드 {stage.cards.length}개</div>
+                  <div style={{ marginTop: 32, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <button className="button-primary" style={{ padding: "8px 20px", fontSize: 14 }} onClick={() => onNavigate("learn", { stageIdx: i })}>
+                      {completed ? "Review" : "Start"}
+                    </button>
+                    {completed && <span style={{ color: "var(--primary)", fontWeight: 600, fontSize: 14 }}>✓ Completed</span>}
+                  </div>
                 </div>
               );
             })}
           </div>
         </div>
+      </section>
 
-        {/* Features */}
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: -0.5, marginBottom: 12, color: "#000" }}>핵심 기능</div>
-          <div style={{ background: "#fff", borderRadius: 16, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
-            {FEATURES.map((f, i) => (
-              <div key={f.title} className="ios-cell" style={{ cursor: "pointer" }}>
-                <div style={{ width: 42, height: 42, borderRadius: 10, background: f.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>{f.icon}</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 600, fontSize: 15, color: "#000" }}>{f.title}</div>
-                  <div style={{ fontSize: 13, color: "#8e8e93", marginTop: 1 }}>{f.sub}</div>
-                </div>
-                <span className="ios-chevron">›</span>
-              </div>
-            ))}
+      {/* Footer */}
+      <footer style={{ 
+        background: "var(--canvas-parchment)", 
+        padding: "80px var(--spacing-lg)",
+        borderTop: "1px solid var(--divider-soft)",
+        color: "var(--ink-muted-48)",
+        fontSize: 12
+      }}>
+        <div style={{ maxWidth: 980, margin: "0 auto" }}>
+          <div style={{ borderBottom: "1px solid var(--hairline)", paddingBottom: 20, marginBottom: 20 }}>
+            <p style={{ lineHeight: 1.6 }}>
+              1. AI Assistant requires an active internet connection. Results may vary based on query complexity. <br/>
+              2. Curriculum stages are updated periodically to reflect modern C standards.
+            </p>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 20 }}>
+            <p>Copyright © 2026 easyC Inc. All rights reserved.</p>
+            <div style={{ display: "flex", gap: 20 }}>
+              <span>Privacy Policy</span>
+              <span style={{ borderLeft: "1px solid var(--ink-muted-48)", paddingLeft: 20 }}>Terms of Use</span>
+              <span style={{ borderLeft: "1px solid var(--ink-muted-48)", paddingLeft: 20 }}>Legal</span>
+              <span style={{ borderLeft: "1px solid var(--ink-muted-48)", paddingLeft: 20 }}>Site Map</span>
+            </div>
           </div>
         </div>
+      </footer>
 
-        {/* CTA */}
-        <div style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.07)", borderRadius: 20, padding: "28px 20px", textAlign: "center", marginBottom: 8, boxShadow: "0 2px 10px rgba(0,0,0,0.05)", position: "relative", overflow: "hidden" }}>
-          <div style={{ position:"absolute", top:-50, right:-50, width:150, height:150, borderRadius:"50%", background:"rgba(0,122,255,0.05)", pointerEvents:"none" }} />
-          <div style={{ fontSize: 34, marginBottom: 10 }}>🚀</div>
-          <div style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.6, color: "#000", marginBottom: 8 }}>지금 바로 시작!</div>
-          <div style={{ fontSize: 14, color: "#8e8e93", lineHeight: 1.65, marginBottom: 20 }}>Hello World부터 포인터까지</div>
-          <button style={{ background: "var(--blue)", color: "#fff", padding: "13px 32px", borderRadius: 100, fontSize: 15, fontWeight: 700, border: "none", cursor: "pointer", boxShadow: "0 4px 14px rgba(0,122,255,0.3)" }} onClick={() => onNavigate("learn")}>
-            학습 시작 →
-          </button>
-        </div>
+      <style>{`
+        .card-hover:hover {
+          transform: scale(1.02);
+        }
+      `}</style>
 
-      </div>
     </div>
   );
 }
-
-const s = {
-  heroCard: {
-    background: "#fff",
-    borderRadius: 22, padding: "24px 20px",
-    marginBottom: 16,
-    position: "relative", overflow: "hidden",
-    boxShadow: "0 2px 12px rgba(0,0,0,0.07)",
-  },
-  heroBlob1: { position:"absolute", top:-60, right:-60, width:180, height:180, borderRadius:"50%", background:"radial-gradient(circle,rgba(0,122,255,0.1),transparent 70%)", pointerEvents:"none" },
-  heroBlob2: { position:"absolute", bottom:-40, left:-40, width:140, height:140, borderRadius:"50%", background:"radial-gradient(circle,rgba(88,86,214,0.08),transparent 70%)", pointerEvents:"none" },
-  heroTitle: { marginBottom: 12, lineHeight: 0.95 },
-};
