@@ -126,7 +126,7 @@ function LineWithSlots({ raw, card, sel, onSel, color, slotColors }) {
     elements.push(
       <InlineSlot
         key={`slot-${found.si}`}
-        options={nonFixed[found.si].options}
+        options={card.slots.filter(s => !s.fixed)[found.si].options}
         selected={sel[found.si] || 0}
         onSelect={v => onSel(found.si, v)}
         color={sc}
@@ -182,6 +182,7 @@ function Explanations({ card, stage }) {
 /* ── One full code card ── */
 function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate, isLast, onSave, savedItems, onSolvedChange, onCorrect }) {
   const isSaved = savedItems?.some(i => i.title === card.title);
+  
   const processedSlots = useMemo(() => {
     return card.slots.map(s => {
       if (s.fixed || s.options.length <= 1) return s;
@@ -205,7 +206,7 @@ function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate,
   useEffect(() => {
     setSel(nonFixed.map(() => 0));
     setStatus(null);
-  }, [processedSlots]);
+  }, [card.title]);
 
   const pct = Math.round(((cardIdx + 1) / totalCards) * 100);
   const pick = (i, v) => { const n = [...sel]; n[i] = v; setSel(n); setStatus(null); };
@@ -287,7 +288,7 @@ function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate,
 }
 
 /* ── Concept card ── */
-function ConceptLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate, isLast, onSave, savedItems }) {
+function ConceptLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onSave, savedItems }) {
   const [flipped, setFlipped] = useState(false);
   const isSaved = savedItems?.some(i => i.title === card.title);
   const pct = Math.round(((cardIdx + 1) / totalCards) * 100);
@@ -409,13 +410,13 @@ function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge,
               ))}
             </div>
           </div>
-        </div>
+        )}
 
         <button
           style={{ width: "100%", padding: "16px", borderRadius: 16, background: claimed ? "rgba(52,199,89,0.12)" : `linear-gradient(135deg, ${stage.color}, ${stage.color}bb)`, color: claimed ? "var(--green)" : "#fff", fontWeight: 800, fontSize: 17, border: "none", cursor: "pointer", boxShadow: claimed ? "none" : `0 4px 16px ${stage.color}44`, transition: "all 0.3s" }}
           onClick={handleClaim}
         >
-          {claimed ? `${card.badge} 획득!` : `🏆 ${card.badge} 획득하기`}
+          {claimed ? `${card.badge} 획득 완료!` : `🏆 ${card.badge} 획득하기`}
         </button>
 
         {isLast && claimed && (
@@ -442,6 +443,7 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
   useEffect(() => { 
     setStageIdx(initialStage); 
     setCardIdx(initialCard); 
+    setKey(k => k + 1);
   }, [initialStage, initialCard]);
 
   const stage = stages[stageIdx];
@@ -449,7 +451,7 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
   const card  = stage.cards[cardIdx];
 
   useEffect(() => {
-    if (card.type !== "code") {
+    if (card.type === "concept") {
       setSolved(true);
     } else {
       setSolved(false);
@@ -457,8 +459,8 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
   }, [stageIdx, cardIdx, card.type]);
 
   const go = (d) => {
-    if (d > 0 && card.type === "code" && !solved) {
-      alert("문제를 맞혀야 다음으로 넘어갈 수 있어!");
+    if (d > 0 && (card.type === "code" || card.type === "project") && !solved) {
+      alert("문제를 맞춰야 다음으로 넘어갈 수 있어! 💪");
       return;
     }
     setKey(k => k + 1);
@@ -516,7 +518,7 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
             <div key={i} style={{ width: 4, height: i === cardIdx ? 16 : 4, borderRadius: 2, background: i === cardIdx ? stage.color : "rgba(0,0,0,0.15)", transition: "all 0.3s" }} />
           ))}
         </div>
-        <button style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.95)", border: "1px solid rgba(0,0,0,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, boxShadow: "0 2px 8px rgba(0,0,0,0.1)", opacity: (card.type === "code" && !solved) || isLast ? 0.2 : 0.9 }} onClick={() => go(1)} disabled={isLast}>↓</button>
+        <button style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.95)", border: "1px solid rgba(0,0,0,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, boxShadow: "0 2px 8px rgba(0,0,0,0.1)", opacity: (!solved && card.type !== "concept") || isLast ? 0.2 : 0.9 }} onClick={() => go(1)} disabled={isLast}>↓</button>
       </div>
     </div>
   );
