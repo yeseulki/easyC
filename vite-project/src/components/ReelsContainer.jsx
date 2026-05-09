@@ -130,10 +130,10 @@ function StageMap({ onSelect, badges }) {
     <div style={styles.stageMap}>
       <div style={styles.stageMapHeader}>
         <div style={{ fontSize: 28, fontWeight: 900, letterSpacing: -1 }}>
-          Vibe<span style={{ color: "#6C63FF" }}>-C</span>
+          easy<span style={{ color: "#6C63FF" }}>C</span>
         </div>
         <div style={{ fontSize: 13, color: "#8888aa", marginTop: 4 }}>
-          C언어를 비브처럼 배워보자! 🎵
+          C언어를 쉽고 재미있게 배워보자! 🎵
         </div>
         {badges.length > 0 && (
           <div style={{ marginTop: 12, display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center" }}>

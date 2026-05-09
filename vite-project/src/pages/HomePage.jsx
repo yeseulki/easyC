@@ -17,7 +17,7 @@ export default function HomePage({ onNavigate, progress }) {
       {/* CFeed-style header */}
       <div className="cf-nav">
         <div className="cf-nav-top">
-          <span className="cf-logo">Vibe<span style={{ color: "var(--blue)" }}>-C</span></span>
+          <span className="cf-logo">easy<span style={{ color: "var(--blue)" }}>C</span></span>
           <span className="cf-beta">Beta</span>
         </div>
         <div className="cf-tabs">
@@ -46,7 +46,7 @@ export default function HomePage({ onNavigate, progress }) {
               </span>
             </h1>
             <p style={{ fontSize: 14, color: "rgba(60,60,67,0.55)", lineHeight: 1.65, marginBottom: 20, fontWeight: 400 }}>
-              컴퓨터의 모국어를 영어처럼 자연스럽게.{"\n"}중학생도 즐길 수 있는 C언어 플랫폼 🎵
+              중학생도 즐길 수 있는 C언어 플랫폼 🎵
             </p>
             <div style={{ display: "flex", gap: 10 }}>
               <button style={{ flex: 1, padding: "13px 0", background: "var(--blue)", color: "#fff", borderRadius: 14, fontWeight: 700, fontSize: 15, border: "none", cursor: "pointer", boxShadow: "0 4px 14px rgba(0,122,255,0.3)" }} onClick={() => onNavigate("learn")}>
