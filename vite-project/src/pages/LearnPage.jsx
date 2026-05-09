@@ -40,36 +40,61 @@ function CodeWithSlots({ card, color, sel, onSel }) {
 
 function LineWithSlots({ raw, card, sel, onSel, color, slotColors }) {
   const nonFixed = card.slots.filter(s => !s.fixed);
-  const parts = [];
-  let remaining = raw;
-
+  const foundSlots = [];
+  
+  // Find all non-fixed slots in this line
   nonFixed.forEach((slot, si) => {
     const correctVal = slot.options[slot.correct];
-    if (remaining.includes(correctVal) && !parts.some(p => p.slotIdx === si)) {
-      const idx = remaining.indexOf(correctVal);
-      parts.push({ idx, slotIdx: si, val: correctVal, before: remaining.slice(0, idx), after: remaining.slice(idx + correctVal.length) });
+    let startIdx = 0;
+    while (true) {
+      const idx = raw.indexOf(correctVal, startIdx);
+      if (idx === -1) break;
+      
+      // Ensure we don't pick the same occurrence twice
+      if (!foundSlots.some(f => f.idx === idx)) {
+        foundSlots.push({ idx, si, val: correctVal });
+      }
+      startIdx = idx + correctVal.length;
     }
   });
 
-  if (parts.length === 0) {
+  // Sort slots by their position in the line
+  foundSlots.sort((a, b) => a.idx - b.idx);
+
+  if (foundSlots.length === 0) {
     return <SyntaxLine raw={raw} />;
   }
 
-  const part = parts[0];
-  const sc = slotColors[nonFixed.findIndex(s => s === card.slots.filter(x => !x.fixed)[part.slotIdx]) % slotColors.length] || color;
+  const elements = [];
+  let currentPos = 0;
 
-  return (
-    <>
-      <SyntaxLine raw={part.before} />
+  foundSlots.forEach((found, i) => {
+    // Text before slot
+    if (found.idx > currentPos) {
+      elements.push(<SyntaxLine key={`text-${i}`} raw={raw.slice(currentPos, found.idx)} />);
+    }
+    
+    // The slot itself
+    const sc = slotColors[found.si % slotColors.length] || color;
+    elements.push(
       <InlineSlot
-        options={card.slots.filter(x => !x.fixed)[part.slotIdx]?.options || [part.val]}
-        selected={sel[part.slotIdx] || 0}
-        onSelect={v => onSel(part.slotIdx, v)}
+        key={`slot-${found.si}`}
+        options={nonFixed[found.si].options}
+        selected={sel[found.si] || 0}
+        onSelect={v => onSel(found.si, v)}
         color={sc}
       />
-      <SyntaxLine raw={part.after} />
-    </>
-  );
+    );
+    
+    currentPos = found.idx + found.val.length;
+  });
+
+  // Remaining text after last slot
+  if (currentPos < raw.length) {
+    elements.push(<SyntaxLine key="text-end" raw={raw.slice(currentPos)} />);
+  }
+
+  return <>{elements}</>;
 }
 
 function SyntaxLine({ raw }) {
@@ -364,7 +389,6 @@ export default function LearnPage({ initialStage = 0, onBadge, onComplete, onNav
     }
 
     setKey(k => k + 1);
-    // solved is reset by useEffect above
 
     if (d > 0) {
       if (cardIdx < total - 1)               { setCardIdx(c => c + 1); }
