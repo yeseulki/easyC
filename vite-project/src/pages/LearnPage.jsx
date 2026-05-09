@@ -136,7 +136,6 @@ function CodeLearnCard({ stage, card, cardIdx, totalCards, onNavigate, isLast, o
   useEffect(() => {
     setSel(nonFixed.map(() => 0));
     setStatus(null);
-    onSolvedChange?.(false);
   }, [processedSlots]);
 
   const pct = Math.round(((cardIdx + 1) / totalCards) * 100);
@@ -343,27 +342,29 @@ export default function LearnPage({ initialStage = 0, onBadge, onComplete, onNav
   const touchY = useRef(null);
   const isScrolling = useRef(false);
 
-  useEffect(() => { setStageIdx(initialStage); setCardIdx(0); setSolved(false); }, [initialStage]);
+  useEffect(() => { setStageIdx(initialStage); setCardIdx(0); }, [initialStage]);
 
   const stage = stages[stageIdx];
   const total = stage.cards.length;
   const card  = stage.cards[cardIdx];
 
-  const canGoNext = () => {
-    if (card.type === "code" || card.type === "project") {
-      return solved;
+  // Robust auto-solve logic for non-quiz cards
+  useEffect(() => {
+    if (card.type !== "code") {
+      setSolved(true);
+    } else {
+      setSolved(false);
     }
-    return true;
-  };
+  }, [stageIdx, cardIdx, card.type]);
 
   const go = (d) => {
-    if (d > 0 && !canGoNext()) {
+    if (d > 0 && card.type === "code" && !solved) {
       alert("문제를 맞춰야 다음으로 넘어갈 수 있어! 💪");
       return;
     }
 
     setKey(k => k + 1);
-    setSolved(false);
+    // solved is reset by useEffect above
 
     if (d > 0) {
       if (cardIdx < total - 1)               { setCardIdx(c => c + 1); }
@@ -399,7 +400,7 @@ export default function LearnPage({ initialStage = 0, onBadge, onComplete, onNav
       <div style={{ background: "#fff", borderBottom: "1px solid rgba(0,0,0,0.08)", padding: "10px 16px", flexShrink: 0 }}>
         <div className="ios-hscroll">
           {stages.map((st, i) => (
-            <button key={st.id} className={`cf-tab ${i === stageIdx ? "active" : "inactive"}`} style={i === stageIdx ? { background: st.color } : {}} onClick={() => { if (i <= stageIdx) { setStageIdx(i); setCardIdx(0); setKey(k => k + 1); setSolved(false); } }}>
+            <button key={st.id} className={`cf-tab ${i === stageIdx ? "active" : "inactive"}`} style={i === stageIdx ? { background: st.color } : {}} onClick={() => { if (i <= stageIdx) { setStageIdx(i); setCardIdx(0); setKey(k => k + 1); } }}>
               {st.emoji} {st.title}
             </button>
           ))}
@@ -419,7 +420,7 @@ export default function LearnPage({ initialStage = 0, onBadge, onComplete, onNav
             <div key={i} style={{ width: 4, height: i === cardIdx ? 16 : 4, borderRadius: 2, background: i === cardIdx ? stage.color : "rgba(0,0,0,0.15)", transition: "all 0.3s" }} />
           ))}
         </div>
-        <button style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.95)", border: "1px solid rgba(0,0,0,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, boxShadow: "0 2px 8px rgba(0,0,0,0.1)", opacity: (!canGoNext() || isLast) ? 0.2 : 0.9 }} onClick={() => go(1)} disabled={isLast}>↓</button>
+        <button style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.95)", border: "1px solid rgba(0,0,0,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, boxShadow: "0 2px 8px rgba(0,0,0,0.1)", opacity: (card.type === "code" && !solved) || isLast ? 0.2 : 0.9 }} onClick={() => go(1)} disabled={isLast}>↓</button>
       </div>
     </div>
   );
