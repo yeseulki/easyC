@@ -114,28 +114,7 @@ function CodeLearnCard({ stage, card, cardIdx, totalCards, onSolved, onSave, sav
   const nonFixed = card.slots.filter(s => !s.fixed);
   const [sel,    setSel]    = useState(nonFixed.map(() => 0));
   const [status, setStatus] = useState(null);
-  const isSaved = savedItems.some(i => i.title === card.title);
-function CodeLearnCard({ stage, card, cardIdx, totalCards, onNavigate, isLast }) {
-  const [processedSlots] = useState(() => {
-    return card.slots.map(s => {
-      if (s.fixed || s.options.length <= 1) return s;
-      const options = [...s.options];
-      const correctVal = options[s.correct];
-      for (let i = options.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [options[i], options[j]] = [options[j], options[i]];
-      }
-      return { ...s, options, correct: options.indexOf(correctVal) };
-    });
-  });
-
-  const processedCard = { ...card, slots: processedSlots };
-  const nonFixed = processedSlots.filter(s => !s.fixed);
-  const [sel,    setSel]    = useState(nonFixed.map(() => 0));
-  const [status, setStatus] = useState(null); // null | ok | err
-  const [likes,  setLikes]  = useState(Math.floor(Math.random() * 5000 + 200));
-  const [liked,  setLiked]  = useState(false);
-  const [saved,  setSaved]  = useState(false);
+  const isSaved = savedItems?.some(i => i.title === card.title);
 
   const pct = Math.round(((cardIdx + 1) / totalCards) * 100);
 
@@ -174,14 +153,6 @@ function CodeLearnCard({ stage, card, cardIdx, totalCards, onNavigate, isLast })
           <div className="cf-card">
             <div className="cf-dots"><div className="cf-dot red" /><div className="cf-dot yellow" /><div className="cf-dot green" /></div>
             <CodeWithSlots card={card} color={stage.color} sel={sel} onSel={pick} />
-            {/* Traffic lights */}
-            <div className="cf-dots">
-              <div className="cf-dot red" />
-              <div className="cf-dot yellow" />
-              <div className="cf-dot green" />
-            </div>
-            {/* Code with inline slots */}
-            <CodeWithSlots card={processedCard} color={stage.color} sel={sel} onSel={pick} />
           </div>
         </div>
         <div style={{ margin: "12px 16px 0" }}>
