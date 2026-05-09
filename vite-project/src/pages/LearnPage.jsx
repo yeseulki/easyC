@@ -370,7 +370,7 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
 
   const go = (d) => {
     if (d > 0 && card.type === "code" && !solved) {
-      alert("문제를 맞혀야 다음으로 넘어갈 수 있어! 💪");
+      alert("문제를 맞혀야 다음으로 넘어갈 수 있어!");
       return;
     }
 
