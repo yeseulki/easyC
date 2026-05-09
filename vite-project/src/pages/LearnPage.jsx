@@ -110,7 +110,7 @@ function Explanations({ card, stage }) {
 }
 
 /* ── One full code card ── */
-function CodeLearnCard({ stage, card, cardIdx, totalCards, onNavigate, isLast, onSave, savedItems }) {
+function CodeLearnCard({ stage, card, cardIdx, totalCards, onNavigate, isLast, onSave, savedItems, onSolvedChange }) {
   const isSaved = savedItems?.some(i => i.title === card.title);
   const processedSlots = useMemo(() => {
     return card.slots.map(s => {
@@ -136,6 +136,7 @@ function CodeLearnCard({ stage, card, cardIdx, totalCards, onNavigate, isLast, o
   useEffect(() => {
     setSel(nonFixed.map(() => 0));
     setStatus(null);
+    onSolvedChange?.(false);
   }, [processedSlots]);
 
   const pct = Math.round(((cardIdx + 1) / totalCards) * 100);
@@ -144,7 +145,11 @@ function CodeLearnCard({ stage, card, cardIdx, totalCards, onNavigate, isLast, o
   const check = () => {
     const ok = nonFixed.every((s, i) => sel[i] === s.correct);
     setStatus(ok ? "ok" : "err");
-    if (!ok) setTimeout(() => setStatus(null), 1500);
+    if (ok) {
+      onSolvedChange?.(true);
+    } else {
+      setTimeout(() => setStatus(null), 1500);
+    }
   };
 
   const handleNavigate = () => {
@@ -193,7 +198,7 @@ function CodeLearnCard({ stage, card, cardIdx, totalCards, onNavigate, isLast, o
           <div className="cf-card"><Explanations card={card} stage={stage} /></div>
         </div>
 
-        {isLast && (
+        {isLast && status === "ok" && (
           <div style={{ margin: "24px 16px 0", paddingBottom: 20 }}>
             <button onClick={handleNavigate} className="ios-btn ios-btn-fill" style={{ width: "100%", background: "var(--blue)", borderRadius: 16, padding: "18px", fontSize: 18, fontWeight: 800, boxShadow: "0 8px 24px rgba(0,122,255,0.25)" }}>
               학습 완료! 코딩 시작하기
@@ -317,7 +322,7 @@ function ProjectLearnCard({ stage, card, cardIdx, totalCards, onBadge, onNavigat
           {claimed ? `${card.badge} 획득!` : `🏆 ${card.badge} 획득하기`}
         </button>
 
-        {isLast && (
+        {isLast && claimed && (
           <div style={{ marginTop: 24, paddingBottom: 20 }}>
             <button onClick={handleNavigate} className="ios-btn ios-btn-fill" style={{ width: "100%", background: "var(--blue)", borderRadius: 16, padding: "18px", fontSize: 18, fontWeight: 800, boxShadow: "0 8px 24px rgba(0,122,255,0.25)" }}>
               학습 완료! 코딩 시작하기
@@ -334,17 +339,32 @@ export default function LearnPage({ initialStage = 0, onBadge, onComplete, onNav
   const [stageIdx, setStageIdx] = useState(initialStage);
   const [cardIdx,  setCardIdx]  = useState(0);
   const [key,      setKey]      = useState(0);
+  const [solved,   setSolved]   = useState(false);
   const touchY = useRef(null);
   const isScrolling = useRef(false);
 
-  useEffect(() => { setStageIdx(initialStage); setCardIdx(0); }, [initialStage]);
+  useEffect(() => { setStageIdx(initialStage); setCardIdx(0); setSolved(false); }, [initialStage]);
 
   const stage = stages[stageIdx];
   const total = stage.cards.length;
   const card  = stage.cards[cardIdx];
 
+  const canGoNext = () => {
+    if (card.type === "code" || card.type === "project") {
+      return solved;
+    }
+    return true;
+  };
+
   const go = (d) => {
+    if (d > 0 && !canGoNext()) {
+      alert("문제를 맞춰야 다음으로 넘어갈 수 있어! 💪");
+      return;
+    }
+
     setKey(k => k + 1);
+    setSolved(false);
+
     if (d > 0) {
       if (cardIdx < total - 1)               { setCardIdx(c => c + 1); }
       else if (stageIdx < stages.length - 1) { onComplete?.(stage.id); setStageIdx(s => s + 1); setCardIdx(0); }
@@ -379,7 +399,7 @@ export default function LearnPage({ initialStage = 0, onBadge, onComplete, onNav
       <div style={{ background: "#fff", borderBottom: "1px solid rgba(0,0,0,0.08)", padding: "10px 16px", flexShrink: 0 }}>
         <div className="ios-hscroll">
           {stages.map((st, i) => (
-            <button key={st.id} className={`cf-tab ${i === stageIdx ? "active" : "inactive"}`} style={i === stageIdx ? { background: st.color } : {}} onClick={() => { setStageIdx(i); setCardIdx(0); setKey(k => k + 1); }}>
+            <button key={st.id} className={`cf-tab ${i === stageIdx ? "active" : "inactive"}`} style={i === stageIdx ? { background: st.color } : {}} onClick={() => { if (i <= stageIdx) { setStageIdx(i); setCardIdx(0); setKey(k => k + 1); setSolved(false); } }}>
               {st.emoji} {st.title}
             </button>
           ))}
@@ -388,8 +408,8 @@ export default function LearnPage({ initialStage = 0, onBadge, onComplete, onNav
 
       <div key={key} style={{ flex: 1, overflow: "hidden", animation: "iosFadeScale 0.24s ease" }}>
         {card.type === "concept" && <ConceptLearnCard stage={stage} card={card} cardIdx={cardIdx} totalCards={total} onNavigate={onNavigate} isLast={isLast} onSave={onSave} savedItems={savedItems} />}
-        {card.type === "code"    && <CodeLearnCard key={`code-${stageIdx}-${cardIdx}`} stage={stage} card={card} cardIdx={cardIdx} totalCards={total} onNavigate={onNavigate} isLast={isLast} onSave={onSave} savedItems={savedItems} />}
-        {card.type === "project" && <ProjectLearnCard stage={stage} card={card} cardIdx={cardIdx} totalCards={total} onBadge={onBadge} onNavigate={onNavigate} isLast={isLast} />}
+        {card.type === "code"    && <CodeLearnCard key={`code-${stageIdx}-${cardIdx}`} stage={stage} card={card} cardIdx={cardIdx} totalCards={total} onNavigate={onNavigate} isLast={isLast} onSave={onSave} savedItems={savedItems} onSolvedChange={setSolved} />}
+        {card.type === "project" && <ProjectLearnCard stage={stage} card={card} cardIdx={cardIdx} totalCards={total} onBadge={onBadge} onNavigate={onNavigate} isLast={isLast} onSolvedChange={setSolved} />}
       </div>
 
       <div style={{ position: "fixed", right: 8, top: "50%", transform: "translateY(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, zIndex: 50 }}>
@@ -399,7 +419,7 @@ export default function LearnPage({ initialStage = 0, onBadge, onComplete, onNav
             <div key={i} style={{ width: 4, height: i === cardIdx ? 16 : 4, borderRadius: 2, background: i === cardIdx ? stage.color : "rgba(0,0,0,0.15)", transition: "all 0.3s" }} />
           ))}
         </div>
-        <button style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.95)", border: "1px solid rgba(0,0,0,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, boxShadow: "0 2px 8px rgba(0,0,0,0.1)", opacity: isLast ? 0.2 : 0.9 }} onClick={() => go(1)} disabled={isLast}>↓</button>
+        <button style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.95)", border: "1px solid rgba(0,0,0,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, boxShadow: "0 2px 8px rgba(0,0,0,0.1)", opacity: (!canGoNext() || isLast) ? 0.2 : 0.9 }} onClick={() => go(1)} disabled={isLast}>↓</button>
       </div>
     </div>
   );
