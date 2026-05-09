@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 
 function Drum({ options, selected, onSelect, fixed, color }) {
   const startY = useRef(null);
@@ -41,7 +41,7 @@ function Drum({ options, selected, onSelect, fixed, color }) {
 }
 
 export default function SlotCodePicker({ slots, color = "var(--blue)", onResult }) {
-  const [processedSlots] = useState(() => {
+  const processedSlots = useMemo(() => {
     return slots.map(s => {
       if (s.fixed || s.options.length <= 1) return s;
       const options = [...s.options];
@@ -52,12 +52,18 @@ export default function SlotCodePicker({ slots, color = "var(--blue)", onResult 
       }
       return { ...s, options, correct: options.indexOf(correctVal) };
     });
-  });
+  }, [slots]);
 
   const [sel,      setSel]      = useState(processedSlots.map(() => 0));
   const [result,   setResult]   = useState(null);
   const [showHint, setShowHint] = useState(false);
   const [confetti, setConfetti] = useState([]);
+
+  // Reset selection when slots change
+  useEffect(() => {
+    setSel(processedSlots.map(() => 0));
+    setResult(null);
+  }, [processedSlots]);
 
   const pick = (i, v) => { const n = [...sel]; n[i] = v; setSel(n); setResult(null); };
 
