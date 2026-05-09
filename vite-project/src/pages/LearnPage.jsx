@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { stages } from "../data/curriculum";
 
 /* ── CFeed-style inline slot inside code ── */
@@ -72,7 +72,7 @@ function LineWithSlots({ raw, card, sel, onSel, color, slotColors }) {
     elements.push(
       <InlineSlot
         key={`slot-${found.si}`}
-        options={nonFixed[found.si].options}
+        options={card.slots.filter(s => !s.fixed)[found.si].options}
         selected={sel[found.si] || 0}
         onSelect={v => onSel(found.si, v)}
         color={sc}
@@ -126,8 +126,9 @@ function Explanations({ card, stage }) {
 }
 
 /* ── One full code card ── */
-function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate, isLast, onSave, savedItems, onSolvedChange }) {
+function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onSave, savedItems, onSolvedChange }) {
   const isSaved = savedItems?.some(i => i.title === card.title);
+  
   const processedSlots = useMemo(() => {
     return card.slots.map(s => {
       if (s.fixed || s.options.length <= 1) return s;
@@ -150,7 +151,7 @@ function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate,
   useEffect(() => {
     setSel(nonFixed.map(() => 0));
     setStatus(null);
-  }, [processedSlots]);
+  }, [card.title]);
 
   const pct = Math.round(((cardIdx + 1) / totalCards) * 100);
 
@@ -159,7 +160,7 @@ function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate,
   const check = () => {
     const ok = nonFixed.every((s, i) => sel[i] === s.correct);
     setStatus(ok ? "ok" : "err");
-    if (ok) onSolved(true);
+    if (ok) onSolvedChange?.(true);
     else setTimeout(() => setStatus(null), 1500);
   };
 
@@ -206,7 +207,7 @@ function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate,
 }
 
 /* ── Concept card ── */
-function ConceptLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate, isLast, onSave, savedItems }) {
+function ConceptLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onSave, savedItems }) {
   const [flipped, setFlipped] = useState(false);
   const pct = Math.round(((cardIdx + 1) / totalCards) * 100);
   const isSaved = savedItems?.some(i => i.title === card.title);
@@ -260,27 +261,35 @@ function ConceptLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNaviga
 /* ── Project card ── */
 function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge, onNavigate, isLast, onSolvedChange }) {
   const [claimed, setClaimed] = useState(false);
-  const [userCode, setUserCode] = useState("");
-  const [userOut,  setUserOut]  = useState("");
+  const [userInput, setUserInput] = useState("");
   const [showResult, setShowResult] = useState(false);
-  const [status, setStatus] = useState(null);
+  const [status, setStatus] = useState(null); // null | ok | err
   const pct = Math.round(((cardIdx + 1) / totalCards) * 100);
 
+  const handleNavigate = () => {
+    onNavigate("code");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const handleRun = () => {
-    const code = userCode.trim();
-    const out  = userOut.trim();
-    if (!code || !out) { alert("코드와 출력 내용을 모두 입력해봐! 😉"); return; }
+    const input = userInput.trim().replace(/\s/g, "");
+    const target = (card.answer || "").replace(/\s/g, "");
 
-    const hasKeywords = card.keywords?.every(k => code.toLowerCase().includes(k.toLowerCase())) ?? true;
-    const matchesAnswer = card.answer ? code.replace(/\s/g, "").includes(card.answer.replace(/\s/g, "")) : true;
+    if (!input) {
+      alert("빈칸에 코드를 입력해봐! 😉");
+      return;
+    }
 
-    if (hasKeywords && matchesAnswer) {
+    // Keyword or exact match validation
+    const matches = input === target || (card.keywords && card.keywords.every(k => input.includes(k.replace(/\s/g, ""))));
+
+    if (matches) {
       setShowResult(true);
       setStatus("ok");
-      onSolved(true);
+      onSolvedChange?.(true);
     } else {
       setStatus("err");
-      alert("음, 핵심 코드가 조금 다른 것 같아! 다시 한 번 확인해볼까? 🤔");
+      alert("음, 코드가 조금 다른 것 같아! 다시 한 번 생각해볼까? 🤔");
     }
   };
 
@@ -294,33 +303,67 @@ function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge,
         <span style={{ fontWeight: 700, fontSize: 14, color: "#000" }}>{stage.title}</span>
         <span style={{ marginLeft: "auto", fontSize: 12, color: "#8e8e93" }}>{cardIdx + 1} / {totalCards}</span>
       </div>
+
       <div style={{ flex: 1, overflowY: "auto", padding: "0 16px 16px" }}>
         <div style={{ fontSize: 11, color: stage.color, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 6 }}>🚀 미니 프로젝트</div>
         <h2 style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.5, lineHeight: 1.3, color: "#000", marginBottom: 10 }}>{card.title}</h2>
-        <p style={{ fontSize: 14, color: "#8e8e93", lineHeight: 1.7, marginBottom: 16 }}>배운 내용을 바탕으로 <b>핵심 코드</b>를 직접 입력해서 맞춰보자!{"\n"}결과가 어떻게 나올지도 함께 설계해봐.</p>
-        <div style={{ background: "#fff", borderRadius: 20, padding: "20px", marginBottom: 16, boxShadow: "0 1px 6px rgba(0,0,0,0.06)", border: status === "err" ? "1px solid #ff3b30" : "0.5px solid rgba(0,0,0,0.05)" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                <span style={{ fontSize: 12, color: stage.color, fontWeight: 800 }}>1. 핵심 코드 입력하기</span>
-              </div>
-              <textarea className="ios-input" value={userCode} onChange={(e) => { setUserCode(e.target.value); setStatus(null); }} placeholder="여기에 정답 코드를 입력해봐..." style={{ minHeight: 80, resize: "none", fontSize: 14, fontFamily: "monospace", padding: "12px", background: "#f9f9fb" }} />
+        <p style={{ fontSize: 14, color: "#8e8e93", lineHeight: 1.7, marginBottom: 16 }}>
+          배운 내용을 바탕으로 <b>핵심 코드</b>를 완성해보자!{"\n"}
+          빈칸을 채우고 실행 버튼을 눌러 결과를 확인해봐.
+        </p>
+
+        {/* Project Code Editor */}
+        <div style={{ background: "#fff", borderRadius: 20, padding: "20px", marginBottom: 16, boxShadow: "0 1px 6px rgba(0,0,0,0.06)", border: status === "err" ? "1.5px solid #ff3b30" : status === "ok" ? "1.5px solid var(--green)" : "0.5px solid rgba(0,0,0,0.05)" }}>
+          <div style={{ background: "#1c1c1e", borderRadius: 12, padding: "16px", marginBottom: 16, fontFamily: "monospace", fontSize: 14, lineHeight: 1.6, color: "#abb2bf" }}>
+            <div style={{ color: "#c678dd", marginBottom: 4 }}>#include &lt;stdio.h&gt;</div>
+            <div style={{ color: "#c678dd" }}>int <span style={{ color: "#61afef" }}>main</span>() {'{'}</div>
+            <div style={{ paddingLeft: 16, color: "#8e8e93" }}>// ... 이전 로직 ...</div>
+            <div style={{ paddingLeft: 16, display: "flex", alignItems: "center", flexWrap: "wrap", gap: 6, margin: "8px 0" }}>
+              <span style={{ color: "#56b6c2" }}>{">>>"}</span>
+              <input
+                className="ios-input"
+                style={{ flex: 1, minWidth: 120, height: 32, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", fontFamily: "monospace", padding: "0 8px", borderRadius: 6 }}
+                value={userInput}
+                onChange={(e) => { setUserInput(e.target.value); setStatus(null); }}
+                placeholder="여기에 핵심 코드 작성..."
+              />
             </div>
-            <div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                <span style={{ fontSize: 12, color: stage.color, fontWeight: 800 }}>2. 예상 출력 메시지</span>
-              </div>
-              <input className="ios-input" value={userOut} onChange={(e) => setUserOut(e.target.value)} placeholder="모니터에 뭐라고 나올까?" style={{ padding: "12px", background: "#f9f9fb" }} />
-            </div>
-            <button className={`ios-btn ios-btn-fill ${status === "ok" ? "success" : ""}`} style={{ width: "100%", background: status === "ok" ? "var(--green)" : stage.color, height: 50, borderRadius: 14, fontSize: 16, fontWeight: 700, transition: "all 0.3s" }} onClick={handleRun}>{status === "ok" ? "✓ 코드 검증 완료" : "▶ 코드 확인 및 실행"}</button>
+            <div style={{ paddingLeft: 16, color: "#c678dd" }}>return <span style={{ color: "#d19a66" }}>0</span>;</div>
+            <div>{'}'}</div>
           </div>
+
+          <button
+            className={`ios-btn ios-btn-fill ${status === "ok" ? "success" : ""}`}
+            style={{ width: "100%", background: status === "ok" ? "var(--green)" : stage.color, height: 48, borderRadius: 12, fontSize: 15, fontWeight: 700 }}
+            onClick={handleRun}
+          >
+            {status === "ok" ? "✓ 실행 성공!" : "▶ 나의 프로그램 실행"}
+          </button>
         </div>
 
+        {showResult && (
+          <div style={{ margin: "0 0 20px", animation: "iosPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)" }}>
+            <div className="cf-card" style={{ background: "#000", border: "none", padding: "20px", borderRadius: 16 }}>
+              <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
+                <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#ff5f56" }} />
+                <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#ffbd2e" }} />
+                <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#27c93f" }} />
+              </div>
+              <div style={{ color: "#fff", fontFamily: "monospace", fontSize: 15, lineHeight: 1.5 }}>
+                <div style={{ color: "#8e8e93", fontSize: 11, marginBottom: 8 }}>[easyC Terminal v1.2]</div>
+                <div style={{ color: "#fff" }}>{`$ ./my_program`}</div>
+                <div style={{ color: "#27c93f", marginTop: 4 }}>{`> 결과: ${card.expectedOutput || "성공적으로 실행되었습니다!"}`}</div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <button
-          style={{ width: "100%", padding: "16px", borderRadius: 16, background: claimed ? "rgba(52,199,89,0.12)" : `linear-gradient(135deg, ${stage.color}, ${stage.color}bb)`, color: claimed ? "var(--green)" : "#fff", fontWeight: 800, fontSize: 17, border: "none", cursor: "pointer", boxShadow: claimed ? "none" : `0 4px 16px ${stage.color}44`, transition: "all 0.3s" }}
-          onClick={() => { setClaimed(true); onBadge(card.badge); onSolvedChange?.(true); }}
+          disabled={!showResult}
+          style={{ width: "100%", padding: "18px", borderRadius: 16, background: claimed ? "rgba(52,199,89,0.12)" : showResult ? `linear-gradient(135deg, ${stage.color}, ${stage.color}bb)` : "#ccc", color: claimed ? "var(--green)" : "#fff", fontWeight: 800, fontSize: 17, border: "none", cursor: showResult ? "pointer" : "default", boxShadow: claimed || !showResult ? "none" : `0 4px 20px ${stage.color}44`, transition: "all 0.3s" }}
+          onClick={() => { setClaimed(true); onBadge(card.badge); }}
         >
-          {claimed ? `${card.badge} 획득!` : `🏆 ${card.badge} 획득하기`}
+          {claimed ? `${card.badge} 획득 완료!` : `🏆 ${card.badge} 획득하기`}
         </button>
 
         {isLast && claimed && (
@@ -330,7 +373,6 @@ function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge,
             </button>
           </div>
         )}
-        <button disabled={!showResult} style={{ width: "100%", padding: "18px", borderRadius: 16, background: claimed ? "rgba(52,199,89,0.12)" : showResult ? `linear-gradient(135deg, ${stage.color}, ${stage.color}bb)` : "#ccc", color: claimed ? "var(--green)" : "#fff", fontWeight: 800, fontSize: 17, border: "none", cursor: showResult ? "pointer" : "default", boxShadow: claimed || !showResult ? "none" : `0 4px 20px ${stage.color}44`, transition: "all 0.3s" }} onClick={() => { setClaimed(true); onBadge(card.badge); }}>{claimed ? `${card.badge} 획득 완료!` : `🏆 ${card.badge} 획득하기`}</button>
       </div>
     </div>
   );
@@ -348,6 +390,7 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
   useEffect(() => { 
     setStageIdx(initialStage); 
     setCardIdx(initialCard); 
+    setKey(k => k + 1);
   }, [initialStage, initialCard]);
 
   const stage = stages[stageIdx];
@@ -356,7 +399,7 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
 
   // Robust auto-solve logic for non-quiz cards
   useEffect(() => {
-    if (card.type !== "code") {
+    if (card.type === "concept") {
       setSolved(true);
     } else {
       setSolved(false);
@@ -364,8 +407,8 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
   }, [stageIdx, cardIdx, card.type]);
 
   const go = (d) => {
-    if (d > 0 && card.type === "code" && !solved) {
-      alert("문제를 맞혀야 다음으로 넘어갈 수 있어!");
+    if (d > 0 && (card.type === "code" || card.type === "project") && !solved) {
+      alert("문제를 맞춰야 다음으로 넘어갈 수 있어! 💪");
       return;
     }
 
@@ -401,8 +444,8 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
         </div>
       </div>
       <div key={key} style={{ flex: 1, overflow: "hidden", animation: "iosFadeScale 0.24s ease" }}>
-        {card.type === "concept" && <ConceptLearnCard stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={total} onNavigate={onNavigate} isLast={isLast} onSave={onSave} savedItems={savedItems} />}
-        {card.type === "code"    && <CodeLearnCard key={`code-${stageIdx}-${cardIdx}`} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={total} onNavigate={onNavigate} isLast={isLast} onSave={onSave} savedItems={savedItems} onSolvedChange={setSolved} />}
+        {card.type === "concept" && <ConceptLearnCard stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={total} onSave={onSave} savedItems={savedItems} />}
+        {card.type === "code"    && <CodeLearnCard stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={total} onSave={onSave} savedItems={savedItems} onSolvedChange={setSolved} />}
         {card.type === "project" && <ProjectLearnCard stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={total} onBadge={onBadge} onNavigate={onNavigate} isLast={isLast} onSolvedChange={setSolved} />}
       </div>
       <div style={{ position: "fixed", right: 8, top: "50%", transform: "translateY(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, zIndex: 50 }}>
@@ -412,7 +455,7 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
             <div key={i} style={{ width: 4, height: i === cardIdx ? 16 : 4, borderRadius: 2, background: i === cardIdx ? stage.color : "rgba(0,0,0,0.15)", transition: "all 0.3s" }} />
           ))}
         </div>
-        <button style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.95)", border: "1px solid rgba(0,0,0,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, boxShadow: "0 2px 8px rgba(0,0,0,0.1)", opacity: (card.type === "code" && !solved) || isLast ? 0.2 : 0.9 }} onClick={() => go(1)} disabled={isLast}>↓</button>
+        <button style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.95)", border: "1px solid rgba(0,0,0,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, boxShadow: "0 2px 8px rgba(0,0,0,0.1)", opacity: (!solved && card.type !== "concept") || isLast ? 0.2 : 0.9 }} onClick={() => go(1)} disabled={isLast}>↓</button>
       </div>
     </div>
   );
