@@ -110,18 +110,17 @@ function Explanations({ card, stage }) {
 }
 
 /* ── One full code card ── */
-function CodeLearnCard({ stage, card, cardIdx, totalCards, onNavigate, isLast }) {
+function CodeLearnCard({ stage, card, cardIdx, totalCards, onNavigate, isLast, onSave, savedItems }) {
+  const isSaved = savedItems?.some(i => i.title === card.title);
   const processedSlots = useMemo(() => {
     return card.slots.map(s => {
       if (s.fixed || s.options.length <= 1) return s;
       const options = [...s.options];
       const correctVal = options[s.correct];
-      
       for (let i = options.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [options[i], options[j]] = [options[j], options[i]];
       }
-      
       const newCorrect = options.indexOf(correctVal);
       return { ...s, options, correct: newCorrect };
     });
@@ -133,7 +132,6 @@ function CodeLearnCard({ stage, card, cardIdx, totalCards, onNavigate, isLast })
   const [status, setStatus] = useState(null); // null | ok | err
   const [likes,  setLikes]  = useState(Math.floor(Math.random() * 5000 + 200));
   const [liked,  setLiked]  = useState(false);
-  const [saved,  setSaved]  = useState(false);
 
   useEffect(() => {
     setSel(nonFixed.map(() => 0));
@@ -167,49 +165,37 @@ function CodeLearnCard({ stage, card, cardIdx, totalCards, onNavigate, isLast })
       </div>
 
       <div style={{ flex: 1, overflowY: "auto" }}>
-        <div style={{ padding: "0 16px 12px", background: "#f2f2f7" }}>
-          <div style={{ fontSize: 11, color: stage.color, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 4 }}>💻 실습</div>
-          <h2 style={{ fontSize: 18, fontWeight: 900, letterSpacing: -0.4, lineHeight: 1.3, color: "#000" }}>{card.title}</h2>
-          <p style={{ fontSize: 13, color: "#8e8e93", marginTop: 6, lineHeight: 1.6 }}>{card.description}</p>
+        <div style={{ padding: "0 16px 12px", background: "#f2f2f7", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 11, color: stage.color, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 4 }}>💻 실습</div>
+            <h2 style={{ fontSize: 18, fontWeight: 900, letterSpacing: -0.4, lineHeight: 1.3, color: "#000" }}>{card.title}</h2>
+            <p style={{ fontSize: 13, color: "#8e8e93", marginTop: 6, lineHeight: 1.6 }}>{card.description}</p>
+          </div>
+          <div className="cf-action-btn" onClick={() => onSave?.(card)} style={{ marginTop: 10 }}>
+            <div className="cf-action-icon" style={{ width: 38, height: 38, fontSize: 18, color: isSaved ? stage.color : "#000" }}>{isSaved ? "🔖" : "📌"}</div>
+          </div>
         </div>
 
         <div style={{ margin: "0 16px", position: "relative" }}>
           <div className="cf-card">
-            <div className="cf-dots">
-              <div className="cf-dot red" />
-              <div className="cf-dot yellow" />
-              <div className="cf-dot green" />
-            </div>
+            <div className="cf-dots"><div className="cf-dot red" /><div className="cf-dot yellow" /><div className="cf-dot green" /></div>
             <CodeWithSlots card={processedCard} color={stage.color} sel={sel} onSel={pick} />
           </div>
-
           <div style={{ position: "absolute", right: -14, top: "50%", transform: "translateY(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
             <div className="cf-action-btn" onClick={() => { setLiked(l => !l); setLikes(n => liked ? n - 1 : n + 1); }}>
-              <div className="cf-action-icon" style={{ color: liked ? "#ff2d55" : "#000" }}>
-                {liked ? "❤️" : "🤍"}
-              </div>
+              <div className="cf-action-icon" style={{ color: liked ? "#ff2d55" : "#000" }}>{liked ? "❤️" : "🤍"}</div>
               <span className="cf-action-label">{(likes / 1000).toFixed(1)}k</span>
-            </div>
-            <div className="cf-action-btn" onClick={() => setSaved(s => !s)}>
-              <div className="cf-action-icon">{saved ? "🔖" : "📌"}</div>
-              <span className="cf-action-label">저장</span>
             </div>
           </div>
         </div>
 
         <div style={{ margin: "12px 16px 0" }}>
-          <div className="cf-card">
-            <Explanations card={card} stage={stage} />
-          </div>
+          <div className="cf-card"><Explanations card={card} stage={stage} /></div>
         </div>
 
         {isLast && (
           <div style={{ margin: "24px 16px 0", paddingBottom: 20 }}>
-            <button
-              onClick={handleNavigate}
-              className="ios-btn ios-btn-fill"
-              style={{ width: "100%", background: "var(--blue)", borderRadius: 16, padding: "18px", fontSize: 18, fontWeight: 800, boxShadow: "0 8px 24px rgba(0,122,255,0.25)" }}
-            >
+            <button onClick={handleNavigate} className="ios-btn ios-btn-fill" style={{ width: "100%", background: "var(--blue)", borderRadius: 16, padding: "18px", fontSize: 18, fontWeight: 800, boxShadow: "0 8px 24px rgba(0,122,255,0.25)" }}>
               학습 완료! 코딩 시작하기
             </button>
           </div>
@@ -218,11 +204,7 @@ function CodeLearnCard({ stage, card, cardIdx, totalCards, onNavigate, isLast })
       </div>
 
       <div style={{ position: "sticky", bottom: 0, background: "#f2f2f7", padding: "12px 16px 16px", borderTop: "0.5px solid rgba(0,0,0,0.08)" }}>
-        <button
-          className={`cf-cta ${status === "ok" ? "success" : status === "err" ? "error" : ""}`}
-          onClick={check}
-          style={{ width: "100%" }}
-        >
+        <button className={`cf-cta ${status === "ok" ? "success" : status === "err" ? "error" : ""}`} onClick={check} style={{ width: "100%" }}>
           {status === "ok" ? "✓ 정답이야! 완벽해!" : status === "err" ? "✗ 다시 생각해봐!" : "확인하기"}
         </button>
       </div>
@@ -231,8 +213,9 @@ function CodeLearnCard({ stage, card, cardIdx, totalCards, onNavigate, isLast })
 }
 
 /* ── Concept card ── */
-function ConceptLearnCard({ stage, card, cardIdx, totalCards, onNavigate, isLast }) {
+function ConceptLearnCard({ stage, card, cardIdx, totalCards, onNavigate, isLast, onSave, savedItems }) {
   const [flipped, setFlipped] = useState(false);
+  const isSaved = savedItems?.some(i => i.title === card.title);
   const pct = Math.round(((cardIdx + 1) / totalCards) * 100);
 
   const handleNavigate = () => {
@@ -252,8 +235,15 @@ function ConceptLearnCard({ stage, card, cardIdx, totalCards, onNavigate, isLast
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", padding: "0 16px" }}>
-        <div style={{ fontSize: 11, color: stage.color, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 6 }}>📖 개념</div>
-        <h2 style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.5, lineHeight: 1.3, color: "#000", marginBottom: 16, borderLeft: `3px solid ${stage.color}`, paddingLeft: 12 }}>{card.title}</h2>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div>
+            <div style={{ fontSize: 11, color: stage.color, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 6 }}>📖 개념</div>
+            <h2 style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.5, lineHeight: 1.3, color: "#000", marginBottom: 16, borderLeft: `3px solid ${stage.color}`, paddingLeft: 12 }}>{card.title}</h2>
+          </div>
+          <div className="cf-action-btn" onClick={() => onSave?.(card)} style={{ marginTop: 4 }}>
+            <div className="cf-action-icon" style={{ width: 38, height: 38, fontSize: 18, color: isSaved ? stage.color : "#000" }}>{isSaved ? "🔖" : "📌"}</div>
+          </div>
+        </div>
 
         <div style={{ background: "#fff", borderRadius: 16, padding: "16px", marginBottom: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
           <div style={{ fontSize: 11, color: stage.color, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 10 }}>🧠 비유로 이해하기</div>
@@ -264,23 +254,13 @@ function ConceptLearnCard({ stage, card, cardIdx, totalCards, onNavigate, isLast
           <p style={{ fontSize: 15, color: "#3c3c43", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{card.content}</p>
         </div>
 
-        <div
-          style={{ background: flipped ? stage.color + "10" : "#fff", border: `1px solid ${flipped ? stage.color + "44" : "rgba(0,0,0,0.08)"}`, borderRadius: 16, padding: "14px 16px", cursor: "pointer", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", transition: "all 0.25s", marginBottom: 24 }}
-          onClick={() => setFlipped(f => !f)}
-        >
-          {!flipped
-            ? <div style={{ textAlign: "center", color: "#8e8e93", fontSize: 14 }}>💡 탭해서 핵심 팁 보기</div>
-            : <div style={{ fontSize: 14, color: stage.color, lineHeight: 1.7, animation: "iosFadeIn 0.2s ease" }}><b>핵심 팁:</b> {card.tip}</div>
-          }
+        <div style={{ background: flipped ? stage.color + "10" : "#fff", border: `1px solid ${flipped ? stage.color + "44" : "rgba(0,0,0,0.08)"}`, borderRadius: 16, padding: "14px 16px", cursor: "pointer", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", transition: "all 0.25s", marginBottom: 24 }} onClick={() => setFlipped(f => !f)}>
+          {!flipped ? <div style={{ textAlign: "center", color: "#8e8e93", fontSize: 14 }}>💡 탭해서 핵심 팁 보기</div> : <div style={{ fontSize: 14, color: stage.color, lineHeight: 1.7, animation: "iosFadeIn 0.2s ease" }}><b>핵심 팁:</b> {card.tip}</div>}
         </div>
 
         {isLast && (
           <div style={{ marginTop: 8, paddingBottom: 24 }}>
-            <button
-              onClick={handleNavigate}
-              className="ios-btn ios-btn-fill"
-              style={{ width: "100%", background: "var(--blue)", borderRadius: 16, padding: "18px", fontSize: 18, fontWeight: 800, boxShadow: "0 8px 24px rgba(0,122,255,0.25)" }}
-            >
+            <button onClick={handleNavigate} className="ios-btn ios-btn-fill" style={{ width: "100%", background: "var(--blue)", borderRadius: 16, padding: "18px", fontSize: 18, fontWeight: 800, boxShadow: "0 8px 24px rgba(0,122,255,0.25)" }}>
               학습 완료! 코딩 시작하기
             </button>
           </div>
@@ -339,11 +319,7 @@ function ProjectLearnCard({ stage, card, cardIdx, totalCards, onBadge, onNavigat
 
         {isLast && (
           <div style={{ marginTop: 24, paddingBottom: 20 }}>
-            <button
-              onClick={handleNavigate}
-              className="ios-btn ios-btn-fill"
-              style={{ width: "100%", background: "var(--blue)", borderRadius: 16, padding: "18px", fontSize: 18, fontWeight: 800, boxShadow: "0 8px 24px rgba(0,122,255,0.25)" }}
-            >
+            <button onClick={handleNavigate} className="ios-btn ios-btn-fill" style={{ width: "100%", background: "var(--blue)", borderRadius: 16, padding: "18px", fontSize: 18, fontWeight: 800, boxShadow: "0 8px 24px rgba(0,122,255,0.25)" }}>
               학습 완료! 코딩 시작하기
             </button>
           </div>
@@ -354,7 +330,7 @@ function ProjectLearnCard({ stage, card, cardIdx, totalCards, onBadge, onNavigat
 }
 
 /* ── Main LearnPage ── */
-export default function LearnPage({ initialStage = 0, onBadge, onComplete, onNavigate }) {
+export default function LearnPage({ initialStage = 0, onBadge, onComplete, onNavigate, onSave, savedItems }) {
   const [stageIdx, setStageIdx] = useState(initialStage);
   const [cardIdx,  setCardIdx]  = useState(0);
   const [key,      setKey]      = useState(0);
@@ -390,53 +366,40 @@ export default function LearnPage({ initialStage = 0, onBadge, onComplete, onNav
   const onWheel = e => {
     if (isScrolling.current) return;
     if (Math.abs(e.deltaY) < 30) return;
-    
     isScrolling.current = true;
     go(e.deltaY > 0 ? 1 : -1);
-    
-    setTimeout(() => {
-      isScrolling.current = false;
-    }, 600);
+    setTimeout(() => { isScrolling.current = false; }, 600);
   };
 
   const isFirst = stageIdx === 0 && cardIdx === 0;
   const isLast  = stageIdx === stages.length - 1 && cardIdx === total - 1;
 
   return (
-    <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative", paddingBottom: "var(--nav-h)" }}
-      onTouchStart={onTS} onTouchEnd={onTE} onWheel={onWheel}>
-
-      {/* Category tabs */}
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative", paddingBottom: "var(--nav-h)" }} onTouchStart={onTS} onTouchEnd={onTE} onWheel={onWheel}>
       <div style={{ background: "#fff", borderBottom: "1px solid rgba(0,0,0,0.08)", padding: "10px 16px", flexShrink: 0 }}>
         <div className="ios-hscroll">
           {stages.map((st, i) => (
-            <button key={st.id} className={`cf-tab ${i === stageIdx ? "active" : "inactive"}`}
-              style={i === stageIdx ? { background: st.color } : {}}
-              onClick={() => { setStageIdx(i); setCardIdx(0); setKey(k => k + 1); }}>
+            <button key={st.id} className={`cf-tab ${i === stageIdx ? "active" : "inactive"}`} style={i === stageIdx ? { background: st.color } : {}} onClick={() => { setStageIdx(i); setCardIdx(0); setKey(k => k + 1); }}>
               {st.emoji} {st.title}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Card */}
       <div key={key} style={{ flex: 1, overflow: "hidden", animation: "iosFadeScale 0.24s ease" }}>
-        {card.type === "concept" && <ConceptLearnCard stage={stage} card={card} cardIdx={cardIdx} totalCards={total} onNavigate={onNavigate} isLast={isLast} />}
-        {card.type === "code"    && <CodeLearnCard    key={`code-${stageIdx}-${cardIdx}`} stage={stage} card={card} cardIdx={cardIdx} totalCards={total} onNavigate={onNavigate} isLast={isLast} />}
+        {card.type === "concept" && <ConceptLearnCard stage={stage} card={card} cardIdx={cardIdx} totalCards={total} onNavigate={onNavigate} isLast={isLast} onSave={onSave} savedItems={savedItems} />}
+        {card.type === "code"    && <CodeLearnCard key={`code-${stageIdx}-${cardIdx}`} stage={stage} card={card} cardIdx={cardIdx} totalCards={total} onNavigate={onNavigate} isLast={isLast} onSave={onSave} savedItems={savedItems} />}
         {card.type === "project" && <ProjectLearnCard stage={stage} card={card} cardIdx={cardIdx} totalCards={total} onBadge={onBadge} onNavigate={onNavigate} isLast={isLast} />}
       </div>
 
-      {/* Side nav dots */}
       <div style={{ position: "fixed", right: 8, top: "50%", transform: "translateY(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, zIndex: 50 }}>
-        <button style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.95)", border: "1px solid rgba(0,0,0,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, boxShadow: "0 2px 8px rgba(0,0,0,0.1)", opacity: isFirst ? 0.2 : 0.9 }}
-          onClick={() => go(-1)} disabled={isFirst}>↑</button>
+        <button style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.95)", border: "1px solid rgba(0,0,0,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, boxShadow: "0 2px 8px rgba(0,0,0,0.1)", opacity: isFirst ? 0.2 : 0.9 }} onClick={() => go(-1)} disabled={isFirst}>↑</button>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
           {stage.cards.map((_, i) => (
             <div key={i} style={{ width: 4, height: i === cardIdx ? 16 : 4, borderRadius: 2, background: i === cardIdx ? stage.color : "rgba(0,0,0,0.15)", transition: "all 0.3s" }} />
           ))}
         </div>
-        <button style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.95)", border: "1px solid rgba(0,0,0,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, boxShadow: "0 2px 8px rgba(0,0,0,0.1)", opacity: isLast ? 0.2 : 0.9 }}
-          onClick={() => go(1)} disabled={isLast}>↓</button>
+        <button style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.95)", border: "1px solid rgba(0,0,0,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, boxShadow: "0 2px 8px rgba(0,0,0,0.1)", opacity: isLast ? 0.2 : 0.9 }} onClick={() => go(1)} disabled={isLast}>↓</button>
       </div>
     </div>
   );
