@@ -17,7 +17,7 @@ export default function HomePage({ onNavigate, progress }) {
       {/* CFeed-style header */}
       <div className="cf-nav">
         <div className="cf-nav-top">
-          <span className="cf-logo">Vibe<span style={{ color: "var(--blue)" }}>-C</span></span>
+          <span className="cf-logo">easy<span style={{ color: "var(--blue)" }}>C</span></span>
           <span className="cf-beta">Beta</span>
         </div>
         <div className="cf-tabs">
