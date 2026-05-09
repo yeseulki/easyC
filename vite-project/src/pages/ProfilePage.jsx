@@ -15,7 +15,7 @@ const LEVELS = [
 ];
 const getLevel = n => [...LEVELS].reverse().find(l => n >= l.min) || LEVELS[0];
 
-export default function ProfilePage({ badges, progress }) {
+export default function ProfilePage({ badges, progress, savedItems = [] }) {
   const done  = progress.completedStages || [];
   const pct   = Math.round((done.length / stages.length) * 100);
   const level = getLevel(badges.length);
@@ -60,7 +60,7 @@ export default function ProfilePage({ badges, progress }) {
               { icon: "🏅", val: badges.length, label: "획득 뱃지",    c: "var(--orange)" },
               { icon: "📚", val: done.length,   label: "완료 스테이지", c: "var(--blue)"   },
               { icon: "💯", val: `${pct}%`,     label: "전체 진도",    c: "var(--green)"  },
-              { icon: "🚀", val: 5,             label: "전체 스테이지", c: "var(--purple)" },
+              { icon: "🚀", val: stages.length, label: "전체 스테이지", c: "var(--purple)" },
             ].map(st => (
               <div key={st.label} style={{ background: "#fff", borderRadius: 16, padding: "18px 16px", boxShadow: "0 1px 4px rgba(0,0,0,0.07)", display: "flex", flexDirection: "column", gap: 4 }}>
                 <div style={{ fontSize: 28 }}>{st.icon}</div>
@@ -69,6 +69,30 @@ export default function ProfilePage({ badges, progress }) {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Saved Items */}
+        <div className="ios-section" style={{ marginBottom: 28 }}>
+          <div className="ios-section-title">저장된 학습</div>
+          {savedItems.length === 0 ? (
+            <div style={{ background: "#fff", borderRadius: 16, padding: "32px 20px", textAlign: "center", border: "1px dashed var(--sep)" }}>
+              <div style={{ fontSize: 24, marginBottom: 8 }}>📌</div>
+              <div style={{ fontSize: 14, color: "var(--label2)" }}>아직 저장된 카드가 없어요.</div>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {savedItems.map((item, i) => (
+                <div key={i} style={{ background: "#fff", borderRadius: 14, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 8, background: "rgba(0,122,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🔖</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "var(--label)" }}>{item.title}</div>
+                    <div style={{ fontSize: 11, color: "var(--label2)", marginTop: 2 }}>{item.type === "concept" ? "개념 카드" : "실습 카드"}</div>
+                  </div>
+                  <span style={{ color: "var(--blue)", fontSize: 18 }}>›</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Badges */}
