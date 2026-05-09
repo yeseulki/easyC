@@ -156,7 +156,7 @@ function SyntaxLine({ raw }) {
 const EXPLAIN_ICONS = ["❓", "🔁", "📊", "💡", "⚠️"];
 function Explanations({ card, stage }) {
   const bullets = [
-    `${card.title}에 대해 배워보자!`,
+    `${card.title}`,
     `이 코드는 ${stage.subtitle} 개념을 사용해.`,
     `예상 출력: ${card.expectedOutput}`,
     card.hint,
