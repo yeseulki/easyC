@@ -384,7 +384,7 @@ export default function LearnPage({ initialStage = 0, onBadge, onComplete, onNav
 
   const go = (d) => {
     if (d > 0 && card.type === "code" && !solved) {
-      alert("문제를 맞춰야 다음으로 넘어갈 수 있어! 💪");
+      alert("문제를 맞혀야 다음으로 넘어갈 수 있어! 💪");
       return;
     }
 
