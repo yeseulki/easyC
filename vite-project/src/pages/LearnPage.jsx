@@ -128,7 +128,21 @@ function Explanations({ card, stage }) {
 
 /* ── One full code card ── */
 function CodeLearnCard({ stage, card, cardIdx, totalCards, onNavigate, isLast }) {
-  const nonFixed = card.slots.filter(s => !s.fixed);
+  const [processedSlots] = useState(() => {
+    return card.slots.map(s => {
+      if (s.fixed || s.options.length <= 1) return s;
+      const options = [...s.options];
+      const correctVal = options[s.correct];
+      for (let i = options.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [options[i], options[j]] = [options[j], options[i]];
+      }
+      return { ...s, options, correct: options.indexOf(correctVal) };
+    });
+  });
+
+  const processedCard = { ...card, slots: processedSlots };
+  const nonFixed = processedSlots.filter(s => !s.fixed);
   const [sel,    setSel]    = useState(nonFixed.map(() => 0));
   const [status, setStatus] = useState(null); // null | ok | err
   const [likes,  setLikes]  = useState(Math.floor(Math.random() * 5000 + 200));
@@ -183,7 +197,7 @@ function CodeLearnCard({ stage, card, cardIdx, totalCards, onNavigate, isLast })
               <div className="cf-dot green" />
             </div>
             {/* Code with inline slots */}
-            <CodeWithSlots card={card} color={stage.color} sel={sel} onSel={pick} />
+            <CodeWithSlots card={processedCard} color={stage.color} sel={sel} onSel={pick} />
           </div>
 
           {/* Side actions */}
