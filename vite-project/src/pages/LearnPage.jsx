@@ -492,7 +492,7 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
   const isLast  = stageIdx === stages.length - 1 && cardIdx === total - 1;
 
   return (
-    <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative", paddingBottom: "var(--nav-h)" }} onTouchStart={onTS} onTouchEnd={onTE} onWheel={onWheel}>
+    <div className="learn-page-container" onTouchStart={onTS} onTouchEnd={onTE} onWheel={onWheel}>
       <div style={{ background: "#fff", borderBottom: "1px solid rgba(0,0,0,0.08)", padding: "10px 16px", flexShrink: 0 }}>
         <div className="ios-hscroll">
           {stages.map((st, i) => (

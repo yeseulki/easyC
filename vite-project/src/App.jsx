@@ -56,8 +56,21 @@ export default function App() {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden", background: "#f2f2f7" }}>
-      <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+    <div className="app-container">
+      {/* Sidebar / Tab Bar */}
+      <nav className="tab-bar">
+        <div className="sidebar-logo">
+          <span className="cf-logo">easy<span style={{ color: "var(--blue)" }}>C</span></span>
+        </div>
+        {TABS.map(t => (
+          <button key={t.id} className={`tab-item ${tab === t.id ? "active" : ""}`} onClick={() => setTab(t.id)}>
+            <span className="tab-icon">{t.icon}</span>
+            <span className="tab-label">{t.label}</span>
+          </button>
+        ))}
+      </nav>
+
+      <main className="main-content">
         <div style={{ display: tab === "home"    ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}><HomePage onNavigate={navigate} progress={progress} /></div>
         <div style={{ display: tab === "learn"   ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}>
           <LearnPage 
@@ -73,17 +86,7 @@ export default function App() {
         </div>
         <div style={{ display: tab === "code"    ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}><CodePage onCorrect={handleCorrect} /></div>
         <div style={{ display: tab === "profile" ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}><ProfilePage badges={badges} progress={progress} savedItems={savedItems} onNavigate={navigate} /></div>
-      </div>
-
-      {/* Tab Bar */}
-      <nav className="tab-bar">
-        {TABS.map(t => (
-          <button key={t.id} className={`tab-item ${tab === t.id ? "active" : ""}`} onClick={() => setTab(t.id)}>
-            <span className="tab-icon">{t.icon}</span>
-            <span className="tab-label">{t.label}</span>
-          </button>
-        ))}
-      </nav>
+      </main>
 
       {/* Badge/Correct Toast */}
       {toast && (

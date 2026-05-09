@@ -56,7 +56,7 @@ export default function ProfilePage({ badges, progress, savedItems = [], onNavig
 
         {/* Stats */}
         <div className="ios-section" style={{ marginBottom: 28 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div className="responsive-grid grid-2">
             {[
               { icon: "🏅", val: badges.length, label: "획득 뱃지",    c: "var(--orange)" },
               { icon: "📚", val: done.length,   label: "완료 스테이지", c: "var(--blue)"   },
@@ -103,7 +103,7 @@ export default function ProfilePage({ badges, progress, savedItems = [], onNavig
         {/* Badges */}
         <div className="ios-section" style={{ marginBottom: 28 }}>
           <div className="ios-section-title">뱃지</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+          <div className="responsive-grid grid-3">
             {ALL_BADGES.map(b => {
               const earned = badges.includes(b.badge);
               return (

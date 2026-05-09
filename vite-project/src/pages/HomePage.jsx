@@ -79,7 +79,7 @@ export default function HomePage({ onNavigate, progress }) {
         {/* Stage grid */}
         <div style={{ marginBottom: 24 }}>
           <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: -0.5, marginBottom: 12, color: "#000" }}>커리큘럼</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div className="responsive-grid grid-2">
             {stages.map((stage, i) => {
               const completed = done.includes(stage.id);
               return (
