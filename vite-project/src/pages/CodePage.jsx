@@ -85,7 +85,7 @@ export default function CodePage() {
       </div>
 
       {/* List */}
-      <div className="page" style={{ padding: "16px 20px" }}>
+      <div className="page" style={{ padding: "16px 20px var(--nav-h)" }}>
         {grouped.map(({ stage, items }) => (
           <div key={stage.id} style={{ marginBottom: 24 }}>
             <div className="ios-subsection-title">{stage.emoji} {stage.title}</div>

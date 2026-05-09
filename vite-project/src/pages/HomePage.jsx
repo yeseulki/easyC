@@ -3,7 +3,7 @@ import { stages } from "../data/curriculum";
 const FEATURES = [
   { icon: "🎰", color: "#ff9500", bg: "rgba(255,149,0,0.1)",  title: "슬롯 코딩",    sub: "코드 안에서 직접 조합" },
   { icon: "🗺️", color: "#5856d6", bg: "rgba(88,86,214,0.1)", title: "메모리 맵",    sub: "포인터를 눈으로 확인" },
-  { icon: "🤖", color: "#007aff", bg: "rgba(0,122,255,0.1)",  title: "Dr. C AI",    sub: "정답 대신 유도하는 튜터" },
+  { icon: "📂", color: "#4CAF50", bg: "rgba(76,175,80,0.1)",  title: "심화 학습",    sub: "구조체부터 연결 리스트까지" },
   { icon: "🚀", color: "#34c759", bg: "rgba(52,199,89,0.1)",  title: "미니 프로젝트",sub: "만들며 배우는 커리큘럼" },
 ];
 
@@ -21,9 +21,9 @@ export default function HomePage({ onNavigate, progress }) {
           <span className="cf-beta">Beta</span>
         </div>
         <div className="cf-tabs">
-          {["전체", "출력/변수", "조건문", "반복문", "함수", "배열"].map((t, i) => (
+          {["전체", "기초", "조건/반복", "배열/함수", "포인터", "심화"].map((t, i) => (
             <button key={t} className={`cf-tab ${i === 0 ? "active" : "inactive"}`}
-              onClick={() => onNavigate("learn", { stageIdx: Math.max(0, i - 1) })}>
+              onClick={() => onNavigate("learn", { stageIdx: i === 0 ? 0 : [0, 0, 2, 3, 4, 5][i] })}>
               {t}
             </button>
           ))}
@@ -31,7 +31,7 @@ export default function HomePage({ onNavigate, progress }) {
       </div>
 
       {/* Scrollable content */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "16px 16px 0" }}>
+      <div style={{ flex: 1, overflowY: "auto", padding: "16px 16px var(--nav-h)" }}>
 
         {/* Hero card */}
         <div style={s.heroCard}>
@@ -46,14 +46,11 @@ export default function HomePage({ onNavigate, progress }) {
               </span>
             </h1>
             <p style={{ fontSize: 14, color: "rgba(60,60,67,0.55)", lineHeight: 1.65, marginBottom: 20, fontWeight: 400 }}>
-              컴퓨터의 모국어를 영어처럼 자연스럽게.{"\n"}중학생도 즐길 수 있는 C언어 플랫폼 🎵
+              컴퓨터의 모국어를 영어처럼 자연스럽게.{"\n"}기초부터 연결 리스트까지 완벽하게 정복 🎵
             </p>
             <div style={{ display: "flex", gap: 10 }}>
               <button style={{ flex: 1, padding: "13px 0", background: "var(--blue)", color: "#fff", borderRadius: 14, fontWeight: 700, fontSize: 15, border: "none", cursor: "pointer", boxShadow: "0 4px 14px rgba(0,122,255,0.3)" }} onClick={() => onNavigate("learn")}>
-                시작하기 →
-              </button>
-              <button style={{ padding: "13px 18px", background: "rgba(0,122,255,0.1)", color: "var(--blue)", borderRadius: 14, fontWeight: 700, fontSize: 15, border: "none", cursor: "pointer" }} onClick={() => onNavigate("drc")}>
-                🤖 Dr. C
+                학습 시작하기 →
               </button>
             </div>
             {done.length > 0 && (
@@ -71,7 +68,7 @@ export default function HomePage({ onNavigate, progress }) {
 
         {/* Stats row */}
         <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
-          {[{ n: "5", l: "단계", c: "#007aff" }, { n: "15", l: "카드", c: "#5856d6" }, { n: "5", l: "프로젝트", c: "#34c759" }, { n: "AI", l: "튜터", c: "#ff9500" }].map(st => (
+          {[{ n: "8", l: "단계", c: "#007aff" }, { n: "25+", l: "카드", c: "#5856d6" }, { n: "8", l: "프로젝트", c: "#34c759" }, { n: "100%", l: "자율학습", c: "#ff9500" }].map(st => (
             <div key={st.l} style={{ flex: 1, background: "#fff", borderRadius: 14, padding: "14px 0", textAlign: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
               <div style={{ fontSize: 20, fontWeight: 900, color: st.c, letterSpacing: -0.5 }}>{st.n}</div>
               <div style={{ fontSize: 11, color: "#8e8e93", marginTop: 2, fontWeight: 500 }}>{st.l}</div>

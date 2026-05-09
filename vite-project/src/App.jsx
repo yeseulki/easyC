@@ -3,14 +3,12 @@ import "./App.css";
 import HomePage    from "./pages/HomePage";
 import LearnPage   from "./pages/LearnPage";
 import CodePage    from "./pages/CodePage";
-import DrCPage     from "./pages/DrCPage";
 import ProfilePage from "./pages/ProfilePage";
 
 const TABS = [
   { id: "home",    icon: "🏠", label: "홈" },
   { id: "learn",   icon: "📚", label: "학습" },
   { id: "code",    icon: "⌨️",  label: "코딩" },
-  { id: "drc",     icon: "🤖", label: "Dr.C" },
   { id: "profile", icon: "👤", label: "내 정보" },
 ];
 
@@ -40,9 +38,8 @@ export default function App() {
     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden", background: "#f2f2f7" }}>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <div style={{ display: tab === "home"    ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}><HomePage onNavigate={navigate} progress={progress} /></div>
-        <div style={{ display: tab === "learn"   ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}><LearnPage initialStage={learnStage} onDrC={() => setTab("drc")} onBadge={handleBadge} onComplete={handleComplete} /></div>
+        <div style={{ display: tab === "learn"   ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}><LearnPage initialStage={learnStage} onBadge={handleBadge} onComplete={handleComplete} /></div>
         <div style={{ display: tab === "code"    ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}><CodePage /></div>
-        <div style={{ display: tab === "drc"     ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}><DrCPage /></div>
         <div style={{ display: tab === "profile" ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}><ProfilePage badges={badges} progress={progress} /></div>
       </div>
 

@@ -28,7 +28,7 @@ export default function ProfilePage({ badges, progress }) {
         <div className="ios-nav-large-title">프로필</div>
       </div>
 
-      <div className="page" style={{ padding: "0 0 20px" }}>
+      <div className="page" style={{ padding: "0 0 var(--nav-h)" }}>
 
         {/* Hero */}
         <div style={{ background: "#fff", padding: "28px 24px 24px", display: "flex", flexDirection: "column", alignItems: "center", borderBottom: "0.5px solid var(--sep2)", marginBottom: 16 }}>
