@@ -114,7 +114,7 @@ function CodeLearnCard({ stage, card, cardIdx, totalCards, onSolved, onSave, sav
   const nonFixed = card.slots.filter(s => !s.fixed);
   const [sel,    setSel]    = useState(nonFixed.map(() => 0));
   const [status, setStatus] = useState(null);
-  const isSaved = savedItems?.some(i => i.title === card.title);
+  const isSaved = savedItems.some(i => i.title === card.title);
 
   const pct = Math.round(((cardIdx + 1) / totalCards) * 100);
 
@@ -230,11 +230,14 @@ function ProjectLearnCard({ stage, card, cardIdx, totalCards, onBadge, onSolved 
   const pct = Math.round(((cardIdx + 1) / totalCards) * 100);
 
   const handleRun = () => {
-    if (userCode.trim().length > 3 && userOut.trim().length > 0) {
+    const hasCode = userCode.trim().length > 2;
+    const hasOut  = userOut.trim().length > 0;
+
+    if (hasCode && hasOut) {
       setShowResult(true);
       onSolved(true);
     } else {
-      alert("코드와 출력 내용을 모두 입력해봐! 직접 설계해보는 게 중요해 😉");
+      alert("핵심 코드와 출력 내용을 모두 입력해봐! 직접 설계해보는 게 중요해 😉");
     }
   };
 
@@ -249,35 +252,45 @@ function ProjectLearnCard({ stage, card, cardIdx, totalCards, onBadge, onSolved 
         <span style={{ marginLeft: "auto", fontSize: 12, color: "#8e8e93" }}>{cardIdx + 1} / {totalCards}</span>
       </div>
       <div style={{ flex: 1, overflowY: "auto", padding: "0 16px 16px" }}>
-        <div style={{ fontSize: 11, color: stage.color, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 6 }}>🚀 프로젝트</div>
+        <div style={{ fontSize: 11, color: stage.color, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 6 }}>🚀 미니 프로젝트</div>
         <h2 style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.5, lineHeight: 1.3, color: "#000", marginBottom: 10 }}>{card.title}</h2>
-        <p style={{ fontSize: 14, color: "#8e8e93", lineHeight: 1.7, marginBottom: 16 }}>{card.description}</p>
-        <div style={{ background: "#fff", borderRadius: 16, padding: 16, marginBottom: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
-          <div style={{ fontSize: 12, color: stage.color, fontWeight: 700, marginBottom: 8 }}>직접 설계해보기</div>
-          <div style={{ marginBottom: 12 }}>
-            <label style={{ fontSize: 11, color: "#8e8e93", display: "block", marginBottom: 4 }}>핵심 코드 (예: printf, int...)</label>
-            <textarea className="ios-input" value={userCode} onChange={(e) => setUserCode(e.target.value)} placeholder="여기에 핵심 코드를 작성해봐..." style={{ minHeight: 60, resize: "none", fontSize: 14, fontFamily: "monospace" }} />
+        <p style={{ fontSize: 14, color: "#8e8e93", lineHeight: 1.7, marginBottom: 16 }}>
+          배운 내용을 바탕으로 직접 프로그램을 설계해보자!{"\n"}
+          <b>핵심 개념</b>을 코드에 담고, 결과가 어떻게 나올지 정해봐.
+        </p>
+        <div style={{ background: "#fff", borderRadius: 20, padding: "20px", marginBottom: 16, boxShadow: "0 1px 6px rgba(0,0,0,0.06)", border: "0.5px solid rgba(0,0,0,0.05)" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <span style={{ fontSize: 12, color: stage.color, fontWeight: 800 }}>1. 핵심 코드 작성</span>
+                <span style={{ fontSize: 10, color: "#c7c7cc" }}>예: printf, int, for...</span>
+              </div>
+              <textarea className="ios-input" value={userCode} onChange={(e) => setUserCode(e.target.value)} placeholder="핵심 로직을 자유롭게 적어봐..." style={{ minHeight: 80, resize: "none", fontSize: 14, fontFamily: "monospace", padding: "12px", background: "#f9f9fb" }} />
+            </div>
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <span style={{ fontSize: 12, color: stage.color, fontWeight: 800 }}>2. 출력 내용 설계</span>
+                <span style={{ fontSize: 10, color: "#c7c7cc" }}>모니터에 보일 메시지</span>
+              </div>
+              <input className="ios-input" value={userOut} onChange={(e) => setUserOut(e.target.value)} placeholder="결과창에 뭐라고 나올까?" style={{ padding: "12px", background: "#f9f9fb" }} />
+            </div>
+            <button className="ios-btn ios-btn-fill" style={{ width: "100%", background: stage.color, height: 50, borderRadius: 14, fontSize: 16, fontWeight: 700 }} onClick={handleRun}>▶ 나의 프로그램 실행하기</button>
           </div>
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ fontSize: 11, color: "#8e8e93", display: "block", marginBottom: 4 }}>예상 출력 메시지</label>
-            <input className="ios-input" value={userOut} onChange={(e) => setUserOut(e.target.value)} placeholder="프로그램이 뭐라고 말할까?" />
-          </div>
-          <button className="ios-btn ios-btn-fill" style={{ width: "100%", background: stage.color }} onClick={handleRun}>▶ 프로그램 실행</button>
         </div>
         {showResult && (
-          <div style={{ margin: "0 0 16px", animation: "iosPop 0.3s ease" }}>
-            <div className="cf-card">
-              <div className="cf-dots"><div className="cf-dot red" /><div className="cf-dot yellow" /><div className="cf-dot green" /></div>
-              <div className="ios-code" style={{ borderRadius: 0, background: "#1c1c1e", color: "#fff", padding: 16 }}>
-                <div style={{ color: "#8e8e93", fontSize: 11, marginBottom: 8 }}>// 사용자가 설계한 로직 실행 중...</div>
-                <div style={{ color: "#34c759", fontFamily: "monospace" }}>{`> ${userOut}`}</div>
-                <div style={{ marginTop: 12, color: "#5ac8fa", fontSize: 11 }}>코드 분석: "{userCode}" 키워드가 확인되었습니다!</div>
+          <div style={{ margin: "0 0 20px", animation: "iosPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)" }}>
+            <div className="cf-card" style={{ background: "#1c1c1e", border: "none", padding: "20px" }}>
+              <div className="cf-dots" style={{ marginBottom: 12 }}>
+                <div className="cf-dot red" /><div className="cf-dot yellow" /><div className="cf-dot green" />
               </div>
+              <div style={{ color: "#8e8e93", fontSize: 11, marginBottom: 10, fontFamily: "monospace" }}>// easyC Terminal v1.0</div>
+              <div style={{ color: "#34c759", fontFamily: "monospace", fontSize: 15, lineHeight: 1.5 }}>{`> ${userOut}`}</div>
+              <div style={{ marginTop: 16, paddingTop: 12, borderTop: "0.5px solid #333", color: "#5ac8fa", fontSize: 11, fontStyle: "italic" }}>상태: 입력하신 "{userCode.slice(0, 15)}{userCode.length > 15 ? '...' : ''}" 로직이 성공적으로 시뮬레이션 되었습니다.</div>
             </div>
           </div>
         )}
-        <button disabled={!showResult} style={{ width: "100%", padding: "16px", borderRadius: 16, background: claimed ? "rgba(52,199,89,0.12)" : showResult ? `linear-gradient(135deg, ${stage.color}, ${stage.color}bb)` : "#ccc", color: claimed ? "var(--green)" : "#fff", fontWeight: 800, fontSize: 17, border: "none", cursor: showResult ? "pointer" : "default", boxShadow: claimed || !showResult ? "none" : `0 4px 16px ${stage.color}44`, transition: "all 0.3s" }} onClick={() => { setClaimed(true); onBadge(card.badge); }}>
-          {claimed ? `${card.badge} 획득!` : `🏆 ${card.badge} 획득하기`}
+        <button disabled={!showResult} style={{ width: "100%", padding: "18px", borderRadius: 16, background: claimed ? "rgba(52,199,89,0.12)" : showResult ? `linear-gradient(135deg, ${stage.color}, ${stage.color}bb)` : "#ccc", color: claimed ? "var(--green)" : "#fff", fontWeight: 800, fontSize: 17, border: "none", cursor: showResult ? "pointer" : "default", boxShadow: claimed || !showResult ? "none" : `0 4px 20px ${stage.color}44`, transition: "all 0.3s" }} onClick={() => { setClaimed(true); onBadge(card.badge); }}>
+          {claimed ? `${card.badge} 획득 완료!` : `🏆 ${card.badge} 획득하기`}
         </button>
       </div>
     </div>
@@ -285,15 +298,21 @@ function ProjectLearnCard({ stage, card, cardIdx, totalCards, onBadge, onSolved 
 }
 
 /* ── Main LearnPage ── */
-export default function LearnPage({ initialStage = 0, onBadge, onComplete, onSave, savedItems }) {
+export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, onComplete, onSave, savedItems }) {
   const [stageIdx, setStageIdx] = useState(initialStage);
-  const [cardIdx,  setCardIdx]  = useState(0);
+  const [cardIdx,  setCardIdx]  = useState(initialCard);
   const [key,      setKey]      = useState(0);
   const [solved,   setSolved]   = useState(false);
   const touchY = useRef(null);
   const isScrolling = useRef(false);
 
-  useEffect(() => { setStageIdx(initialStage); setCardIdx(0); setSolved(false); }, [initialStage]);
+  useEffect(() => { 
+    setStageIdx(initialStage); 
+    setCardIdx(initialCard); 
+    setSolved(false); 
+    setKey(k => k + 1);
+  }, [initialStage, initialCard]);
+
   useEffect(() => { setSolved(false); }, [cardIdx, stageIdx]);
 
   const stage = stages[stageIdx];
@@ -348,8 +367,8 @@ export default function LearnPage({ initialStage = 0, onBadge, onComplete, onSav
         </div>
       </div>
       <div key={key} style={{ flex: 1, overflow: "hidden", animation: "iosFadeScale 0.24s ease" }}>
-        {card.type === "concept" && <ConceptLearnCard stage={stage} card={card} cardIdx={cardIdx} totalCards={total} onSave={onSave} savedItems={savedItems} />}
-        {card.type === "code"    && <CodeLearnCard    stage={stage} card={card} cardIdx={cardIdx} totalCards={total} onSolved={setSolved} onSave={onSave} savedItems={savedItems} />}
+        {card.type === "concept" && <ConceptLearnCard stage={stage} card={card} cardIdx={cardIdx} totalCards={total} onSave={(c) => onSave(c, stageIdx, cardIdx)} savedItems={savedItems} />}
+        {card.type === "code"    && <CodeLearnCard    stage={stage} card={card} cardIdx={cardIdx} totalCards={total} onSolved={setSolved} onSave={(c) => onSave(c, stageIdx, cardIdx)} savedItems={savedItems} />}
         {card.type === "project" && <ProjectLearnCard stage={stage} card={card} cardIdx={cardIdx} totalCards={total} onBadge={onBadge} onSolved={setSolved} />}
       </div>
       <div style={{ position: "fixed", right: 8, top: "50%", transform: "translateY(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, zIndex: 50 }}>
