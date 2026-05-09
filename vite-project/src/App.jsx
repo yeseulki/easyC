@@ -16,6 +16,7 @@ export default function App() {
   const [tab, setTab]             = useState("home");
   const [learnStage, setLearnStage] = useState(0);
   const [badges, setBadges]       = useState([]);
+  const [savedItems, setSavedItems] = useState([]);
   const [toast, setToast]         = useState(null);
   const [progress, setProgress]   = useState({ completedStages: [] });
 
@@ -30,6 +31,14 @@ export default function App() {
     setTimeout(() => setToast(null), 2600);
   };
 
+  const handleSave = (item) => {
+    setSavedItems(prev => {
+      const exists = prev.find(i => i.title === item.title);
+      if (exists) return prev.filter(i => i.title !== item.title);
+      return [...prev, item];
+    });
+  };
+
   const handleComplete = (stageId) => {
     setProgress(p => ({ ...p, completedStages: [...new Set([...p.completedStages, stageId])] }));
   };
@@ -38,9 +47,9 @@ export default function App() {
     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden", background: "#f2f2f7" }}>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <div style={{ display: tab === "home"    ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}><HomePage onNavigate={navigate} progress={progress} /></div>
-        <div style={{ display: tab === "learn"   ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}><LearnPage initialStage={learnStage} onBadge={handleBadge} onComplete={handleComplete} /></div>
+        <div style={{ display: tab === "learn"   ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}><LearnPage initialStage={learnStage} onBadge={handleBadge} onComplete={handleComplete} onSave={handleSave} savedItems={savedItems} /></div>
         <div style={{ display: tab === "code"    ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}><CodePage /></div>
-        <div style={{ display: tab === "profile" ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}><ProfilePage badges={badges} progress={progress} /></div>
+        <div style={{ display: tab === "profile" ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}><ProfilePage badges={badges} progress={progress} savedItems={savedItems} /></div>
       </div>
 
       {/* Tab Bar */}

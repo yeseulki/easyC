@@ -127,11 +127,11 @@ function Explanations({ card, stage }) {
 }
 
 /* ── One full code card ── */
-function CodeLearnCard({ stage, card, cardIdx, totalCards, onSolved }) {
+function CodeLearnCard({ stage, card, cardIdx, totalCards, onSolved, onSave, savedItems }) {
   const nonFixed = card.slots.filter(s => !s.fixed);
   const [sel,    setSel]    = useState(nonFixed.map(() => 0));
   const [status, setStatus] = useState(null); // null | ok | err
-  const [saved,  setSaved]  = useState(false);
+  const isSaved = savedItems.some(i => i.title === card.title);
 
   const pct = Math.round(((cardIdx + 1) / totalCards) * 100);
 
@@ -145,11 +145,6 @@ function CodeLearnCard({ stage, card, cardIdx, totalCards, onSolved }) {
     } else {
       setTimeout(() => setStatus(null), 1500);
     }
-  };
-
-  const handleSave = () => {
-    setSaved(!saved);
-    // Real save logic would go here
   };
 
   return (
@@ -175,9 +170,9 @@ function CodeLearnCard({ stage, card, cardIdx, totalCards, onSolved }) {
             <h2 style={{ fontSize: 18, fontWeight: 900, letterSpacing: -0.4, lineHeight: 1.3, color: "#000" }}>{card.title}</h2>
             <p style={{ fontSize: 13, color: "#8e8e93", marginTop: 6, lineHeight: 1.6 }}>{card.description}</p>
           </div>
-          <div className="cf-action-btn" onClick={handleSave} style={{ marginTop: 10 }}>
-            <div className="cf-action-icon" style={{ width: 38, height: 38, fontSize: 18, color: saved ? stage.color : "#000" }}>{saved ? "🔖" : "📌"}</div>
-            <span className="cf-action-label" style={{ fontSize: 9 }}>{saved ? "저장됨" : "저장"}</span>
+          <div className="cf-action-btn" onClick={() => onSave(card)} style={{ marginTop: 10 }}>
+            <div className="cf-action-icon" style={{ width: 38, height: 38, fontSize: 18, color: isSaved ? stage.color : "#000" }}>{isSaved ? "🔖" : "📌"}</div>
+            <span className="cf-action-label" style={{ fontSize: 9 }}>{isSaved ? "저장됨" : "저장"}</span>
           </div>
         </div>
 
@@ -221,9 +216,10 @@ function CodeLearnCard({ stage, card, cardIdx, totalCards, onSolved }) {
 }
 
 /* ── Concept card ── */
-function ConceptLearnCard({ stage, card, cardIdx, totalCards }) {
+function ConceptLearnCard({ stage, card, cardIdx, totalCards, onSave, savedItems }) {
   const [flipped, setFlipped] = useState(false);
   const pct = Math.round(((cardIdx + 1) / totalCards) * 100);
+  const isSaved = savedItems?.some(i => i.title === card.title);
 
   // Function to highlight keywords in content
   const highlight = (text) => {
@@ -249,8 +245,15 @@ function ConceptLearnCard({ stage, card, cardIdx, totalCards }) {
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", padding: "0 16px" }}>
-        <div style={{ fontSize: 11, color: stage.color, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 6 }}>📖 개념</div>
-        <h2 style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.5, lineHeight: 1.3, color: "#000", marginBottom: 16, borderLeft: `3px solid ${stage.color}`, paddingLeft: 12 }}>{card.title}</h2>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div>
+            <div style={{ fontSize: 11, color: stage.color, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 6 }}>📖 개념</div>
+            <h2 style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.5, lineHeight: 1.3, color: "#000", marginBottom: 16, borderLeft: `3px solid ${stage.color}`, paddingLeft: 12 }}>{card.title}</h2>
+          </div>
+          <div className="cf-action-btn" onClick={() => onSave(card)} style={{ marginTop: 4 }}>
+            <div className="cf-action-icon" style={{ width: 38, height: 38, fontSize: 18, color: isSaved ? stage.color : "#000" }}>{isSaved ? "🔖" : "📌"}</div>
+          </div>
+        </div>
 
         {/* Metaphor */}
         <div style={{ background: "#fff", borderRadius: 16, padding: "16px", marginBottom: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
@@ -281,16 +284,17 @@ function ConceptLearnCard({ stage, card, cardIdx, totalCards }) {
 /* ── Project card ── */
 function ProjectLearnCard({ stage, card, cardIdx, totalCards, onBadge, onSolved }) {
   const [claimed, setClaimed] = useState(false);
-  const [userInput, setUserInput] = useState("");
+  const [userCode, setUserCode] = useState("");
+  const [userOut,  setUserOut]  = useState("");
   const [showResult, setShowResult] = useState(false);
   const pct = Math.round(((cardIdx + 1) / totalCards) * 100);
 
   const handleRun = () => {
-    if (userInput.trim().length > 0) {
+    if (userCode.trim().length > 3 && userOut.trim().length > 0) {
       setShowResult(true);
       onSolved(true);
     } else {
-      alert("정보를 입력해봐! 직접 적어보는 게 중요해 😊");
+      alert("코드와 출력 내용을 모두 입력해봐! 직접 설계해보는 게 중요해 😉");
     }
   };
 
@@ -312,20 +316,35 @@ function ProjectLearnCard({ stage, card, cardIdx, totalCards, onBadge, onSolved 
 
         {/* Input for interactivity */}
         <div style={{ background: "#fff", borderRadius: 16, padding: 16, marginBottom: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
-          <div style={{ fontSize: 12, color: stage.color, fontWeight: 700, marginBottom: 8 }}>직접 입력해보기</div>
-          <input
-            className="ios-input"
-            value={userInput}
-            onChange={(e) => setUserInput(e.target.value)}
-            placeholder="예: 홍길동, 서울중학교, 게임..."
-            style={{ marginBottom: 12 }}
-          />
+          <div style={{ fontSize: 12, color: stage.color, fontWeight: 700, marginBottom: 8 }}>직접 설계해보기</div>
+          
+          <div style={{ marginBottom: 12 }}>
+            <label style={{ fontSize: 11, color: "#8e8e93", display: "block", marginBottom: 4 }}>핵심 코드 (예: printf, int...)</label>
+            <textarea
+              className="ios-input"
+              value={userCode}
+              onChange={(e) => setUserCode(e.target.value)}
+              placeholder="여기에 핵심 코드를 작성해봐..."
+              style={{ minHeight: 60, resize: "none", fontSize: 14, fontFamily: "monospace" }}
+            />
+          </div>
+
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ fontSize: 11, color: "#8e8e93", display: "block", marginBottom: 4 }}>예상 출력 메시지</label>
+            <input
+              className="ios-input"
+              value={userOut}
+              onChange={(e) => setUserOut(e.target.value)}
+              placeholder="프로그램이 뭐라고 말할까?"
+            />
+          </div>
+
           <button
-            className="ios-btn ios-btn-tint ios-btn-sm"
-            style={{ width: "100%", borderRadius: 10 }}
+            className="ios-btn ios-btn-fill"
+            style={{ width: "100%", background: stage.color }}
             onClick={handleRun}
           >
-            ▶ 실행해보기
+            ▶ 프로그램 실행
           </button>
         </div>
 
@@ -334,7 +353,9 @@ function ProjectLearnCard({ stage, card, cardIdx, totalCards, onBadge, onSolved 
             <div className="cf-card">
               <div className="cf-dots"><div className="cf-dot red" /><div className="cf-dot yellow" /><div className="cf-dot green" /></div>
               <div className="ios-code" style={{ borderRadius: 0, background: "#1c1c1e", color: "#fff", padding: 16 }}>
-                {`> 실행 결과:\n------------------\n입력하신 정보: ${userInput}\n성공적으로 처리되었습니다!\n------------------`}
+                <div style={{ color: "#8e8e93", fontSize: 11, marginBottom: 8 }}>// 사용자가 설계한 로직 실행 중...</div>
+                <div style={{ color: "#34c759", fontFamily: "monospace" }}>{`> ${userOut}`}</div>
+                <div style={{ marginTop: 12, color: "#5ac8fa", fontSize: 11 }}>코드 분석: "{userCode}" 키워드가 확인되었습니다!</div>
               </div>
             </div>
           </div>
@@ -353,7 +374,7 @@ function ProjectLearnCard({ stage, card, cardIdx, totalCards, onBadge, onSolved 
 }
 
 /* ── Main LearnPage ── */
-export default function LearnPage({ initialStage = 0, onBadge, onComplete }) {
+export default function LearnPage({ initialStage = 0, onBadge, onComplete, onSave, savedItems }) {
   const [stageIdx, setStageIdx] = useState(initialStage);
   const [cardIdx,  setCardIdx]  = useState(0);
   const [key,      setKey]      = useState(0);
@@ -429,10 +450,26 @@ export default function LearnPage({ initialStage = 0, onBadge, onComplete }) {
 
       {/* Card */}
       <div key={key} style={{ flex: 1, overflow: "hidden", animation: "iosFadeScale 0.24s ease" }}>
-        {card.type === "concept" && <ConceptLearnCard stage={stage} card={card} cardIdx={cardIdx} totalCards={total} />}
-        {card.type === "code"    && <CodeLearnCard    stage={stage} card={card} cardIdx={cardIdx} totalCards={total} onSolved={setSolved} />}
+        {card.type === "concept" && <ConceptLearnCard stage={stage} card={card} cardIdx={cardIdx} totalCards={total} onSave={onSave} savedItems={savedItems} />}
+        {card.type === "code"    && <CodeLearnCard    stage={stage} card={card} cardIdx={cardIdx} totalCards={total} onSolved={setSolved} onSave={onSave} savedItems={savedItems} />}
         {card.type === "project" && <ProjectLearnCard stage={stage} card={card} cardIdx={cardIdx} totalCards={total} onBadge={onBadge} onSolved={setSolved} />}
       </div>
+
+      {/* Side nav dots */}
+      <div style={{ position: "fixed", right: 8, top: "50%", transform: "translateY(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, zIndex: 50 }}>
+        <button style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.95)", border: "1px solid rgba(0,0,0,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, boxShadow: "0 2px 8px rgba(0,0,0,0.1)", opacity: isFirst ? 0.2 : 0.9 }}
+          onClick={() => go(-1)} disabled={isFirst}>↑</button>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+          {stage.cards.map((_, i) => (
+            <div key={i} style={{ width: 4, height: i === cardIdx ? 16 : 4, borderRadius: 2, background: i === cardIdx ? stage.color : "rgba(0,0,0,0.15)", transition: "all 0.3s" }} />
+          ))}
+        </div>
+        <button style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.95)", border: "1px solid rgba(0,0,0,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, boxShadow: "0 2px 8px rgba(0,0,0,0.1)", opacity: isLast ? 0.2 : 0.9 }}
+          onClick={() => go(1)} disabled={isLast}>↓</button>
+      </div>
+    </div>
+  );
+}
 
       {/* Side nav dots */}
       <div style={{ position: "fixed", right: 8, top: "50%", transform: "translateY(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, zIndex: 50 }}>
