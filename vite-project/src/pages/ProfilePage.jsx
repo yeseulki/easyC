@@ -86,7 +86,7 @@ export default function ProfilePage({ badges, progress, savedItems = [], onNavig
                 <div 
                   key={i} 
                   style={{ background: "#fff", borderRadius: 14, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", cursor: "pointer" }}
-                  onClick={() => onNavigate?.("learn", { stageIdx: item.stageIdx, cardIdx: item.cardIdx })}
+                  onClick={() => onNavigate("learn", { stageIdx: item.stageIdx, cardIdx: item.cardIdx })}
                 >
                   <div style={{ width: 36, height: 36, borderRadius: 8, background: "rgba(0,122,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🔖</div>
                   <div style={{ flex: 1 }}>
@@ -125,7 +125,7 @@ export default function ProfilePage({ badges, progress, savedItems = [], onNavig
             {stages.map((stage, i) => {
               const completed = done.includes(stage.id);
               return (
-                <div key={stage.id} className="ios-cell" style={{ cursor: "pointer" }} onClick={() => onNavigate?.("learn", { stageIdx: i })}>
+                <div key={stage.id} className="ios-cell" style={{ cursor: "pointer" }} onClick={() => onNavigate("learn", { stageIdx: i })}>
                   <div style={{ width: 40, height: 40, borderRadius: 10, background: stage.color + "15", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>
                     {stage.emoji}
                   </div>
@@ -140,6 +140,19 @@ export default function ProfilePage({ badges, progress, savedItems = [], onNavig
                 </div>
               );
             })}
+          </div>
+        </div>
+
+        {/* Motivational */}
+        <div className="ios-section">
+          <div style={{ background: "linear-gradient(145deg,#f0f4ff,#f7f7ff)", border: "0.5px solid rgba(0,0,0,0.12)", borderRadius: 20, padding: "24px 20px", textAlign: "center", boxShadow: "0 1px 8px rgba(0,0,0,0.05)" }}>
+            <div style={{ fontSize: 34, marginBottom: 10 }}>{badges.length === 0 ? "💪" : badges.length < 3 ? "🔥" : "🏆"}</div>
+            <div style={{ fontSize: 18, fontWeight: 900, letterSpacing: -0.4, color: "var(--label)", marginBottom: 8 }}>
+              {badges.length === 0 ? "첫 번째 뱃지를 획득해봐!" : badges.length < 3 ? "훌륭해! 계속 도전해봐!" : "정말 대단해!"}
+            </div>
+            <div style={{ fontSize: 14, color: "var(--label2)", lineHeight: 1.7 }}>
+              C언어를 배운다는 건 컴퓨터와 직접 대화하는 법을 익히는 것.{"\n"}너는 지금 그 언어를 배우고 있어! 🚀
+            </div>
           </div>
         </div>
 
