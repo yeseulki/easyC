@@ -53,6 +53,8 @@ export const stages = [
         example:
           '#include <stdio.h>\nint main() {\n  printf("=== 나의 명함 ===\\n");\n  printf("이름: 홍길동\\n");\n  printf("학교: 서울중학교\\n");\n  printf("취미: 게임\\n");\n  return 0;\n}',
         badge: "🏆 Hello 마스터",
+        answer: 'printf("이름: 홍길동\\n");',
+        keywords: ["printf", "이름"],
       },
     ],
   },
@@ -100,6 +102,8 @@ export const stages = [
         example:
           '#include <stdio.h>\nint main() {\n  float height, weight, bmi;\n  printf("키(m)를 입력하세요: ");\n  scanf("%f", &height);\n  printf("몸무게(kg)를 입력하세요: ");\n  scanf("%f", &weight);\n  bmi = weight / (height * height);\n  printf("BMI: %.1f\\n", bmi);\n  return 0;\n}',
         badge: "🏆 변수 마스터",
+        answer: "bmi = weight / (height * height);",
+        keywords: ["bmi", "weight", "height"],
       },
     ],
   },
@@ -160,6 +164,8 @@ export const stages = [
         example:
           '#include <stdio.h>\nint main() {\n  int secret = 42, guess, tries = 0;\n  printf("1~100 숫자를 맞춰봐!\\n");\n  while(guess != secret) {\n    printf("입력: ");\n    scanf("%d", &guess);\n    tries++;\n    if(guess < secret) printf("Up!\\n");\n    else if(guess > secret) printf("Down!\\n");\n    else printf("정답! %d번 만에 맞췄어!\\n", tries);\n  }\n  return 0;\n}',
         badge: "🏆 반복문 마스터",
+        answer: "while(guess != secret)",
+        keywords: ["while", "!=", "secret"],
       },
     ],
   },
@@ -217,6 +223,8 @@ export const stages = [
         example:
           '#include <stdio.h>\nint getMax(int arr[], int n) {\n  int max = arr[0];\n  for(int i=1; i<n; i++)\n    if(arr[i] > max) max = arr[i];\n  return max;\n}\nint main() {\n  int scores[] = {90,85,92,78,88};\n  printf("최고점: %d\\n", getMax(scores, 5));\n  return 0;\n}',
         badge: "🏆 배열/함수 마스터",
+        answer: "int max = arr[0];",
+        keywords: ["int", "max", "arr[0]"],
       },
     ],
   },
@@ -270,6 +278,8 @@ export const stages = [
         example:
           '#include <stdio.h>\n#include <stdlib.h>\nint main() {\n  int n;\n  printf("연락처 수: ");\n  scanf("%d", &n);\n  int *contacts = (int*)malloc(n * sizeof(int));\n  for(int i=0; i<n; i++) {\n    printf("번호 %d: ", i+1);\n    scanf("%d", &contacts[i]);\n  }\n  for(int i=0; i<n; i++)\n    printf("연락처 %d: %d\\n", i+1, contacts[i]);\n  free(contacts);\n  return 0;\n}',
         badge: "🏆 포인터 마스터",
+        answer: "free(contacts);",
+        keywords: ["malloc", "free", "sizeof"],
       },
     ],
   },
@@ -311,6 +321,8 @@ export const stages = [
         example:
           '#include <stdio.h>\nstruct Student { char name[20]; int score; };\nint main() {\n  struct Student list[3] = {{"Kim", 90}, {"Lee", 85}, {"Park", 95}};\n  for(int i=0; i<3; i++) printf("%s: %d\\n", list[i].name, list[i].score);\n  return 0;\n}',
         badge: "🏆 구조체 마스터",
+        answer: "list[i].name",
+        keywords: ["struct", "list", "name"],
       },
     ],
   },
@@ -350,6 +362,8 @@ export const stages = [
         example:
           '#include <stdio.h>\nint main() {\n  char diary[100];\n  printf("오늘의 할 일: ");\n  gets(diary);\n  FILE *fp = fopen("diary.txt", "a");\n  fprintf(fp, "%s\\n", diary);\n  fclose(fp);\n  return 0;\n}',
         badge: "🏆 파일 마스터",
+        answer: 'fopen("diary.txt", "a")',
+        keywords: ["fopen", "diary.txt", "a"],
       },
     ],
   },
@@ -389,6 +403,8 @@ export const stages = [
         example:
           '#include <stdio.h>\n#include <stdlib.h>\nstruct Todo { char task[30]; struct Todo *next; };\nint main() {\n  struct Todo *head = (struct Todo*)malloc(sizeof(struct Todo));\n  // ... 할 일 추가 로직 ...\n  return 0;\n}',
         badge: "🏆 연결 리스트 마스터",
+        answer: "struct Todo *next;",
+        keywords: ["struct", "Todo", "next"],
       },
     ],
   },

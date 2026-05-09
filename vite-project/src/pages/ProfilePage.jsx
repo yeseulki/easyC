@@ -23,9 +23,10 @@ export default function ProfilePage({ badges, progress, savedItems = [], onNavig
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", background: "var(--bg2)" }}>
-      {/* Nav */}
-      <div className="ios-nav" style={{ paddingTop: 54, background: "rgba(242,242,247,0.9)" }}>
-        <div className="ios-nav-large-title">프로필</div>
+      {/* Nav with easyC logo */}
+      <div className="ios-nav" style={{ paddingTop: 54, background: "rgba(242,242,247,0.9)", display: "flex", alignItems: "center", gap: 12 }}>
+        <span style={{ fontSize: 24, fontWeight: 900, letterSpacing: -1.2, color: "var(--blue)", marginLeft: 20 }}>easyC</span>
+        <div className="ios-nav-large-title" style={{ padding: 0 }}>프로필</div>
       </div>
 
       <div className="page" style={{ padding: "0 0 var(--nav-h)" }}>
@@ -121,10 +122,10 @@ export default function ProfilePage({ badges, progress, savedItems = [], onNavig
         <div className="ios-section" style={{ marginBottom: 28 }}>
           <div className="ios-section-title">스테이지</div>
           <div style={{ background: "#fff", borderRadius: 14, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
-            {stages.map(stage => {
+            {stages.map((stage, i) => {
               const completed = done.includes(stage.id);
               return (
-                <div key={stage.id} className="ios-cell">
+                <div key={stage.id} className="ios-cell" style={{ cursor: "pointer" }} onClick={() => onNavigate("learn", { stageIdx: i })}>
                   <div style={{ width: 40, height: 40, borderRadius: 10, background: stage.color + "15", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>
                     {stage.emoji}
                   </div>
@@ -144,7 +145,7 @@ export default function ProfilePage({ badges, progress, savedItems = [], onNavig
 
         {/* Motivational */}
         <div className="ios-section">
-          <div style={{ background: "linear-gradient(145deg,#f0f4ff,#f7f7ff)", border: "0.5px solid rgba(0,122,255,0.12)", borderRadius: 20, padding: "24px 20px", textAlign: "center", boxShadow: "0 1px 8px rgba(0,0,0,0.05)" }}>
+          <div style={{ background: "linear-gradient(145deg,#f0f4ff,#f7f7ff)", border: "0.5px solid rgba(0,0,0,0.12)", borderRadius: 20, padding: "24px 20px", textAlign: "center", boxShadow: "0 1px 8px rgba(0,0,0,0.05)" }}>
             <div style={{ fontSize: 34, marginBottom: 10 }}>{badges.length === 0 ? "💪" : badges.length < 3 ? "🔥" : "🏆"}</div>
             <div style={{ fontSize: 18, fontWeight: 900, letterSpacing: -0.4, color: "var(--label)", marginBottom: 8 }}>
               {badges.length === 0 ? "첫 번째 뱃지를 획득해봐!" : badges.length < 3 ? "훌륭해! 계속 도전해봐!" : "정말 대단해!"}
