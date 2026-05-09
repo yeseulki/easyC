@@ -52,7 +52,16 @@ export default function App() {
     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden", background: "#f2f2f7" }}>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <div style={{ display: tab === "home"    ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}><HomePage onNavigate={navigate} progress={progress} /></div>
-        <div style={{ display: tab === "learn"   ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}><LearnPage initialStage={learnStage} initialCard={learnCard} onBadge={handleBadge} onComplete={handleComplete} onSave={handleSave} savedItems={savedItems} /></div>
+        <div style={{ display: tab === "learn"   ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+          <LearnPage 
+            initialStage={learnStage} 
+            onBadge={handleBadge} 
+            onComplete={handleComplete} 
+            onNavigate={navigate} 
+            onSave={handleSave} 
+            savedItems={savedItems} 
+          />
+        </div>
         <div style={{ display: tab === "code"    ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}><CodePage /></div>
         <div style={{ display: tab === "profile" ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}><ProfilePage badges={badges} progress={progress} savedItems={savedItems} onNavigate={navigate} /></div>
       </div>
