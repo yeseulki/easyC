@@ -67,9 +67,12 @@ export default function CodePage() {
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", background: "var(--bg2)" }}>
-      {/* Nav */}
-      <div className="ios-nav" style={{ paddingTop: 54, background: "rgba(242,242,247,0.9)" }}>
-        <div className="ios-nav-large-title">코딩 챌린지</div>
+      {/* Nav with easyC logo */}
+      <div className="ios-nav" style={{ paddingTop: 54, background: "rgba(242,242,247,0.9)", display: "flex", flexDirection: "column" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
+          <span style={{ fontSize: 24, fontWeight: 900, letterSpacing: -1.2, color: "var(--blue)" }}>easyC</span>
+          <div className="ios-nav-large-title" style={{ padding: 0 }}>코딩 챌린지</div>
+        </div>
         <div style={{ fontSize: 14, color: "var(--label2)", marginTop: 4 }}>{solved.size}/{CHALLENGES.length} 완료</div>
         <div className="ios-prog-track" style={{ marginTop: 10, height: 5 }}>
           <div className="ios-prog-fill" style={{ width: `${(solved.size / CHALLENGES.length) * 100}%`, background: "var(--blue)" }} />
