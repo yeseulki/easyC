@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { stages } from "../data/curriculum";
 
 /* ── CFeed-style inline slot inside code ── */
@@ -22,29 +22,15 @@ function InlineSlot({ options, selected, onSelect, color }) {
 /* ── Build code lines with inline slots ── */
 function CodeWithSlots({ card, color, sel, onSel }) {
   const slotColors = ["#007aff", "#af52de", "#ff9500", "#34c759", "#30b0c7"];
-
-  // Build code lines — replace slot positions with components
   const fullLines = card.fullCode.split("\n");
-  const slotsByLine = {};
-
-  // Simple slot insertion: place first non-fixed slots on the key lines
-  let slotIdx = 0;
-  const nonFixed = card.slots.filter(s => !s.fixed);
 
   return (
     <div className="cf-code">
       {fullLines.map((line, li) => {
-        // Highlight syntax
-        const colored = line
-          .replace(/\b(int|float|char|void|return|if|else|for|while|include)\b/g, '<kw>$1</kw>')
-          .replace(/\b(printf|scanf|malloc|free|sizeof|main)\b/g, '<fn>$1</fn>')
-          .replace(/"([^"]*)"/g, '<str>"$1"</str>')
-          .replace(/\b(\d+)\b/g, '<num>$1</num>');
-
         return (
           <div key={li} style={{ display: "flex", alignItems: "center", gap: 0, whiteSpace: "pre" }}>
             <span style={{ color: "#c7c7cc", minWidth: 22, textAlign: "right", marginRight: 14, fontSize: 11, userSelect: "none", flexShrink: 0 }}>{li + 1}</span>
-            <LineWithSlots raw={line} colored={colored} lineIdx={li} card={card} sel={sel} onSel={onSel} color={color} slotColors={slotColors} />
+            <LineWithSlots raw={line} card={card} sel={sel} onSel={onSel} color={color} slotColors={slotColors} />
           </div>
         );
       })}
@@ -52,11 +38,8 @@ function CodeWithSlots({ card, color, sel, onSel }) {
   );
 }
 
-function LineWithSlots({ raw, lineIdx, card, sel, onSel, color, slotColors }) {
-  // Find if any non-fixed slot keyword appears on this line
+function LineWithSlots({ raw, card, sel, onSel, color, slotColors }) {
   const nonFixed = card.slots.filter(s => !s.fixed);
-
-  // Detect which slot values appear on this line
   const parts = [];
   let remaining = raw;
 
@@ -128,15 +111,36 @@ function Explanations({ card, stage }) {
 
 /* ── One full code card ── */
 function CodeLearnCard({ stage, card, cardIdx, totalCards, onNavigate, isLast }) {
-  const nonFixed = card.slots.filter(s => !s.fixed);
+  const processedSlots = useMemo(() => {
+    return card.slots.map(s => {
+      if (s.fixed || s.options.length <= 1) return s;
+      const options = [...s.options];
+      const correctVal = options[s.correct];
+      
+      for (let i = options.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [options[i], options[j]] = [options[j], options[i]];
+      }
+      
+      const newCorrect = options.indexOf(correctVal);
+      return { ...s, options, correct: newCorrect };
+    });
+  }, [card.slots]);
+
+  const processedCard = { ...card, slots: processedSlots };
+  const nonFixed = processedSlots.filter(s => !s.fixed);
   const [sel,    setSel]    = useState(nonFixed.map(() => 0));
   const [status, setStatus] = useState(null); // null | ok | err
   const [likes,  setLikes]  = useState(Math.floor(Math.random() * 5000 + 200));
   const [liked,  setLiked]  = useState(false);
   const [saved,  setSaved]  = useState(false);
 
-  const pct = Math.round(((cardIdx + 1) / totalCards) * 100);
+  useEffect(() => {
+    setSel(nonFixed.map(() => 0));
+    setStatus(null);
+  }, [processedSlots]);
 
+  const pct = Math.round(((cardIdx + 1) / totalCards) * 100);
   const pick = (i, v) => { const n = [...sel]; n[i] = v; setSel(n); setStatus(null); };
 
   const check = () => {
@@ -152,41 +156,33 @@ function CodeLearnCard({ stage, card, cardIdx, totalCards, onNavigate, isLast })
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", background: "#f2f2f7", position: "relative" }}>
-      {/* Progress */}
       <div style={{ height: 3, background: "rgba(0,0,0,0.06)" }}>
         <div style={{ height: "100%", width: `${pct}%`, background: stage.color, transition: "width 0.4s" }} />
       </div>
 
-      {/* Stage badge */}
       <div style={{ padding: "10px 16px", display: "flex", alignItems: "center", gap: 8, background: "#f2f2f7" }}>
         <span style={{ fontSize: 18 }}>{stage.emoji}</span>
         <span style={{ fontWeight: 700, fontSize: 14, color: "#000" }}>{stage.title}</span>
         <span style={{ marginLeft: "auto", fontSize: 12, color: "#8e8e93" }}>{cardIdx + 1} / {totalCards}</span>
       </div>
 
-      {/* Scrollable body */}
       <div style={{ flex: 1, overflowY: "auto" }}>
-        {/* Card title */}
         <div style={{ padding: "0 16px 12px", background: "#f2f2f7" }}>
           <div style={{ fontSize: 11, color: stage.color, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 4 }}>💻 실습</div>
           <h2 style={{ fontSize: 18, fontWeight: 900, letterSpacing: -0.4, lineHeight: 1.3, color: "#000" }}>{card.title}</h2>
           <p style={{ fontSize: 13, color: "#8e8e93", marginTop: 6, lineHeight: 1.6 }}>{card.description}</p>
         </div>
 
-        {/* Code card — CFeed style */}
         <div style={{ margin: "0 16px", position: "relative" }}>
           <div className="cf-card">
-            {/* Traffic lights */}
             <div className="cf-dots">
               <div className="cf-dot red" />
               <div className="cf-dot yellow" />
               <div className="cf-dot green" />
             </div>
-            {/* Code with inline slots */}
-            <CodeWithSlots card={card} color={stage.color} sel={sel} onSel={pick} />
+            <CodeWithSlots card={processedCard} color={stage.color} sel={sel} onSel={pick} />
           </div>
 
-          {/* Side actions */}
           <div style={{ position: "absolute", right: -14, top: "50%", transform: "translateY(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
             <div className="cf-action-btn" onClick={() => { setLiked(l => !l); setLikes(n => liked ? n - 1 : n + 1); }}>
               <div className="cf-action-icon" style={{ color: liked ? "#ff2d55" : "#000" }}>
@@ -201,7 +197,6 @@ function CodeLearnCard({ stage, card, cardIdx, totalCards, onNavigate, isLast })
           </div>
         </div>
 
-        {/* Explanation */}
         <div style={{ margin: "12px 16px 0" }}>
           <div className="cf-card">
             <Explanations card={card} stage={stage} />
@@ -219,12 +214,9 @@ function CodeLearnCard({ stage, card, cardIdx, totalCards, onNavigate, isLast })
             </button>
           </div>
         )}
-
-        {/* Spacer for CTA */}
         <div style={{ height: 100 }} />
       </div>
 
-      {/* Confirm button */}
       <div style={{ position: "sticky", bottom: 0, background: "#f2f2f7", padding: "12px 16px 16px", borderTop: "0.5px solid rgba(0,0,0,0.08)" }}>
         <button
           className={`cf-cta ${status === "ok" ? "success" : status === "err" ? "error" : ""}`}
@@ -263,18 +255,15 @@ function ConceptLearnCard({ stage, card, cardIdx, totalCards, onNavigate, isLast
         <div style={{ fontSize: 11, color: stage.color, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 6 }}>📖 개념</div>
         <h2 style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.5, lineHeight: 1.3, color: "#000", marginBottom: 16, borderLeft: `3px solid ${stage.color}`, paddingLeft: 12 }}>{card.title}</h2>
 
-        {/* Metaphor */}
         <div style={{ background: "#fff", borderRadius: 16, padding: "16px", marginBottom: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
           <div style={{ fontSize: 11, color: stage.color, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 10 }}>🧠 비유로 이해하기</div>
           <pre style={{ fontFamily: "monospace", fontSize: 13, color: stage.color, lineHeight: 1.85, margin: 0, whiteSpace: "pre-wrap" }}>{card.metaphor}</pre>
         </div>
 
-        {/* Content */}
         <div style={{ background: "#fff", borderRadius: 16, padding: "16px", marginBottom: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
           <p style={{ fontSize: 15, color: "#3c3c43", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{card.content}</p>
         </div>
 
-        {/* Tip flip */}
         <div
           style={{ background: flipped ? stage.color + "10" : "#fff", border: `1px solid ${flipped ? stage.color + "44" : "rgba(0,0,0,0.08)"}`, borderRadius: 16, padding: "14px 16px", cursor: "pointer", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", transition: "all 0.25s", marginBottom: 24 }}
           onClick={() => setFlipped(f => !f)}
@@ -433,7 +422,7 @@ export default function LearnPage({ initialStage = 0, onBadge, onComplete, onNav
       {/* Card */}
       <div key={key} style={{ flex: 1, overflow: "hidden", animation: "iosFadeScale 0.24s ease" }}>
         {card.type === "concept" && <ConceptLearnCard stage={stage} card={card} cardIdx={cardIdx} totalCards={total} onNavigate={onNavigate} isLast={isLast} />}
-        {card.type === "code"    && <CodeLearnCard    stage={stage} card={card} cardIdx={cardIdx} totalCards={total} onNavigate={onNavigate} isLast={isLast} />}
+        {card.type === "code"    && <CodeLearnCard    key={`code-${stageIdx}-${cardIdx}`} stage={stage} card={card} cardIdx={cardIdx} totalCards={total} onNavigate={onNavigate} isLast={isLast} />}
         {card.type === "project" && <ProjectLearnCard stage={stage} card={card} cardIdx={cardIdx} totalCards={total} onBadge={onBadge} onNavigate={onNavigate} isLast={isLast} />}
       </div>
 
