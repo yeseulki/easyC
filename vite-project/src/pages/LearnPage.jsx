@@ -317,7 +317,7 @@ function ProjectLearnCard({ stage, card, cardIdx, totalCards, onBadge, onNavigat
 
         <button
           style={{ width: "100%", padding: "16px", borderRadius: 16, background: claimed ? "rgba(52,199,89,0.12)" : `linear-gradient(135deg, ${stage.color}, ${stage.color}bb)`, color: claimed ? "var(--green)" : "#fff", fontWeight: 800, fontSize: 17, border: "none", cursor: "pointer", boxShadow: claimed ? "none" : `0 4px 16px ${stage.color}44`, transition: "all 0.3s" }}
-          onClick={() => { setClaimed(true); onBadge(card.badge); }}
+          onClick={() => { setClaimed(true); onBadge(card.badge); onSolvedChange?.(true); }}
         >
           {claimed ? `${card.badge} 획득!` : `🏆 ${card.badge} 획득하기`}
         </button>
