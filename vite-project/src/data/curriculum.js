@@ -34,6 +34,18 @@ export const stages = [
         hint: "화면에 출력할 때 쓰는 함수는 'printf'야!",
       },
       {
+        type: "code",
+        title: "여러 번 출력해보기!",
+        description: "printf와 줄바꿈(\\n)을 사용해 세 줄을 출력해봐.",
+        slots: [
+          { id: 0, options: ['"Line 1\\n"', '"Line 1"', '"Line 1;\\n"'], correct: 0, fixed: false },
+          { id: 1, options: [";", "."], correct: 0, fixed: false },
+        ],
+        fullCode: '#include <stdio.h>\nint main() {\n  printf("Line 1\\n");\n  printf("Line 2\\n");\n  printf("Line 3\\n");\n  return 0;\n}',
+        expectedOutput: "Line 1\nLine 2\nLine 3",
+        hint: "줄을 바꿀 때는 \\n을 사용해!",
+      },
+      {
         type: "project",
         title: "미니 프로젝트: 나만의 명함 만들기",
         description:
@@ -261,36 +273,123 @@ export const stages = [
       },
     ],
   },
+  {
+    id: 6,
+    title: "묶음으로 관리하기",
+    subtitle: "구조체와 공용체",
+    emoji: "📂",
+    color: "#4CAF50",
+    colorLight: "#E8F5E9",
+    cards: [
+      {
+        type: "concept",
+        title: "구조체는 나만의 데이터 세트야",
+        content:
+          "서로 다른 종류의 정보(이름, 나이, 점수)를 하나로 묶고 싶을 때 '구조체'를 써.\n학생 한 명의 정보를 하나의 변수로 관리할 수 있어 편리해!",
+        metaphor: "📂 구조체 = 개인 프로필 폴더\n📑 공용체 = 한 칸을 돌려쓰는 사물함",
+        tip: "struct Student { char name[20]; int age; }; 처럼 정의해.",
+      },
+      {
+        type: "code",
+        title: "학생 정보 출력하기",
+        description: "구조체 변수를 만들고 값을 넣어봐.",
+        slots: [
+          { id: 0, options: ["struct Student", "Student", "struct", "class"], correct: 0, fixed: false },
+          { id: 1, options: ["s1"], correct: 0, fixed: true },
+          { id: 2, options: ["."], correct: 0, fixed: true },
+          { id: 3, options: ["age", "name", "id"], correct: 0, fixed: false },
+        ],
+        fullCode:
+          '#include <stdio.h>\nstruct Student { int age; };\nint main() {\n  struct Student s1;\n  s1.age = 20;\n  printf("나이: %d\\n", s1.age);\n  return 0;\n}',
+        expectedOutput: "나이: 20",
+        hint: "구조체 멤버에 접근할 때는 점(.)을 사용해!",
+      },
+      {
+        type: "project",
+        title: "미니 프로젝트: 학생 관리 시스템",
+        description: "구조체 배열을 사용해 여러 명의 학생 정보를 저장하고 출력해봐.",
+        example:
+          '#include <stdio.h>\nstruct Student { char name[20]; int score; };\nint main() {\n  struct Student list[3] = {{"Kim", 90}, {"Lee", 85}, {"Park", 95}};\n  for(int i=0; i<3; i++) printf("%s: %d\\n", list[i].name, list[i].score);\n  return 0;\n}',
+        badge: "🏆 구조체 마스터",
+      },
+    ],
+  },
+  {
+    id: 7,
+    title: "영원히 저장하기",
+    subtitle: "파일 입출력",
+    emoji: "💾",
+    color: "#607D8B",
+    colorLight: "#ECEFF1",
+    cards: [
+      {
+        type: "concept",
+        title: "파일은 컴퓨터의 장기 기억장치야",
+        content:
+          "프로그램이 꺼져도 데이터를 남기고 싶다면 파일에 저장해야 해.\nFILE 포인터를 사용해 파일을 열고(fopen), 쓰고(fprintf), 닫아(fclose)!",
+        metaphor: "📖 fopen = 책 펴기\n✍️ fprintf = 글 쓰기\n📕 fclose = 책 덮기",
+        tip: "파일을 다 썼다면 반드시 fclose로 닫아줘야 메모리가 안전해.",
+      },
+      {
+        type: "code",
+        title: "파일에 인사말 쓰기",
+        description: "파일을 쓰기 모드('w')로 열어봐.",
+        slots: [
+          { id: 0, options: ["FILE *fp", "FILE fp", "File *fp"], correct: 0, fixed: false },
+          { id: 1, options: ['"w"', '"r"', '"a"'], correct: 0, fixed: false },
+        ],
+        fullCode:
+          '#include <stdio.h>\nint main() {\n  FILE *fp = fopen("hello.txt", "w");\n  fprintf(fp, "Hello File!");\n  fclose(fp);\n  return 0;\n}',
+        expectedOutput: "",
+        hint: "파일 쓰기 모드는 'write'의 약자인 'w'야!",
+      },
+      {
+        type: "project",
+        title: "미니 프로젝트: 나만의 일기장",
+        description: "사용자로부터 문자열을 입력받아 diary.txt 파일에 저장하는 프로그램을 만들어봐.",
+        example:
+          '#include <stdio.h>\nint main() {\n  char diary[100];\n  printf("오늘의 할 일: ");\n  gets(diary);\n  FILE *fp = fopen("diary.txt", "a");\n  fprintf(fp, "%s\\n", diary);\n  fclose(fp);\n  return 0;\n}',
+        badge: "🏆 파일 마스터",
+      },
+    ],
+  },
+  {
+    id: 8,
+    title: "유연한 메모리",
+    subtitle: "연결 리스트",
+    emoji: "🔗",
+    color: "#E91E63",
+    colorLight: "#FCE4EC",
+    cards: [
+      {
+        type: "concept",
+        title: "연결 리스트는 기차야",
+        content:
+          "배열은 칸이 붙어있는 기차라면, 연결 리스트는 고리로 연결된 기차 칸들이야.\n중간에 칸을 넣거나 빼기가 훨씬 쉬워!",
+        metaphor: "🔗 노드 = 기차 한 칸\n👉 next = 다음 칸으로 연결하는 고리",
+        tip: "자기 자신과 같은 구조체를 가리키는 포인터가 핵심이야!",
+      },
+      {
+        type: "code",
+        title: "첫 번째 노드 만들기",
+        description: "노드 두 개를 연결해봐.",
+        slots: [
+          { id: 0, options: ["struct Node *next", "int next", "struct Node next"], correct: 0, fixed: false },
+          { id: 1, options: ["&n2", "n2", "*n2"], correct: 0, fixed: false },
+        ],
+        fullCode:
+          '#include <stdio.h>\nstruct Node { int data; struct Node *next; };\nint main() {\n  struct Node n1 = {10, NULL}, n2 = {20, NULL};\n  n1.next = &n2;\n  printf("n1 -> n2: %d", n1.next->data);\n  return 0;\n}',
+        expectedOutput: "n1 -> n2: 20",
+        hint: "포인터를 통해 멤버에 접근할 때는 -> 기호를 써!",
+      },
+      {
+        type: "project",
+        title: "미니 프로젝트: 동적 To-Do 리스트",
+        description: "연결 리스트를 사용해 할 일을 추가하고 관리해봐.",
+        example:
+          '#include <stdio.h>\n#include <stdlib.h>\nstruct Todo { char task[30]; struct Todo *next; };\nint main() {\n  struct Todo *head = (struct Todo*)malloc(sizeof(struct Todo));\n  // ... 할 일 추가 로직 ...\n  return 0;\n}',
+        badge: "🏆 연결 리스트 마스터",
+      },
+    ],
+  },
 ];
-
-export const drCResponses = {
-  semicolon: {
-    message:
-      "앗, 거의 다 왔어! 혹시 편지 쓸 때 문장 끝에 뭘 붙이는지 기억해?\n맞아, 마침표! C언어에서 마침표 역할을 하는 게 뭔지 Stage 1에서 배웠는데...",
-    hint: "힌트: `;` 😉 찾았으면 다시 실행해봐!",
-    type: "warning",
-  },
-  arrayOutOfBounds: {
-    message:
-      "오호, 탐정 같은 실수를 했네! 🔍\narr[5]라고 했는데, 아파트가 5층짜리면 5층 위에는 뭐가 있을까?\n(0층~4층까지가 우리 아파트야!)",
-    hint: "배열의 인덱스는 항상 0부터 시작해. 메모리 맵에서 확인해볼래?",
-    type: "error",
-  },
-  uninitializedPointer: {
-    message:
-      "잠깐, 위험해! 🚨 (걱정 마, 자주 하는 실수야)\nptr이 지금 어디를 가리키고 있는지 알아?\n아직 주소를 안 알려줬으니까 ptr은 '아무 데나' 가리키고 있어.",
-    hint: "ptr = &어떤변수; 로 주소를 먼저 알려줘봐!",
-    type: "error",
-  },
-  correct: {
-    message: "완벽해! 🎉 정말 잘했어!\n코드가 정확하게 동작하고 있어. 다음 단계로 가볼까?",
-    hint: "",
-    type: "success",
-  },
-  wrongSlot: {
-    message:
-      "음, 조금 다른 것 같은데! 🤔\n각 슬롯이 어떤 역할을 하는지 다시 생각해봐.\n힌트를 눌러봐도 괜찮아!",
-    hint: "",
-    type: "warning",
-  },
-};

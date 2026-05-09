@@ -314,11 +314,12 @@ function ProjectLearnCard({ stage, card, cardIdx, totalCards, onBadge }) {
 }
 
 /* ── Main LearnPage ── */
-export default function LearnPage({ initialStage = 0, onDrC, onBadge, onComplete }) {
+export default function LearnPage({ initialStage = 0, onBadge, onComplete }) {
   const [stageIdx, setStageIdx] = useState(initialStage);
   const [cardIdx,  setCardIdx]  = useState(0);
   const [key,      setKey]      = useState(0);
   const touchY = useRef(null);
+  const isScrolling = useRef(false);
 
   useEffect(() => { setStageIdx(initialStage); setCardIdx(0); }, [initialStage]);
 
@@ -346,12 +347,24 @@ export default function LearnPage({ initialStage = 0, onDrC, onBadge, onComplete
     touchY.current = null;
   };
 
+  const onWheel = e => {
+    if (isScrolling.current) return;
+    if (Math.abs(e.deltaY) < 30) return;
+    
+    isScrolling.current = true;
+    go(e.deltaY > 0 ? 1 : -1);
+    
+    setTimeout(() => {
+      isScrolling.current = false;
+    }, 600);
+  };
+
   const isFirst = stageIdx === 0 && cardIdx === 0;
   const isLast  = stageIdx === stages.length - 1 && cardIdx === total - 1;
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative", paddingBottom: "var(--nav-h)" }}
-      onTouchStart={onTS} onTouchEnd={onTE}>
+      onTouchStart={onTS} onTouchEnd={onTE} onWheel={onWheel}>
 
       {/* Category tabs */}
       <div style={{ background: "#fff", borderBottom: "1px solid rgba(0,0,0,0.08)", padding: "10px 16px", flexShrink: 0 }}>
