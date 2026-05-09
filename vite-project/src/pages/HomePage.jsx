@@ -14,11 +14,11 @@ export default function HomePage({ onNavigate, progress }) {
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", background: "#f2f2f7" }}>
 
-      {/* easyC Logo Header */}
-      <div className="cf-nav" style={{ padding: "54px 18px 0" }}>
+      {/* CFeed-style header */}
+      <div className="cf-nav">
         <div className="cf-nav-top">
-          <span className="cf-logo" style={{ fontSize: 24, fontWeight: 900, letterSpacing: -1.2, color: "var(--blue)" }}>easyC</span>
-          <span className="cf-beta" style={{ background: "rgba(0,122,255,0.1)", color: "var(--blue)", fontSize: 12 }}>Beta</span>
+          <span className="cf-logo">easy<span style={{ color: "var(--blue)" }}>C</span></span>
+          <span className="cf-beta">Beta</span>
         </div>
         <div className="cf-tabs">
           {["전체", "기초", "조건/반복", "배열/함수", "포인터", "심화"].map((t, i) => (
@@ -29,7 +29,6 @@ export default function HomePage({ onNavigate, progress }) {
           ))}
         </div>
       </div>
-
 
       {/* Scrollable content */}
       <div style={{ flex: 1, overflowY: "auto", padding: "16px 16px var(--nav-h)" }}>
@@ -117,6 +116,17 @@ export default function HomePage({ onNavigate, progress }) {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* CTA */}
+        <div style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.07)", borderRadius: 20, padding: "28px 20px", textAlign: "center", marginBottom: 8, boxShadow: "0 2px 10px rgba(0,0,0,0.05)", position: "relative", overflow: "hidden" }}>
+          <div style={{ position:"absolute", top:-50, right:-50, width:150, height:150, borderRadius:"50%", background:"rgba(0,122,255,0.05)", pointerEvents:"none" }} />
+          <div style={{ fontSize: 34, marginBottom: 10 }}>🚀</div>
+          <div style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.6, color: "#000", marginBottom: 8 }}>지금 바로 시작!</div>
+          <div style={{ fontSize: 14, color: "#8e8e93", lineHeight: 1.65, marginBottom: 20 }}>Hello World부터 포인터까지</div>
+          <button style={{ background: "var(--blue)", color: "#fff", padding: "13px 32px", borderRadius: 100, fontSize: 15, fontWeight: 700, border: "none", cursor: "pointer", boxShadow: "0 4px 14px rgba(0,122,255,0.3)" }} onClick={() => onNavigate("learn")}>
+            학습 시작 →
+          </button>
         </div>
 
       </div>
