@@ -2,7 +2,16 @@
 import HomePage    from "./pages/HomePage";
 import LearnPage   from "./pages/LearnPage";
 import CodePage    from "./pages/CodePage";
+import DrCPage     from "./pages/DrCPage";
 import ProfilePage from "./pages/ProfilePage";
+
+const TABS = [
+  { id: "home",    icon: "🏠", label: "홈" },
+  { id: "learn",   icon: "📚", label: "학습" },        
+  { id: "code",    icon: "💻", label: "코드" },     
+  { id: "drc",     icon: "🤖", label: "Dr.C" },
+  { id: "profile", icon: "👤", label: "프로필" },      
+];
 
 export default function App() {
   const [tab, setTab]             = useState("home");    
@@ -27,64 +36,39 @@ export default function App() {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh", background: "var(--canvas)" }}>
-      
-      {/* Global Nav */}
-      <nav className="global-nav">
-        <div className="nav-content" style={{ maxWidth: 1024 }}>
-          <div style={{ fontWeight: 600, fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }} onClick={() => setTab("home")}>
-            <span style={{ fontSize: 20 }}></span>
-            <span>easyC</span>
-          </div>
-          <div className="nav-links">
-            <button onClick={() => setTab("home")} className="nav-link">Home</button>
-            <button onClick={() => setTab("learn")} className="nav-link">Learn</button>
-            <button onClick={() => setTab("code")} className="nav-link">Code</button>
-            <button onClick={() => setTab("profile")} className="nav-link">Profile</button>
-          </div>
-        </div>
-      </nav>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden", background: "#f2f2f7" }}>
+      <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        <div style={{ display: tab === "home"    ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}><HomePage onNavigate={navigate} progress={progress} /></div>
+        <div style={{ display: tab === "learn"   ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}><LearnPage initialStage={learnStage} onDrC={() => setTab("drc")} onBadge={handleBadge} onComplete={handleComplete} /></div>
+        <div style={{ display: tab === "code"    ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}><CodePage /></div>
+        <div style={{ display: tab === "drc"     ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}><DrCPage /></div>
+        <div style={{ display: tab === "profile" ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}><ProfilePage badges={badges} progress={progress} /></div>
+      </div>
 
-      {/* Sub Nav */}
-      <nav className="sub-nav-frosted">
-        <div className="nav-content" style={{ maxWidth: 1024 }}>
-          <span className="tagline" style={{ fontSize: 21 }}>
-            {tab === "home" ? "easyC" : tab.charAt(0).toUpperCase() + tab.slice(1)}
-          </span>
-          <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-            <span style={{ fontSize: 12, color: "var(--ink-muted-80)", cursor: "pointer" }} onClick={() => setTab("learn")}>Overview</span>
-            <span style={{ fontSize: 12, color: "var(--ink-muted-80)", cursor: "pointer" }} onClick={() => setTab("code")}>Editor</span>
-            <button className="button-primary" style={{ padding: "4px 12px", fontSize: 12 }} onClick={() => navigate("learn")}>
-              Get Started
-            </button>
-          </div>
-        </div>
+      {/* Tab Bar */}
+      <nav className="tab-bar">
+        {TABS.map(t => (
+          <button key={t.id} className={`tab-item ${tab === t.id ? "active" : ""}`} onClick={() => setTab(t.id)}> 
+            <span className="tab-icon">{t.icon}</span>   
+            <span className="tab-label">{t.label}</span> 
+          </button>
+        ))}
       </nav>
-
-      {/* Main Content */}
-      <main style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-        <div style={{ display: tab === "home"    ? "flex" : "none", flexDirection: "column", flex: 1 }}><HomePage onNavigate={navigate} progress={progress} /></div>
-        <div style={{ display: tab === "learn"   ? "flex" : "none", flexDirection: "column", flex: 1 }}><LearnPage initialStage={learnStage} onDrC={() => setTab("learn")} onBadge={handleBadge} onComplete={handleComplete} /></div>
-        <div style={{ display: tab === "code"    ? "flex" : "none", flexDirection: "column", flex: 1 }}><CodePage /></div>
-        <div style={{ display: tab === "profile" ? "flex" : "none", flexDirection: "column", flex: 1 }}><ProfilePage badges={badges} progress={progress} /></div>
-      </main>
 
       {/* Badge Toast */}
       {toast && (
         <div style={{
-          position: "fixed", bottom: 40, left: "50%", transform: "translateX(-50%)",
-          background: "rgba(255,255,255,0.8)",
-          backdropFilter: "blur(20px)",
-          borderRadius: 20, padding: "16px 24px", textAlign: "center", zIndex: 200,
-          animation: "fadeIn 0.4s ease-out",
-          boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
-          display: "flex", alignItems: "center", gap: 12,
+          position: "fixed", top: "35%", left: "50%", transform: "translate(-50%,-50%)",
+          background: "rgba(255,255,255,0.97)",
+          backdropFilter: "blur(30px)",
+          borderRadius: 28, padding: "28px 40px", textAlign: "center", zIndex: 200,
+          animation: "iosPop 0.4s cubic-bezier(0.34,1.56,0.64,1)",
+          boxShadow: "0 24px 60px rgba(0,0,0,0.18), 0 0 0 0.5px rgba(0,0,0,0.08)",
+          display: "flex", flexDirection: "column", alignItems: "center", gap: 10, minWidth: 220,
         }}>
-          <div style={{ fontSize: 24 }}>🎖️</div>
-          <div style={{ textAlign: "left" }}>
-            <div style={{ fontSize: 14, fontWeight: 600 }}>Badge Earned</div>
-            <div style={{ fontSize: 13, color: "var(--ink-muted-80)" }}>{toast}</div>
-          </div>
+          <div style={{ fontSize: 56, lineHeight: 1, animation: "iosBounce 1s infinite" }}>🎖️</div>
+          <div style={{ fontSize: 20, fontWeight: 900, color: "#000" }}>{toast}</div>
+          <div style={{ fontSize: 15, color: "#8e8e93", fontWeight: 500 }}>뱃지 획득!</div>
         </div>
       )}
     </div>
