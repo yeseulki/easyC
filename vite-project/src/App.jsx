@@ -71,7 +71,7 @@ export default function App() {
             savedItems={savedItems} 
           />
         </div>
-        <div style={{ display: tab === "code"    ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}><CodePage /></div>
+        <div style={{ display: tab === "code"    ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}><CodePage onCorrect={handleCorrect} /></div>
         <div style={{ display: tab === "profile" ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}><ProfilePage badges={badges} progress={progress} savedItems={savedItems} onNavigate={navigate} /></div>
       </div>
 

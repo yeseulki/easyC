@@ -28,7 +28,7 @@ function ChallengeRow({ ch, onSelect, solved }) {
   );
 }
 
-function SolveSheet({ ch, onClose, onSolved }) {
+function SolveSheet({ ch, onClose, onSolved, onCorrect }) {
   return (
     <div className="ios-sheet-bg" onClick={onClose}>
       <div className="ios-sheet" onClick={e => e.stopPropagation()}>
@@ -41,7 +41,7 @@ function SolveSheet({ ch, onClose, onSolved }) {
           <div style={{ fontSize: 14, color: "var(--label2)", lineHeight: 1.65 }}>{ch.description}</div>
         </div>
         <div style={{ padding: "20px 20px 0" }}>
-          <SlotCodePicker slots={ch.slots} color={ch.color} onResult={ok => { if (ok) setTimeout(onSolved, 700); }} />
+          <SlotCodePicker slots={ch.slots} color={ch.color} onResult={ok => { if (ok) { setTimeout(onSolved, 700); onCorrect?.(); } }} />
         </div>
         <div style={{ margin: "16px 20px 0" }}>
           <div style={{ fontSize: 12, color: "var(--label3)", fontWeight: 600, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 8 }}>예상 출력</div>
@@ -57,7 +57,7 @@ function SolveSheet({ ch, onClose, onSolved }) {
   );
 }
 
-export default function CodePage() {
+export default function CodePage({ onCorrect }) {
   const [filter,   setFilter]   = useState("all");
   const [selected, setSelected] = useState(null);
   const [solved,   setSolved]   = useState(new Set());
@@ -97,7 +97,7 @@ export default function CodePage() {
       </div>
 
       {selected && (
-        <SolveSheet ch={selected} onClose={() => setSelected(null)} onSolved={() => { setSolved(s => new Set([...s, selected.title])); setSelected(null); }} />
+        <SolveSheet ch={selected} onClose={() => setSelected(null)} onSolved={() => { setSolved(s => new Set([...s, selected.title])); setSelected(null); }} onCorrect={onCorrect} />
       )}
     </div>
   );

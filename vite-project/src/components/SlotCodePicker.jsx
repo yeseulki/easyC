@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 
 function Drum({ options, selected, onSelect, fixed, color }) {
   const startY = useRef(null);
@@ -41,15 +41,34 @@ function Drum({ options, selected, onSelect, fixed, color }) {
 }
 
 export default function SlotCodePicker({ slots, color = "var(--blue)", onResult }) {
-  const [sel,      setSel]      = useState(slots.map(() => 0));
+  const processedSlots = useMemo(() => {
+    return slots.map(s => {
+      if (s.fixed || s.options.length <= 1) return s;
+      const options = [...s.options];
+      const correctVal = options[s.correct];
+      for (let i = options.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [options[i], options[j]] = [options[j], options[i]];
+      }
+      return { ...s, options, correct: options.indexOf(correctVal) };
+    });
+  }, [slots]);
+
+  const [sel,      setSel]      = useState(processedSlots.map(() => 0));
   const [result,   setResult]   = useState(null);
   const [showHint, setShowHint] = useState(false);
   const [confetti, setConfetti] = useState([]);
 
+  // Reset selection when slots change
+  useEffect(() => {
+    setSel(processedSlots.map(() => 0));
+    setResult(null);
+  }, [processedSlots]);
+
   const pick = (i, v) => { const n = [...sel]; n[i] = v; setSel(n); setResult(null); };
 
   const check = () => {
-    const ok = slots.every((s, i) => sel[i] === s.correct);
+    const ok = processedSlots.every((s, i) => sel[i] === s.correct);
     setResult(ok ? "ok" : "err");
     if (ok) {
       const items = Array.from({ length: 16 }, (_, i) => ({ id: i, x: Math.random() * 100, c: ["#007aff","#af52de","#ff9500","#34c759","#ff2d55"][i % 5], d: Math.random() * 0.3 }));
@@ -59,12 +78,12 @@ export default function SlotCodePicker({ slots, color = "var(--blue)", onResult 
     onResult?.(ok);
   };
 
-  const assembled = slots.map((s, i) => s.options[sel[i]]).join(" ");
+  const assembled = processedSlots.map((s, i) => s.options[sel[i]]).join(" ");
 
   return (
     <div style={{ position: "relative" }}>
       {confetti.map(c => (
-        <div key={c.id} style={{ position: "absolute", left: `${c.x}%`, top: "30%", width: 8, height: 8, borderRadius: 2, background: c.c, animation: `iosConfetti 0.8s ease ${c.d}s forwards`, pointerEvents: "none", zIndex: 10 }} />
+        <div key={c.id} style={{ position: "absolute", left: `${c.x}%`, top: "30%", width: 8, height: 8, borderRadius: 2, background: c.c, animation: `iosConfetti 0.8s ease ${c.d}s forwards`, pointerEvents: "none", zIndex: 100 }} />
       ))}
 
       <div style={{ fontSize: 12, color: "var(--label3)", fontWeight: 500, marginBottom: 12, textAlign: "center" }}>
@@ -73,7 +92,7 @@ export default function SlotCodePicker({ slots, color = "var(--blue)", onResult 
 
       {/* Drums */}
       <div style={{ display: "flex", gap: 6, justifyContent: "center", flexWrap: "wrap", marginBottom: 14 }}>
-        {slots.map((s, i) => (
+        {processedSlots.map((s, i) => (
           <Drum key={i} options={s.options} selected={sel[i]} onSelect={v => pick(i, v)} fixed={s.fixed} color={color} />
         ))}
       </div>
@@ -111,7 +130,7 @@ export default function SlotCodePicker({ slots, color = "var(--blue)", onResult 
         <button className="ios-btn ios-btn-gray ios-btn-sm" style={{ flex: 1 }} onClick={() => setShowHint(h => !h)}>
           {showHint ? "힌트 숨기기" : "💡 힌트"}
         </button>
-        <button className="ios-btn ios-btn-gray ios-btn-sm" onClick={() => { setSel(slots.map(() => 0)); setResult(null); setShowHint(false); }}>
+        <button className="ios-btn ios-btn-gray ios-btn-sm" onClick={() => { setSel(processedSlots.map(() => 0)); setResult(null); setShowHint(false); }}>
           ↩
         </button>
         <button className="ios-btn ios-btn-sm" style={{ flex: 1, background: color, color: "#fff" }} onClick={check}>
