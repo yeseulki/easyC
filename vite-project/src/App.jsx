@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import "./App.css";
 import HomePage    from "./pages/HomePage";
 import LearnPage   from "./pages/LearnPage";
@@ -48,6 +48,7 @@ export default function App() {
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <div style={{ display: tab === "home"    ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}><HomePage onNavigate={navigate} progress={progress} /></div>
         <div style={{ display: tab === "learn"   ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}><LearnPage initialStage={learnStage} onBadge={handleBadge} onComplete={handleComplete} onSave={handleSave} savedItems={savedItems} /></div>
+        <div style={{ display: tab === "learn"   ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}><LearnPage initialStage={learnStage} onBadge={handleBadge} onComplete={handleComplete} onNavigate={navigate} /></div>
         <div style={{ display: tab === "code"    ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}><CodePage /></div>
         <div style={{ display: tab === "profile" ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}><ProfilePage badges={badges} progress={progress} savedItems={savedItems} /></div>
       </div>
