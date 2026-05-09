@@ -1,11 +1,11 @@
-import { useState, useRef, useEffect } from "react";
+﻿import { useState, useRef, useEffect } from "react";
 import { stages } from "../data/curriculum";
 import ConceptCard from "./ConceptCard";
 import CodeCard from "./CodeCard";
 import DrC from "./DrC";
 
-const CARD_TYPES = { concept: "개념", code: "실습", project: "프로젝트" };
-const CARD_ICONS = { concept: "📖", code: "💻", project: "🚀" };
+const CARD_TYPES = { concept: "개념", project: "프로젝트" };
+const CARD_ICONS = { concept: "💡", code: "💻", project: "🚀" };
 
 function ProjectCard({ card, color, onBadge }) {
   const [claimed, setClaimed] = useState(false);
@@ -49,7 +49,7 @@ function ProjectCard({ card, color, onBadge }) {
         }}
         onClick={() => { setClaimed(true); onBadge && onBadge(card.badge); }}
       >
-        {claimed ? `${card.badge} 획득!` : `🏆 ${card.badge} 받기`}
+        {claimed ? `${card.badge} 획득!` : `${card.badge} 배지 받기`}
       </button>
     </div>
   );
@@ -133,10 +133,10 @@ function StageMap({ onSelect, badges }) {
           easy<span style={{ color: "#6C63FF" }}>C</span>
         </div>
         <div style={{ fontSize: 13, color: "#8888aa", marginTop: 4 }}>
-          C언어를 쉽고 재미있게 배워보자! 🎵
+          C언어를 가장 쉽고 재미있게 배워보세요.
         </div>
         {badges.length > 0 && (
-          <div style={{ marginTop: 12, display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center" }}>
+          <div style={{ marginTop: 12, display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center" }}>        
             {badges.map((b, i) => (
               <div key={i} style={styles.badgePill}>{b}</div>
             ))}
@@ -162,7 +162,7 @@ function StageMap({ onSelect, badges }) {
               <div style={{ fontSize: 12, color: stage.color, marginTop: 2 }}>{stage.subtitle}</div>
             </div>
             <div style={{ fontSize: 12, color: "#555" }}>
-              {stage.cards.length}개 카드 →
+              {stage.cards.length}개 카드
             </div>
           </div>
         ))}
@@ -211,14 +211,16 @@ export default function ReelsContainer() {
   const handleTouchEnd = (e) => {
     if (touchStartY.current === null) return;
     const dy = touchStartY.current - e.changedTouches[0].clientY;
-    if (Math.abs(dy) > 50) {
+    // Increase swipe threshold to 120px to prevent accidental skipping while reading
+    if (Math.abs(dy) > 120) {
       dy > 0 ? goNext() : goPrev();
     }
     touchStartY.current = null;
   };
 
   const handleWheel = (e) => {
-    if (Math.abs(e.deltaY) > 30) {
+    // Increase wheel threshold to 50 to prevent accidental skipping
+    if (Math.abs(e.deltaY) > 50) {
       e.deltaY > 0 ? goNext() : goPrev();
     }
   };
@@ -265,13 +267,13 @@ export default function ReelsContainer() {
 
       {/* Navigation */}
       <div style={styles.navBar}>
-        <button style={styles.navBtn} onClick={() => setScreen("map")}>🗺️</button>
+        <button style={styles.navBtn} onClick={() => setScreen("map")}>홈</button>
         <button style={styles.navBtn} onClick={goPrev} disabled={stageIdx === 0 && cardIdx === 0}>↑</button>
         <button
           style={{ ...styles.navBtn, background: stage.color + "22", color: stage.color }}
           onClick={() => openDrC("wrongSlot")}
         >
-          🤖
+          ?
         </button>
         <button style={styles.navBtn} onClick={goNext}>↓</button>
         <div style={{ ...styles.navDots }}>
@@ -292,7 +294,7 @@ export default function ReelsContainer() {
 
       {/* Swipe hint */}
       <div style={styles.swipeHint}>
-        스크롤 또는 스와이프로 넘기기
+        위아래로 스와이프하여 넘기기
       </div>
 
       {/* Dr. C overlay */}
@@ -303,8 +305,8 @@ export default function ReelsContainer() {
       {/* Badge toast */}
       {showBadge && (
         <div style={styles.badgeToast}>
-          <div style={{ fontSize: 32, animation: "floatBadge 0.5s ease" }}>{showBadge}</div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>획득!</div>
+          <div style={{ fontSize: 32, animation: "floatBadge 0.5s ease" }}>🎖️</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>{showBadge} 획득!</div>
         </div>
       )}
     </div>
@@ -318,8 +320,8 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     position: "relative",
-    background: "var(--bg)",
-    overflow: "hidden",
+    background: "#000",
+    overflow: "#000",
   },
   reelsWrap: {
     flex: 1,
@@ -397,6 +399,8 @@ const styles = {
     height: "100%",
     overflowY: "auto",
     padding: "24px 16px",
+    background: "#000",
+    color: "#fff",
   },
   stageMapHeader: {
     textAlign: "center",

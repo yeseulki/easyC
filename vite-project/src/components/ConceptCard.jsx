@@ -1,28 +1,97 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import MemoryVisualizer from "./MemoryVisualizer";
 
 export default function ConceptCard({ card, color }) {
   const [flipped, setFlipped] = useState(false);
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       {/* Metaphor */}
-      <div style={{ background: color + "0e", border: `0.5px solid ${color}33`, borderRadius: 14, padding: "14px 16px" }}>
-        <div style={{ fontSize: 11, color, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 10 }}>🧠 비유로 이해하기</div>
-        <pre style={{ fontFamily: "monospace", fontSize: 13, color, lineHeight: 1.85, margin: 0, whiteSpace: "pre-wrap" }}>{card.metaphor}</pre>
+      <div style={{
+        background: color + "0e",
+        border: `0.5px solid ${color}33`,
+        borderRadius: 14,
+        padding: "16px 20px",
+        minHeight: 100,
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center"
+      }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: color, marginBottom: 8, opacity: 0.8, letterSpacing: 0.5 }}>METAPHOR</div>
+        <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", marginBottom: 6 }}>{card.metaphor}</div>
+        <div style={{ fontSize: 14, color: "#aaa", lineHeight: 1.6 }}>{card.metaphorDesc}</div>
       </div>
-      {/* Content */}
-      <p style={{ fontSize: 15, color: "var(--label2)", lineHeight: 1.8, fontWeight: 400, whiteSpace: "pre-wrap" }}>{card.content}</p>
-      {/* Tip */}
-      <div
-        style={{ background: flipped ? color + "0d" : "rgba(0,0,0,0.03)", border: `0.5px solid ${flipped ? color + "33" : "rgba(0,0,0,0.08)"}`, borderRadius: 14, padding: "14px 16px", cursor: "pointer", transition: "all 0.25s", minHeight: 52, display: "flex", alignItems: "center", justifyContent: flipped ? "flex-start" : "center" }}
-        onClick={() => setFlipped(f => !f)}
+
+      {/* Main Description */}
+      <div style={{ padding: "0 4px" }}>
+        <p style={{
+          fontSize: 16,
+          lineHeight: 1.8,
+          color: "#fff",
+          margin: 0,
+          fontWeight: 400,
+          letterSpacing: -0.01em
+        }}>
+          {card.description}
+        </p>
+      </div>
+
+      {/* Visual / Key Info */}
+      <div 
+        style={{
+          background: "rgba(255,255,255,0.03)",
+          borderRadius: 16,
+          padding: 20,
+          minHeight: 180,
+          cursor: "pointer",
+          perspective: 1000,
+          position: "relative",
+          overflow: "hidden"
+        }}
+        onClick={() => setFlipped(!flipped)}
       >
-        {!flipped
-          ? <span style={{ fontSize: 14, color: "var(--label3)" }}>💡 탭해서 핵심 팁 보기</span>
-          : <span style={{ fontSize: 14, color, lineHeight: 1.6, animation: "iosFadeIn 0.2s ease" }}><b>핵심 팁:</b> {card.tip}</span>
-        }
+        <div style={{ 
+          fontSize: 12, 
+          color: "#888", 
+          marginBottom: 12, 
+          textAlign: "center",
+          textTransform: "uppercase",
+          letterSpacing: 1
+        }}>
+          {flipped ? "Memory View" : "Concept View"}
+        </div>
+        
+        <div style={{
+          transform: flipped ? "rotateY(180deg)" : "rotateY(0)",
+          transition: "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
+          transformStyle: "preserve-3d",
+          height: "100%"
+        }}>
+          {/* Front: Key Concept */}
+          <div style={{
+            backfaceVisibility: "hidden",
+            display: flipped ? "none" : "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 12
+          }}>
+            <div style={{ fontSize: 48 }}>{card.emoji}</div>
+            <div style={{ fontSize: 14, color: "#fff", textAlign: "center", fontWeight: 500 }}>{card.keyConcept}</div>
+            <div style={{ fontSize: 12, color: color, fontWeight: 700 }}>탭하여 메모리 구조 보기</div>
+          </div>
+
+          {/* Back: Visualizer */}
+          <div style={{
+            backfaceVisibility: "hidden",
+            transform: "rotateY(180deg)",
+            display: flipped ? "flex" : "none",
+            flexDirection: "column"
+          }}>
+             <MemoryVisualizer type={card.id} />
+          </div>
+        </div>
       </div>
-      {card.visualization && <MemoryVisualizer type={card.visualization} />}
     </div>
   );
 }
