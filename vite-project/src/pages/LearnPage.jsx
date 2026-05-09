@@ -276,7 +276,7 @@ function ConceptLearnCard({ stage, card, cardIdx, totalCards, onNavigate, isLast
 }
 
 /* ── Project card ── */
-function ProjectLearnCard({ stage, card, cardIdx, totalCards, onBadge, onNavigate, isLast }) {
+function ProjectLearnCard({ stage, card, cardIdx, totalCards, onBadge, onNavigate, isLast, onSolvedChange }) {
   const [claimed, setClaimed] = useState(false);
   const pct = Math.round(((cardIdx + 1) / totalCards) * 100);
 
