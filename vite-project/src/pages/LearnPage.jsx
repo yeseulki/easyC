@@ -127,7 +127,7 @@ function Explanations({ card, stage }) {
 }
 
 /* ── One full code card ── */
-function CodeLearnCard({ stage, card, cardIdx, totalCards }) {
+function CodeLearnCard({ stage, card, cardIdx, totalCards, onNavigate, isLast }) {
   const nonFixed = card.slots.filter(s => !s.fixed);
   const [sel,    setSel]    = useState(nonFixed.map(() => 0));
   const [status, setStatus] = useState(null); // null | ok | err
@@ -143,6 +143,11 @@ function CodeLearnCard({ stage, card, cardIdx, totalCards }) {
     const ok = nonFixed.every((s, i) => sel[i] === s.correct);
     setStatus(ok ? "ok" : "err");
     if (!ok) setTimeout(() => setStatus(null), 1500);
+  };
+
+  const handleNavigate = () => {
+    onNavigate("code");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
@@ -203,6 +208,18 @@ function CodeLearnCard({ stage, card, cardIdx, totalCards }) {
           </div>
         </div>
 
+        {isLast && (
+          <div style={{ margin: "24px 16px 0", paddingBottom: 20 }}>
+            <button
+              onClick={handleNavigate}
+              className="ios-btn ios-btn-fill"
+              style={{ width: "100%", background: "var(--blue)", borderRadius: 16, padding: "18px", fontSize: 18, fontWeight: 800, boxShadow: "0 8px 24px rgba(0,122,255,0.25)" }}
+            >
+              학습 완료! 코딩 시작하기
+            </button>
+          </div>
+        )}
+
         {/* Spacer for CTA */}
         <div style={{ height: 100 }} />
       </div>
@@ -222,9 +239,14 @@ function CodeLearnCard({ stage, card, cardIdx, totalCards }) {
 }
 
 /* ── Concept card ── */
-function ConceptLearnCard({ stage, card, cardIdx, totalCards }) {
+function ConceptLearnCard({ stage, card, cardIdx, totalCards, onNavigate, isLast }) {
   const [flipped, setFlipped] = useState(false);
   const pct = Math.round(((cardIdx + 1) / totalCards) * 100);
+
+  const handleNavigate = () => {
+    onNavigate("code");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", background: "#f2f2f7" }}>
@@ -262,15 +284,32 @@ function ConceptLearnCard({ stage, card, cardIdx, totalCards }) {
             : <div style={{ fontSize: 14, color: stage.color, lineHeight: 1.7, animation: "iosFadeIn 0.2s ease" }}><b>핵심 팁:</b> {card.tip}</div>
           }
         </div>
+
+        {isLast && (
+          <div style={{ marginTop: 8, paddingBottom: 24 }}>
+            <button
+              onClick={handleNavigate}
+              className="ios-btn ios-btn-fill"
+              style={{ width: "100%", background: "var(--blue)", borderRadius: 16, padding: "18px", fontSize: 18, fontWeight: 800, boxShadow: "0 8px 24px rgba(0,122,255,0.25)" }}
+            >
+              학습 완료! 코딩 시작하기
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
 /* ── Project card ── */
-function ProjectLearnCard({ stage, card, cardIdx, totalCards, onBadge }) {
+function ProjectLearnCard({ stage, card, cardIdx, totalCards, onBadge, onNavigate, isLast }) {
   const [claimed, setClaimed] = useState(false);
   const pct = Math.round(((cardIdx + 1) / totalCards) * 100);
+
+  const handleNavigate = () => {
+    onNavigate("code");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", background: "#f2f2f7" }}>
@@ -308,13 +347,25 @@ function ProjectLearnCard({ stage, card, cardIdx, totalCards, onBadge }) {
         >
           {claimed ? `${card.badge} 획득!` : `🏆 ${card.badge} 획득하기`}
         </button>
+
+        {isLast && (
+          <div style={{ marginTop: 24, paddingBottom: 20 }}>
+            <button
+              onClick={handleNavigate}
+              className="ios-btn ios-btn-fill"
+              style={{ width: "100%", background: "var(--blue)", borderRadius: 16, padding: "18px", fontSize: 18, fontWeight: 800, boxShadow: "0 8px 24px rgba(0,122,255,0.25)" }}
+            >
+              학습 완료! 코딩 시작하기
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
 /* ── Main LearnPage ── */
-export default function LearnPage({ initialStage = 0, onBadge, onComplete }) {
+export default function LearnPage({ initialStage = 0, onBadge, onComplete, onNavigate }) {
   const [stageIdx, setStageIdx] = useState(initialStage);
   const [cardIdx,  setCardIdx]  = useState(0);
   const [key,      setKey]      = useState(0);
@@ -381,9 +432,9 @@ export default function LearnPage({ initialStage = 0, onBadge, onComplete }) {
 
       {/* Card */}
       <div key={key} style={{ flex: 1, overflow: "hidden", animation: "iosFadeScale 0.24s ease" }}>
-        {card.type === "concept" && <ConceptLearnCard stage={stage} card={card} cardIdx={cardIdx} totalCards={total} />}
-        {card.type === "code"    && <CodeLearnCard    stage={stage} card={card} cardIdx={cardIdx} totalCards={total} />}
-        {card.type === "project" && <ProjectLearnCard stage={stage} card={card} cardIdx={cardIdx} totalCards={total} onBadge={onBadge} />}
+        {card.type === "concept" && <ConceptLearnCard stage={stage} card={card} cardIdx={cardIdx} totalCards={total} onNavigate={onNavigate} isLast={isLast} />}
+        {card.type === "code"    && <CodeLearnCard    stage={stage} card={card} cardIdx={cardIdx} totalCards={total} onNavigate={onNavigate} isLast={isLast} />}
+        {card.type === "project" && <ProjectLearnCard stage={stage} card={card} cardIdx={cardIdx} totalCards={total} onBadge={onBadge} onNavigate={onNavigate} isLast={isLast} />}
       </div>
 
       {/* Side nav dots */}
