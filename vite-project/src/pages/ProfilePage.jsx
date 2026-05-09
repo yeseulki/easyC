@@ -83,7 +83,8 @@ export default function ProfilePage({ badges, progress, savedItems = [], onNavig
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {savedItems.map((item, i) => (
-                <div key={i}
+                <div 
+                  key={i} 
                   style={{ background: "#fff", borderRadius: 14, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", cursor: "pointer" }}
                   onClick={() => onNavigate("learn", { stageIdx: item.stageIdx, cardIdx: item.cardIdx })}
                 >

@@ -15,7 +15,7 @@ const TABS = [
 export default function App() {
   const [tab, setTab]             = useState("home");
   const [learnStage, setLearnStage] = useState(0);
-  const [learnCard,  setLearnCard]  = useState(0);
+  const [learnCard, setLearnCard]   = useState(0);
   const [badges, setBadges]       = useState([]);
   const [savedItems, setSavedItems] = useState([]);
   const [toast, setToast]         = useState(null);
@@ -24,8 +24,8 @@ export default function App() {
   const navigate = (page, opts = {}) => {
     if (page === "learn") {
       if (opts.stageIdx !== undefined) setLearnStage(opts.stageIdx);
-      if (opts.cardIdx  !== undefined) setLearnCard(opts.cardIdx);
-      else                             setLearnCard(0);
+      if (opts.cardIdx !== undefined)  setLearnCard(opts.cardIdx);
+      else if (opts.stageIdx !== undefined) setLearnCard(0); // reset if only stage is provided
     }
     setTab(page);
   };
@@ -55,6 +55,7 @@ export default function App() {
         <div style={{ display: tab === "learn"   ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}>
           <LearnPage 
             initialStage={learnStage} 
+            initialCard={learnCard}
             onBadge={handleBadge} 
             onComplete={handleComplete} 
             onNavigate={navigate} 
