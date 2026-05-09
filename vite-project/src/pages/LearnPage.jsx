@@ -180,7 +180,7 @@ function Explanations({ card, stage }) {
 }
 
 /* ── One full code card ── */
-function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate, isLast, onSave, savedItems, onSolvedChange }) {
+function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate, isLast, onSave, savedItems, onSolvedChange, onCorrect }) {
   const isSaved = savedItems?.some(i => i.title === card.title);
   const processedSlots = useMemo(() => {
     return card.slots.map(s => {
@@ -200,6 +200,7 @@ function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate,
   const nonFixed = processedSlots.filter(s => !s.fixed);
   const [sel,    setSel]    = useState(nonFixed.map(() => 0));
   const [status, setStatus] = useState(null); // null | ok | err
+  const [confetti, setConfetti] = useState([]);
 
   useEffect(() => {
     setSel(nonFixed.map(() => 0));
@@ -213,7 +214,11 @@ function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate,
     const ok = nonFixed.every((s, i) => sel[i] === s.correct);
     setStatus(ok ? "ok" : "err");
     if (ok) {
+      const items = Array.from({ length: 16 }, (_, i) => ({ id: i, x: Math.random() * 100, c: ["#007aff","#af52de","#ff9500","#34c759","#ff2d55"][i % 5], d: Math.random() * 0.3 }));
+      setConfetti(items);
+      setTimeout(() => setConfetti([]), 1100);
       onSolvedChange?.(true);
+      onCorrect?.();
     } else {
       setTimeout(() => setStatus(null), 1500);
     }
@@ -226,6 +231,9 @@ function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate,
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", background: "#f2f2f7", position: "relative" }}>
+      {confetti.map(c => (
+        <div key={c.id} style={{ position: "absolute", left: `${c.x}%`, top: "30%", width: 8, height: 8, borderRadius: 2, background: c.c, animation: `iosConfetti 0.8s ease ${c.d}s forwards`, pointerEvents: "none", zIndex: 100 }} />
+      ))}
       <div style={{ height: 3, background: "rgba(0,0,0,0.06)" }}>
         <div style={{ height: "100%", width: `${pct}%`, background: stage.color, transition: "width 0.4s" }} />
       </div>
@@ -281,8 +289,13 @@ function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate,
 /* ── Concept card ── */
 function ConceptLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate, isLast, onSave, savedItems }) {
   const [flipped, setFlipped] = useState(false);
-  const pct = Math.round(((cardIdx + 1) / totalCards) * 100);
   const isSaved = savedItems?.some(i => i.title === card.title);
+  const pct = Math.round(((cardIdx + 1) / totalCards) * 100);
+
+  const handleNavigate = () => {
+    onNavigate("code");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const highlight = (text) => {
     return text.split("\n").map((line, i) => (
@@ -317,7 +330,6 @@ function ConceptLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNaviga
           </div>
         </div>
 
-        {/* Dynamic Visualization Rendering */}
         {card.visualization === "memory" && <MemoryMap color={stage.color} />}
 
         <div style={{ background: "#fff", borderRadius: 16, padding: "16px", marginBottom: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
@@ -346,8 +358,9 @@ function ConceptLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNaviga
 }
 
 /* ── Project card ── */
-function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge, onNavigate, isLast, onSolvedChange }) {
+function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge, onNavigate, isLast, onSolvedChange, onCorrect }) {
   const [claimed, setClaimed] = useState(false);
+  const [confetti, setConfetti] = useState([]);
   const pct = Math.round(((cardIdx + 1) / totalCards) * 100);
 
   const handleNavigate = () => {
@@ -355,8 +368,21 @@ function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge,
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const handleClaim = () => {
+    const items = Array.from({ length: 16 }, (_, i) => ({ id: i, x: Math.random() * 100, c: ["#007aff","#af52de","#ff9500","#34c759","#ff2d55"][i % 5], d: Math.random() * 0.3 }));
+    setConfetti(items);
+    setTimeout(() => setConfetti([]), 1100);
+    setClaimed(true);
+    onBadge(card.badge);
+    onSolvedChange?.(true);
+    onCorrect?.();
+  };
+
   return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column", background: "#f2f2f7" }}>
+    <div style={{ height: "100%", display: "flex", flexDirection: "column", background: "#f2f2f7", position: "relative" }}>
+      {confetti.map(c => (
+        <div key={c.id} style={{ position: "absolute", left: `${c.x}%`, top: "30%", width: 8, height: 8, borderRadius: 2, background: c.c, animation: `iosConfetti 0.8s ease ${c.d}s forwards`, pointerEvents: "none", zIndex: 100 }} />
+      ))}
       <div style={{ height: 3, background: "rgba(0,0,0,0.06)" }}>
         <div style={{ height: "100%", width: `${pct}%`, background: stage.color, transition: "width 0.4s" }} />
       </div>
@@ -387,7 +413,7 @@ function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge,
 
         <button
           style={{ width: "100%", padding: "16px", borderRadius: 16, background: claimed ? "rgba(52,199,89,0.12)" : `linear-gradient(135deg, ${stage.color}, ${stage.color}bb)`, color: claimed ? "var(--green)" : "#fff", fontWeight: 800, fontSize: 17, border: "none", cursor: "pointer", boxShadow: claimed ? "none" : `0 4px 16px ${stage.color}44`, transition: "all 0.3s" }}
-          onClick={() => { setClaimed(true); onBadge(card.badge); onSolvedChange?.(true); }}
+          onClick={handleClaim}
         >
           {claimed ? `${card.badge} 획득!` : `🏆 ${card.badge} 획득하기`}
         </button>
@@ -405,7 +431,7 @@ function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge,
 }
 
 /* ── Main LearnPage ── */
-export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, onComplete, onNavigate, onSave, savedItems }) {
+export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, onCorrect, onComplete, onNavigate, onSave, savedItems }) {
   const [stageIdx, setStageIdx] = useState(initialStage);
   const [cardIdx,  setCardIdx]  = useState(initialCard);
   const [key,      setKey]      = useState(0);
@@ -422,7 +448,6 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
   const total = stage.cards.length;
   const card  = stage.cards[cardIdx];
 
-  // Robust auto-solve logic for non-quiz cards
   useEffect(() => {
     if (card.type !== "code") {
       setSolved(true);
@@ -436,9 +461,7 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
       alert("문제를 맞혀야 다음으로 넘어갈 수 있어!");
       return;
     }
-
     setKey(k => k + 1);
-
     if (d > 0) {
       if (cardIdx < total - 1)               { setCardIdx(c => c + 1); }
       else if (stageIdx < stages.length - 1) { onComplete?.(stage.id); setStageIdx(s => s + 1); setCardIdx(0); }
@@ -482,8 +505,8 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
 
       <div key={key} style={{ flex: 1, overflow: "hidden", animation: "iosFadeScale 0.24s ease" }}>
         {card.type === "concept" && <ConceptLearnCard stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={total} onNavigate={onNavigate} isLast={isLast} onSave={onSave} savedItems={savedItems} />}
-        {card.type === "code"    && <CodeLearnCard key={`code-${stageIdx}-${cardIdx}`} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={total} onNavigate={onNavigate} isLast={isLast} onSave={onSave} savedItems={savedItems} onSolvedChange={setSolved} />}
-        {card.type === "project" && <ProjectLearnCard stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={total} onBadge={onBadge} onNavigate={onNavigate} isLast={isLast} onSolvedChange={setSolved} />}
+        {card.type === "code"    && <CodeLearnCard key={`code-${stageIdx}-${cardIdx}`} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={total} onNavigate={onNavigate} isLast={isLast} onSave={onSave} savedItems={savedItems} onSolvedChange={setSolved} onCorrect={onCorrect} />}
+        {card.type === "project" && <ProjectLearnCard stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={total} onBadge={onBadge} onNavigate={onNavigate} isLast={isLast} onSolvedChange={setSolved} onCorrect={onCorrect} />}
       </div>
 
       <div style={{ position: "fixed", right: 8, top: "50%", transform: "translateY(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, zIndex: 50 }}>
