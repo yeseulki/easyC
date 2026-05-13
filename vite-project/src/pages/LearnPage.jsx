@@ -158,7 +158,7 @@ function Explanations({ card, stage }) {
   const bullets = [
     `${card.title}`,
     `이 코드는 ${stage.subtitle} 개념을 사용해.`,
-    `예상 출력: ${card.expectedOutput}`,
+    card.expectedOutput ? `예상 출력: ${card.expectedOutput}` : null,
     card.hint,
   ].filter(Boolean);
 
@@ -167,7 +167,7 @@ function Explanations({ card, stage }) {
       {bullets.map((b, i) => (
         <div key={i} className="cf-explain-item">
           <span style={{ fontSize: 16, flexShrink: 0 }}>{EXPLAIN_ICONS[i] || "•"}</span>
-          <span>{b}</span>
+          <span style={{ whiteSpace: "pre-wrap" }}>{b.replace("예상 출력: ", "")}</span>
         </div>
       ))}
       <div className="cf-tags">
@@ -180,17 +180,13 @@ function Explanations({ card, stage }) {
 }
 
 /* ── One full code card ── */
-function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate, isLast, onSave, savedItems, onSolvedChange, onCorrect }) {
+function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate, isLast, onSave, savedItems, onSolvedChange, onCorrect, initialAnswer, onUpdateAnswer, scrollRef }) {
   const isSaved = savedItems?.some(i => i.title === card.title);
   const processedSlots = useMemo(() => {
     return card.slots.map(s => {
       if (s.fixed || s.options.length <= 1) return s;
-      const options = [...s.options];
-      const correctVal = options[s.correct];
-      for (let i = options.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [options[i], options[j]] = [options[j], options[i]];
-      }
+      const options = [...s.options].sort(); // Stable sort to avoid shuffle issues with persistence
+      const correctVal = s.options[s.correct];
       const newCorrect = options.indexOf(correctVal);
       return { ...s, options, correct: newCorrect };
     });
@@ -198,17 +194,22 @@ function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate,
 
   const processedCard = { ...card, slots: processedSlots };
   const nonFixed = processedSlots.filter(s => !s.fixed);
-  const [sel,    setSel]    = useState(nonFixed.map(() => 0));
-  const [status, setStatus] = useState(null); // null | ok | err
+  const [sel,    setSel]    = useState(initialAnswer || nonFixed.map(() => 0));
+  const [status, setStatus] = useState(() => {
+    if (!initialAnswer) return null;
+    const ok = nonFixed.every((s, i) => initialAnswer[i] === s.correct);
+    return ok ? "ok" : null;
+  });
   const [confetti, setConfetti] = useState([]);
 
-  useEffect(() => {
-    setSel(nonFixed.map(() => 0));
-    setStatus(null);
-  }, [processedSlots]);
-
   const pct = Math.round(((cardIdx + 1) / totalCards) * 100);
-  const pick = (i, v) => { const n = [...sel]; n[i] = v; setSel(n); setStatus(null); };
+  const pick = (i, v) => { 
+    const n = [...sel]; 
+    n[i] = v; 
+    setSel(n); 
+    setStatus(null); 
+    onUpdateAnswer(stage.id, cardIdx, n);
+  };
 
   const check = () => {
     const ok = nonFixed.every((s, i) => sel[i] === s.correct);
@@ -244,7 +245,7 @@ function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate,
         <span style={{ marginLeft: "auto", fontSize: 12, color: "#8e8e93" }}>{cardIdx + 1} / {totalCards}</span>
       </div>
 
-      <div style={{ flex: 1, overflowY: "auto" }}>
+      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto" }}>
         <div style={{ padding: "0 16px 12px", background: "#f2f2f7", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 11, color: stage.color, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 4 }}>💻 실습</div>
@@ -277,8 +278,8 @@ function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate,
         <div style={{ height: 100 }} />
       </div>
 
-      <div style={{ position: "sticky", bottom: 0, background: "#f2f2f7", padding: "12px 16px 16px", borderTop: "0.5px solid rgba(0,0,0,0.08)" }}>
-        <button className={`cf-cta ${status === "ok" ? "success" : status === "err" ? "error" : ""}`} onClick={check} style={{ width: "100%" }}>
+      <div style={{ position: "sticky", bottom: 0, background: "#f2f2f7", padding: "12px 16px 16px", borderTop: "0.5px solid rgba(0,0,0,0.08)", display: "flex", justifyContent: "center" }}>
+        <button className={`cf-cta ${status === "ok" ? "success" : status === "err" ? "error" : ""}`} onClick={check}>
           {status === "ok" ? "✓ 정답이야! 완벽해!" : status === "err" ? "✗ 다시 생각해봐!" : "확인하기"}
         </button>
       </div>
@@ -287,7 +288,7 @@ function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate,
 }
 
 /* ── Concept card ── */
-function ConceptLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate, isLast, onSave, savedItems }) {
+function ConceptLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate, isLast, onSave, savedItems, scrollRef }) {
   const [flipped, setFlipped] = useState(false);
   const isSaved = savedItems?.some(i => i.title === card.title);
   const pct = Math.round(((cardIdx + 1) / totalCards) * 100);
@@ -319,7 +320,7 @@ function ConceptLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNaviga
         <span style={{ marginLeft: "auto", fontSize: 12, color: "#8e8e93" }}>{cardIdx + 1} / {totalCards}</span>
       </div>
 
-      <div style={{ flex: 1, overflowY: "auto", padding: "0 16px" }}>
+      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "0 16px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div>
             <div style={{ fontSize: 11, color: stage.color, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 6 }}>📖 개념</div>
@@ -357,25 +358,119 @@ function ConceptLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNaviga
   );
 }
 
+
+
+
+/* ── Project Card Supporting Components ── */
+function InlineTypingSlot({ value, onChange }) {
+  return (
+    <input
+      type="text"
+      value={value}
+      onChange={e => {
+        e.stopPropagation();
+        onChange(e.target.value);
+      }}
+      spellCheck="false"
+      className="cf-input-slot"
+      style={{ minWidth: Math.max(30, value.length * 8 + 10) }}
+    />  );
+}
+function LineWithTypingSlots({ raw, onInputChange, inputs }) {
+  const parts = raw.split(/(__SLOT_\d+__)/g);
+  let slotIndex = -1; 
+  
+  return (
+    <>
+      {parts.map((part, i) => {
+        const match = part.match(/__SLOT_(\d+)__/);
+        if (match) {
+          slotIndex++;
+          const currentIndex = slotIndex;
+          return (
+            <InlineTypingSlot
+              key={`slot-${currentIndex}`}
+              value={inputs[currentIndex] || ""}
+              onChange={val => onInputChange(currentIndex, val)}
+            />
+          );
+        }
+        return <SyntaxLine key={`text-${i}`} raw={part} />;
+      })}
+    </>
+  );
+}
+
+function CodeWithTypingSlots({ card, inputs, onInputChange }) {
+  const fullLines = card.fullCode.split("\n");
+  let slotCounter = 0;
+
+  return (
+    <div className="cf-code">
+      {fullLines.map((line, li) => {
+        const slotsInLine = (line.match(/__SLOT_\d+__/g) || []).length;
+        const lineInputs = inputs.slice(slotCounter, slotCounter + slotsInLine);
+        const handleLineInputChange = (indexInLine, value) => {
+          onInputChange(slotCounter + indexInLine, value);
+        };
+        slotCounter += slotsInLine;
+        
+        return (
+          <div key={li} style={{ display: "flex", alignItems: "center", gap: 0, whiteSpace: "pre" }}>
+            <span style={{ color: "#c7c7cc", minWidth: 22, textAlign: "right", marginRight: 14, fontSize: 11, userSelect: "none", flexShrink: 0 }}>{li + 1}</span>
+            <LineWithTypingSlots
+              raw={line}
+              onInputChange={handleLineInputChange}
+              inputs={lineInputs}
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 /* ── Project card ── */
-function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge, onNavigate, isLast, onSolvedChange, onCorrect }) {
-  const [claimed, setClaimed] = useState(false);
+function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge, onNavigate, isLast, onSolvedChange, onCorrect, initialAnswer, onUpdateAnswer, badges, scrollRef }) {
+  const isClaimed = badges?.includes(card.badge);
   const [confetti, setConfetti] = useState([]);
+  const [inputs, setInputs] = useState(initialAnswer || Array(card.slots.length).fill(""));
+  const [status, setStatus] = useState(() => {
+    if (!initialAnswer) return null;
+    const isCorrect = card.slots.every((slot, i) => (initialAnswer[i] || "") === slot.answer);
+    return isCorrect ? "ok" : null;
+  });
   const pct = Math.round(((cardIdx + 1) / totalCards) * 100);
 
-  const handleNavigate = () => {
-    onNavigate("code");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  const handleInputChange = (index, value) => {
+    const newInputs = [...inputs];
+    newInputs[index] = value;
+    setInputs(newInputs);
+    setStatus(null);
+    onUpdateAnswer(stage.id, cardIdx, newInputs);
+  };
+
+  const check = () => {
+    const isCorrect = card.slots.every((slot, i) => inputs[i].trim() === slot.answer.trim());
+    setStatus(isCorrect ? "ok" : "err");
+    if (isCorrect) {
+      onSolvedChange?.(true);
+      onCorrect?.();
+    } else {
+      setTimeout(() => setStatus(null), 1500);
+    }
   };
 
   const handleClaim = () => {
+    if (status !== "ok") {
+      alert("먼저 '정답 확인' 버튼을 눌러 코드를 완성해야 해!");
+      return;
+    }
     const items = Array.from({ length: 16 }, (_, i) => ({ id: i, x: Math.random() * 100, c: ["#007aff","#af52de","#ff9500","#34c759","#ff2d55"][i % 5], d: Math.random() * 0.3 }));
     setConfetti(items);
     setTimeout(() => setConfetti([]), 1100);
-    setClaimed(true);
     onBadge(card.badge);
-    onSolvedChange?.(true);
-    onCorrect?.();
+    onSolvedChange?.(true); // Redundant but safe
   };
 
   return (
@@ -392,35 +487,39 @@ function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge,
         <span style={{ marginLeft: "auto", fontSize: 12, color: "#8e8e93" }}>{cardIdx + 1} / {totalCards}</span>
       </div>
 
-      <div style={{ flex: 1, overflowY: "auto", padding: "0 16px 16px" }}>
-        <div style={{ fontSize: 11, color: stage.color, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 6 }}>🚀 프로젝트</div>
-        <h2 style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.5, lineHeight: 1.3, color: "#000", marginBottom: 10 }}>{card.title}</h2>
-        <p style={{ fontSize: 14, color: "#8e8e93", lineHeight: 1.7, marginBottom: 16 }}>{card.description}</p>
+      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "0 16px 16px" }}>
+        <div style={{ paddingTop: 12, paddingBottom: 12 }}>
+          <div style={{ fontSize: 11, color: stage.color, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 6 }}>🚀 프로젝트</div>
+          <h2 style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.5, lineHeight: 1.3, color: "#000", marginBottom: 10 }}>{card.title}</h2>
+          <p style={{ fontSize: 14, color: "#8e8e93", lineHeight: 1.7, marginBottom: 16, whiteSpace: "pre-line" }}>{card.description}</p>
+        </div>
 
-        <div style={{ margin: "0 0 16px" }}>
-          <div className="cf-card">
-            <div className="cf-dots"><div className="cf-dot red" /><div className="cf-dot yellow" /><div className="cf-dot green" /></div>
-            <div className="ios-code" style={{ borderRadius: 0, maxHeight: 240, overflow: "auto" }}>
-              {card.example.split("\n").map((line, i) => (
-                <div key={i} style={{ display: "flex", gap: 12 }}>
-                  <span style={{ color: "#4d5566", minWidth: 18, textAlign: "right", userSelect: "none", fontSize: 11, flexShrink: 0 }}>{i + 1}</span>
-                  <span style={{ color: "#abb2bf" }}>{line}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+        <div className="cf-card" style={{ marginBottom: 16 }}>
+          <div className="cf-dots"><div className="cf-dot red" /><div className="cf-dot yellow" /><div className="cf-dot green" /></div>
+          <CodeWithTypingSlots card={card} inputs={inputs} onInputChange={handleInputChange} />
+        </div>
+        
+        <div style={{ padding: '0 0 16px', display: 'flex', justifyContent: 'center' }}>
+          <button className={`cf-cta ${status === "ok" ? "success" : status === "err" ? "error" : ""}`} onClick={check} style={{ width: '100%'}}>
+            {status === "ok" ? "✓ 정답 확인 완료!" : status === "err" ? "✗ 다시 생각해봐!" : "정답 확인"}
+          </button>
+        </div>
+        
+        <div className="cf-card" style={{ marginBottom: 16 }}>
+          <Explanations card={card} stage={stage} />
         </div>
 
         <button
-          style={{ width: "100%", padding: "16px", borderRadius: 16, background: claimed ? "rgba(52,199,89,0.12)" : `linear-gradient(135deg, ${stage.color}, ${stage.color}bb)`, color: claimed ? "var(--green)" : "#fff", fontWeight: 800, fontSize: 17, border: "none", cursor: "pointer", boxShadow: claimed ? "none" : `0 4px 16px ${stage.color}44`, transition: "all 0.3s" }}
+          style={{ width: "100%", padding: "16px", borderRadius: 16, background: isClaimed ? "rgba(52,199,89,0.12)" : (status === "ok" ? `linear-gradient(135deg, ${stage.color}, ${stage.color}bb)` : "#8e8e93"), color: isClaimed ? "var(--green)" : "#fff", fontWeight: 800, fontSize: 17, border: "none", cursor: status === "ok" ? "pointer" : "default", boxShadow: isClaimed || status !== "ok" ? "none" : `0 4px 16px ${stage.color}44`, transition: "all 0.3s" }}
           onClick={handleClaim}
+          disabled={isClaimed}
         >
-          {claimed ? `${card.badge} 획득!` : `🏆 ${card.badge} 획득하기`}
+          {isClaimed ? `✓ ${card.badge} 획득!` : `🏆 ${card.badge} 획득하기`}
         </button>
 
-        {isLast && claimed && (
+        {isLast && isClaimed && (
           <div style={{ marginTop: 24, paddingBottom: 20 }}>
-            <button onClick={handleNavigate} className="ios-btn ios-btn-fill" style={{ width: "100%", background: "var(--blue)", borderRadius: 16, padding: "18px", fontSize: 18, fontWeight: 800, boxShadow: "0 8px 24px rgba(0,122,255,0.25)" }}>
+            <button onClick={() => onNavigate("code")} className="ios-btn ios-btn-fill" style={{ width: "100%", background: "var(--blue)", borderRadius: 16, padding: "18px", fontSize: 18, fontWeight: 800, boxShadow: "0 8px 24px rgba(0,122,255,0.25)" }}>
               학습 완료! 코딩 시작하기
             </button>
           </div>
@@ -431,7 +530,7 @@ function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge,
 }
 
 /* ── Main LearnPage ── */
-export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, onCorrect, onComplete, onNavigate, onSave, savedItems }) {
+export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, onCorrect, onComplete, onNavigate, onSave, savedItems, onUpdateAnswer, progress, badges }) {
   const [stageIdx, setStageIdx] = useState(initialStage);
   const [cardIdx,  setCardIdx]  = useState(initialCard);
   const [key,      setKey]      = useState(0);
@@ -449,17 +548,49 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
   const card  = stage.cards[cardIdx];
 
   useEffect(() => {
-    if (card.type !== "code") {
+    if (card.type === "concept") {
       setSolved(true);
-    } else {
-      setSolved(false);
+    } else if (card.type === "code") {
+      const saved = progress.cardAnswers[`${stage.id}-${cardIdx}`];
+      if (saved) {
+        // We need to check if the saved indices are correct against the STABLE sorted options
+        const processedSlots = card.slots.map(s => {
+          if (s.fixed || s.options.length <= 1) return s;
+          const options = [...s.options].sort();
+          const correctVal = s.options[s.correct];
+          const newCorrect = options.indexOf(correctVal);
+          return { ...s, options, correct: newCorrect };
+        });
+        const nonFixed = processedSlots.filter(s => !s.fixed);
+        const ok = nonFixed.every((s, i) => saved[i] === s.correct);
+        setSolved(ok);
+      } else {
+        setSolved(false);
+      }
+    } else if (card.type === "project") {
+      setSolved(badges.includes(card.badge));
     }
-  }, [stageIdx, cardIdx, card.type]);
+  }, [stageIdx, cardIdx, card.type, progress.cardAnswers, badges, stage.id]);
 
   const go = (d) => {
-    if (d > 0 && card.type === "code" && !solved) {
-      alert("문제를 맞혀야 다음으로 넘어갈 수 있어!");
-      return;
+    const scrollableContent = scrollRef.current;
+    if (d > 0 && scrollableContent) {
+      const isAtBottom = scrollableContent.scrollHeight - scrollableContent.scrollTop <= scrollableContent.clientHeight + 1; // 1px tolerance
+      if (!isAtBottom) {
+        scrollableContent.scrollBy({ top: 200, behavior: 'smooth' });
+        return;
+      }
+    }
+
+    if (d > 0) {
+      if (card.type === "code" && !solved) {
+        alert("문제를 맞혀야 다음으로 넘어갈 수 있어!");
+        return;
+      }
+      if (card.type === "project" && !badges.includes(card.badge)) {
+        alert(`${card.badge}를 획득해야 다음 단계로 넘어갈 수 있어!`);
+        return;
+      }
     }
     setKey(k => k + 1);
     if (d > 0) {
@@ -472,7 +603,15 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
     }
   };
 
-  const onTS = e => { touchY.current = e.touches[0].clientY; };
+  const onTS = e => { 
+    const scrollableContent = scrollRef.current;
+    if (scrollableContent && scrollableContent.scrollTop > 0) {
+      // If content is scrolled, don't initiate card swipe
+      touchY.current = null;
+      return;
+    }
+    touchY.current = e.touches[0].clientY; 
+  };
   const onTE = e => {
     if (!touchY.current) return;
     const dy = touchY.current - e.changedTouches[0].clientY;
@@ -483,6 +622,20 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
   const onWheel = e => {
     if (isScrolling.current) return;
     if (Math.abs(e.deltaY) < 30) return;
+    
+    const scrollableContent = scrollRef.current;
+    if (scrollableContent) {
+      const isAtBottom = scrollableContent.scrollHeight - scrollableContent.scrollTop <= scrollableContent.clientHeight + 1;
+      const isAtTop = scrollableContent.scrollTop === 0;
+
+      if (e.deltaY > 0 && !isAtBottom) { // Scrolling down, but not at bottom
+        return; // Allow native scroll
+      }
+      if (e.deltaY < 0 && !isAtTop) { // Scrolling up, but not at top
+        return; // Allow native scroll
+      }
+    }
+
     isScrolling.current = true;
     go(e.deltaY > 0 ? 1 : -1);
     setTimeout(() => { isScrolling.current = false; }, 600);
@@ -490,6 +643,7 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
 
   const isFirst = stageIdx === 0 && cardIdx === 0;
   const isLast  = stageIdx === stages.length - 1 && cardIdx === total - 1;
+  const scrollRef = useRef(null);
 
   return (
     <div className="learn-page-container" onTouchStart={onTS} onTouchEnd={onTE} onWheel={onWheel}>
@@ -504,9 +658,9 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
       </div>
 
       <div key={key} style={{ flex: 1, overflow: "hidden", animation: "iosFadeScale 0.24s ease" }}>
-        {card.type === "concept" && <ConceptLearnCard stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={total} onNavigate={onNavigate} isLast={isLast} onSave={onSave} savedItems={savedItems} />}
-        {card.type === "code"    && <CodeLearnCard key={`code-${stageIdx}-${cardIdx}`} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={total} onNavigate={onNavigate} isLast={isLast} onSave={onSave} savedItems={savedItems} onSolvedChange={setSolved} onCorrect={onCorrect} />}
-        {card.type === "project" && <ProjectLearnCard stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={total} onBadge={onBadge} onNavigate={onNavigate} isLast={isLast} onSolvedChange={setSolved} onCorrect={onCorrect} />}
+        {card.type === "concept" && <ConceptLearnCard scrollRef={scrollRef} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={total} onNavigate={onNavigate} isLast={isLast} onSave={onSave} savedItems={savedItems} />}
+        {card.type === "code"    && <CodeLearnCard scrollRef={scrollRef} key={`code-${stageIdx}-${cardIdx}`} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={total} onNavigate={onNavigate} isLast={isLast} onSave={onSave} savedItems={savedItems} onSolvedChange={setSolved} onCorrect={onCorrect} initialAnswer={progress.cardAnswers[`${stage.id}-${cardIdx}`]} onUpdateAnswer={onUpdateAnswer} />}
+        {card.type === "project" && <ProjectLearnCard scrollRef={scrollRef} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={total} onBadge={onBadge} onNavigate={onNavigate} isLast={isLast} onSolvedChange={setSolved} onCorrect={onCorrect} initialAnswer={progress.cardAnswers[`${stage.id}-${cardIdx}`]} onUpdateAnswer={onUpdateAnswer} badges={badges} />}
       </div>
 
       <div style={{ position: "fixed", right: 8, top: "50%", transform: "translateY(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, zIndex: 50 }}>
@@ -516,7 +670,7 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
             <div key={i} style={{ width: 4, height: i === cardIdx ? 16 : 4, borderRadius: 2, background: i === cardIdx ? stage.color : "rgba(0,0,0,0.15)", transition: "all 0.3s" }} />
           ))}
         </div>
-        <button style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.95)", border: "1px solid rgba(0,0,0,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, boxShadow: "0 2px 8px rgba(0,0,0,0.1)", opacity: (card.type === "code" && !solved) || isLast ? 0.2 : 0.9 }} onClick={() => go(1)} disabled={isLast}>↓</button>
+        <button style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.95)", border: "1px solid rgba(0,0,0,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, boxShadow: "0 2px 8px rgba(0,0,0,0.1)", opacity: (card.type === "code" && !solved) || (card.type === "project" && !badges.includes(card.badge)) || isLast ? 0.2 : 0.9 }} onClick={() => go(1)} disabled={isLast}>↓</button>
       </div>
     </div>
   );

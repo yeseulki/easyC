@@ -1,15 +1,27 @@
 ﻿import { stages } from "../data/curriculum";
 
-const FEATURES = [
-  { icon: "🎰", color: "#ff9500", bg: "rgba(255,149,0,0.1)",  title: "슬롯 코딩",    sub: "코드 안에서 직접 조합" },
-  { icon: "🗺️", color: "#5856d6", bg: "rgba(88,86,214,0.1)", title: "메모리 맵",    sub: "포인터를 눈으로 확인" },
-  { icon: "📂", color: "#4CAF50", bg: "rgba(76,175,80,0.1)",  title: "심화 학습",    sub: "구조체부터 연결 리스트까지" },
-  { icon: "🚀", color: "#34c759", bg: "rgba(52,199,89,0.1)",  title: "미니 프로젝트",sub: "만들며 배우는 커리큘럼" },
+const CORE_FEATURES = [
+  { icon: "📖", type: "concept", title: "개념 학습", sub: "핵심 개념부터 차근차근" },
+  { icon: "💻", type: "code",    title: "실습",      sub: "코드를 직접 완성하며 학습" },
+  { icon: "🚀", type: "project", title: "프로젝트",  sub: "만들며 배우는 커리큘큘럼" },
 ];
 
 export default function HomePage({ onNavigate, progress }) {
   const done = progress.completedStages || [];
   const pct  = Math.round((done.length / stages.length) * 100);
+
+  const handleFeatureClick = (type) => {
+    const currentStageIdx = Math.min(progress.completedStages.length, stages.length - 1);
+    const stage = stages[currentStageIdx];
+    if (!stage) return;
+
+    let cardIdx = stage.cards.findIndex(card => card.type === type);
+    if (cardIdx === -1) { // If no card of this type, go to first card of the stage
+      cardIdx = 0;
+    }
+    
+    onNavigate('learn', { stageIdx: currentStageIdx, cardIdx });
+  };
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", background: "#f2f2f7" }}>
@@ -105,9 +117,9 @@ export default function HomePage({ onNavigate, progress }) {
         <div style={{ marginBottom: 24 }}>
           <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: -0.5, marginBottom: 12, color: "#000" }}>핵심 기능</div>
           <div style={{ background: "#fff", borderRadius: 16, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
-            {FEATURES.map((f, i) => (
-              <div key={f.title} className="ios-cell" style={{ cursor: "pointer" }}>
-                <div style={{ width: 42, height: 42, borderRadius: 10, background: f.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>{f.icon}</div>
+            {CORE_FEATURES.map((f, i) => (
+              <div key={f.title} className="ios-cell" style={{ cursor: "pointer" }} onClick={() => handleFeatureClick(f.type)}>
+                <div style={{ width: 42, height: 42, borderRadius: 10, background: f.bg || 'none', display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>{f.icon}</div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 600, fontSize: 15, color: "#000" }}>{f.title}</div>
                   <div style={{ fontSize: 13, color: "#8e8e93", marginTop: 1 }}>{f.sub}</div>
@@ -118,16 +130,7 @@ export default function HomePage({ onNavigate, progress }) {
           </div>
         </div>
 
-        {/* CTA */}
-        <div style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.07)", borderRadius: 20, padding: "28px 20px", textAlign: "center", marginBottom: 8, boxShadow: "0 2px 10px rgba(0,0,0,0.05)", position: "relative", overflow: "hidden" }}>
-          <div style={{ position:"absolute", top:-50, right:-50, width:150, height:150, borderRadius:"50%", background:"rgba(0,122,255,0.05)", pointerEvents:"none" }} />
-          <div style={{ fontSize: 34, marginBottom: 10 }}>🚀</div>
-          <div style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.6, color: "#000", marginBottom: 8 }}>지금 바로 시작!</div>
-          <div style={{ fontSize: 14, color: "#8e8e93", lineHeight: 1.65, marginBottom: 20 }}>Hello World부터 포인터까지</div>
-          <button style={{ background: "var(--blue)", color: "#fff", padding: "13px 32px", borderRadius: 100, fontSize: 15, fontWeight: 700, border: "none", cursor: "pointer", boxShadow: "0 4px 14px rgba(0,122,255,0.3)" }} onClick={() => onNavigate("learn")}>
-            학습 시작 →
-          </button>
-        </div>
+
 
       </div>
     </div>

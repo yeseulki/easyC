@@ -71,7 +71,7 @@ html, body {
   }
 }
 
-button, input { font-family: inherit; border: none; outline: none; cursor: pointer; background: none; color: inherit; }
+button, input { font-family: inherit; border: none; outline: none; cursor: pointer; color: inherit; }
 button:active { opacity: 0.55; transition: opacity 0.08s; }
 ::-webkit-scrollbar { display: none; }
 * { scrollbar-width: none; }

@@ -20,7 +20,10 @@ export default function App() {
   const [savedItems, setSavedItems] = useState([]);
   const [toast, setToast]         = useState(null);
   const [isCorrectToast, setIsCorrectToast] = useState(false);
-  const [progress, setProgress]   = useState({ completedStages: [] });
+  const [progress, setProgress]   = useState({ 
+    completedStages: [],
+    cardAnswers: {}, // { "stageId-cardIdx": answerData }
+  });
 
   const navigate = (page, opts = {}) => {
     if (page === "learn") {
@@ -29,6 +32,16 @@ export default function App() {
       else if (opts.stageIdx !== undefined) setLearnCard(0);
     }
     setTab(page);
+  };
+
+  const handleUpdateAnswer = (stageId, cardIdx, answer) => {
+    setProgress(p => ({
+      ...p,
+      cardAnswers: {
+        ...p.cardAnswers,
+        [`${stageId}-${cardIdx}`]: answer
+      }
+    }));
   };
 
   const handleCorrect = () => {
@@ -60,7 +73,7 @@ export default function App() {
       {/* Sidebar / Tab Bar */}
       <nav className="tab-bar">
         <div className="sidebar-logo">
-          <span className="cf-logo">easy<span style={{ color: "var(--blue)" }}>C</span></span>
+          <span className="cf-logo" onClick={() => setTab("home")}>easy<span style={{ color: "var(--blue)" }}>C</span></span>
         </div>
         {TABS.map(t => (
           <button key={t.id} className={`tab-item ${tab === t.id ? "active" : ""}`} onClick={() => setTab(t.id)}>
@@ -81,6 +94,9 @@ export default function App() {
             onComplete={handleComplete} 
             onNavigate={navigate} 
             onSave={handleSave} 
+            onUpdateAnswer={handleUpdateAnswer}
+            progress={progress}
+            badges={badges}
             savedItems={savedItems} 
           />
         </div>

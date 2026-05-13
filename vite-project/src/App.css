@@ -171,6 +171,26 @@
   justify-content: space-between;
   padding-bottom: 12px;
 }
+.cf-input-slot {
+  background: #eef0ff;
+  border: 1px solid #c8cfff;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: 'SF Mono', 'Menlo', 'monospace';
+  font-size: 13px;
+  min-width: 30px;
+  text-align: center;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  transition: all 0.2s;
+  color: #000 !important;
+}
+.cf-input-slot:focus {
+  outline: none;
+  border-color: #6C63FF;
+  background: #fff;
+  box-shadow: 0 0 0 3px #c8cfff;
+}
+
 .cf-logo { font-size: 22px; font-weight: 900; letter-spacing: -0.8px; color: #000; }
 .cf-beta {
   background: var(--blue); color: #fff;
