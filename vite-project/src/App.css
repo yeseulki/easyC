@@ -75,9 +75,10 @@
 .sidebar-logo { display: none; }
 @media (min-width: 1024px) {
   .sidebar-logo {
-    display: block;
+    display: flex;
+    justify-content: center;
+    width: 100%;
     margin-bottom: 32px;
-    padding-left: 16px;
   }
 }
 
@@ -181,7 +182,7 @@
   letter-spacing: -0.6px;
   color: #000;
 }
-.cf-logo { font-size: 32px; font-weight: 900; letter-spacing: -2.5px; color: #000; }
+.cf-logo { font-size: 35px; font-weight: 900; letter-spacing: -2.5px; color: #000; }
 .cf-logo b { color: var(--blue); }
 
 /* ══════════════════════════════════════
