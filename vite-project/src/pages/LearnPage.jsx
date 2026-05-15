@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { stages } from "../data/curriculum";
-import logo from "../assets/logo.png";
 
 function translateLine(raw) {
   let text = raw.trim();
@@ -735,7 +734,7 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
       <div className="ios-nav">
         <div className="ios-nav-row">
           <div className="ios-nav-title-group" style={{ gap: 16 }}>
-            <img src={logo} className="cf-logo-img" alt="logo" />
+            <span className="cf-logo">easy<b>C</b></span>
             <div className="ios-nav-large-title">학습하기</div>
           </div>
           <div style={{ textAlign: "right" }}>

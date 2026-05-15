@@ -1,6 +1,5 @@
 import { useState } from "react";
 import "./App.css";
-import logo from "./assets/logo.png";
 import HomePage    from "./pages/HomePage";
 import LearnPage   from "./pages/LearnPage";
 import CodePage    from "./pages/CodePage";
@@ -74,7 +73,7 @@ export default function App() {
       {/* Sidebar / Tab Bar */}
       <nav className="tab-bar">
         <div className="sidebar-logo">
-          <img src={logo} className="cf-logo-img" onClick={() => setTab("home")} alt="logo" />
+          <span className="cf-logo" onClick={() => setTab("home")}>easy<b>C</b></span>
         </div>
         {TABS.map(t => (
           <button key={t.id} className={`tab-item ${tab === t.id ? "active" : ""}`} onClick={() => setTab(t.id)}>

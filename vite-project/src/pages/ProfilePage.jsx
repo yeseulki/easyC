@@ -1,5 +1,4 @@
 import { stages } from "../data/curriculum";
-import logo from "../assets/logo.png";
 
 const ALL_BADGES = stages.map(st => ({
   badge: st.cards.find(c => c.type === "project")?.badge || `Stage ${st.id}`,
@@ -28,7 +27,7 @@ export default function ProfilePage({ badges, progress, savedItems = [], onNavig
       <div className="ios-nav">
         <div className="ios-nav-row">
           <div className="ios-nav-title-group" style={{ gap: 16 }}>
-            <img src={logo} className="cf-logo-img" alt="logo" />
+            <span className="cf-logo">easy<b>C</b></span>
             <div className="ios-nav-large-title">프로필</div>
           </div>
         </div>
