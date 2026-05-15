@@ -72,6 +72,7 @@
   }
 }
 
+.sidebar-logo { display: none; }
 @media (min-width: 1024px) {
   .sidebar-logo {
     display: block;
@@ -175,12 +176,12 @@
   gap: 10px;
 }
 .ios-nav-large-title {
-  font-size: 32px;
+  font-size: 26px;
   font-weight: 800;
-  letter-spacing: -0.8px;
+  letter-spacing: -0.6px;
   color: #000;
 }
-.cf-logo { font-size: 26px; font-weight: 900; letter-spacing: -1.2px; color: #000; }
+.cf-logo { font-size: 32px; font-weight: 900; letter-spacing: -2.5px; color: #000; }
 .cf-logo b { color: var(--blue); }
 
 /* ══════════════════════════════════════
@@ -227,7 +228,6 @@
   box-shadow: 0 0 0 3px #c8cfff;
 }
 
-.cf-logo { font-size: 22px; font-weight: 900; letter-spacing: -0.8px; color: #000; }
 .cf-beta {
   background: var(--blue); color: #fff;
   font-size: 12px; font-weight: 700;

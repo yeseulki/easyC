@@ -26,29 +26,36 @@ export default function HomePage({ onNavigate, progress }) {
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", background: "#f2f2f7" }}>
 
-      {/* Unified Nav */}
+      {/* Unified Nav - Perfectly matching LearnPage height and structure */}
       <div className="ios-nav">
         <div className="ios-nav-row">
-          <div className="ios-nav-title-group" style={{ gap: 16 }}>
-            <span className="cf-logo" style={{ fontSize: 28 }}>easy<b>C</b></span>
-            <div className="ios-nav-large-title">홈</div>
+          <div className="ios-nav-title-group">
+            <span className="cf-logo">easy<b>C</b></span>
           </div>
           <span className="cf-beta">Beta</span>
         </div>
-        <div className="cf-tabs"
+      </div>
+
+      <div style={{ background: "#fff", borderBottom: "1px solid rgba(0,0,0,0.08)", padding: "10px 16px", flexShrink: 0 }}>
+        <div className="ios-hscroll"
           onMouseDown={e => { e.currentTarget._isDown = true; e.currentTarget._startX = e.pageX - e.currentTarget.offsetLeft; e.currentTarget._scrollLeft = e.currentTarget.scrollLeft; e.currentTarget.style.cursor = 'grabbing'; }}
           onMouseLeave={e => { e.currentTarget._isDown = false; e.currentTarget.style.cursor = 'grab'; }}
           onMouseUp={e => { e.currentTarget._isDown = false; e.currentTarget.style.cursor = 'grab'; }}
           onMouseMove={e => { if (!e.currentTarget._isDown) return; e.preventDefault(); const x = e.pageX - e.currentTarget.offsetLeft; const walk = (x - e.currentTarget._startX) * 2; e.currentTarget.scrollLeft = e.currentTarget._scrollLeft - walk; }}
           onWheel={e => { if (e.deltaY !== 0) { e.preventDefault(); e.currentTarget.scrollLeft += e.deltaY; } }}
-          style={{ cursor: 'grab', marginTop: 14 }}
+          style={{ cursor: 'grab' }}
         >
-          {["전체", "기초", "조건/반복", "배열/함수", "포인터", "심화"].map((t, i) => (
-            <button key={t} className={`cf-tab ${i === 0 ? "active" : "inactive"}`}
-              onClick={() => onNavigate("learn", { stageIdx: i === 0 ? 0 : [0, 0, 2, 3, 4, 5][i] })}>
-              {t}
-            </button>
-          ))}
+          {["전체", "기초", "조건/반복", "배열/함수", "포인터", "심화"].map((t, i) => {
+            const targetIdx = i === 0 ? 0 : [0, 0, 2, 3, 4, 5][i];
+            const s = stages[targetIdx];
+            return (
+              <button key={t} className={`cf-tab ${i === 0 ? "active" : "inactive"}`}
+                style={i === 0 ? { background: "var(--blue)" } : {}}
+                onClick={() => onNavigate("learn", { stageIdx: targetIdx })}>
+                {i === 0 ? "🏠" : s.emoji} {t}
+              </button>
+            );
+          })}
         </div>
       </div>
 

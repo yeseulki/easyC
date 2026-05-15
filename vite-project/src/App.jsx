@@ -73,7 +73,7 @@ export default function App() {
       {/* Sidebar / Tab Bar */}
       <nav className="tab-bar">
         <div className="sidebar-logo">
-          <span className="cf-logo" onClick={() => setTab("home")}>easy<span style={{ color: "var(--blue)" }}>C</span></span>
+          <span className="cf-logo" onClick={() => setTab("home")}>easy<b>C</b></span>
         </div>
         {TABS.map(t => (
           <button key={t.id} className={`tab-item ${tab === t.id ? "active" : ""}`} onClick={() => setTab(t.id)}>

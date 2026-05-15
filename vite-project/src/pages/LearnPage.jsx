@@ -734,7 +734,7 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
       <div className="ios-nav">
         <div className="ios-nav-row">
           <div className="ios-nav-title-group" style={{ gap: 16 }}>
-            <span className="cf-logo" style={{ fontSize: 28 }}>easy<b>C</b></span>
+            <span className="cf-logo">easy<b>C</b></span>
             <div className="ios-nav-large-title">학습하기</div>
           </div>
           <div style={{ textAlign: "right" }}>
