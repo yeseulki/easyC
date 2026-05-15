@@ -103,7 +103,7 @@
   .tab-bar {
     position: static;
     left: auto; transform: none;
-    width: 120px; max-width: 120px; /* Thinner for square icons */
+    width: 120px; max-width: 120px; /* Restored original width */
     height: 100vh;
     flex-direction: column;
     justify-content: flex-start;
@@ -115,7 +115,7 @@
     flex-shrink: 0;
   }
   .tab-item {
-    width: 96px; height: 96px; /* Square shape */
+    width: 96px; height: 96px; /* Restored original square shape */
     flex-direction: column;
     padding: 16px 0;
     border-radius: 20px;
@@ -127,11 +127,11 @@
     background: rgba(0,122,255,0.08);
   }
   .tab-label {
-    font-size: 15px; /* Larger text */
-    font-weight: 700;
+    font-size: 16px; /* Larger text than original (15px -> 16px) */
+    font-weight: 800;
   }
   .tab-icon {
-    font-size: 32px; /* Larger icons */
+    font-size: 40px; /* Larger icons than original (32px -> 40px) */
   }
   .page {
     padding-bottom: 0;

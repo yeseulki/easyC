@@ -591,15 +591,13 @@ function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge,
           <CodeWithTypingSlots card={card} inputs={inputs} onInputChange={handleInputChange} showKorean={showKorean} />
         </div>
         
-        <div style={{ padding: '0 0 16px', display: 'flex', justifyContent: 'center' }}>
-          <button className={`cf-cta ${status === "ok" ? "success" : status === "err" ? "error" : ""}`} onClick={check} style={{ width: '100%'}}>
-            {status === "ok" ? "✓ 정답 확인 완료!" : status === "err" ? "✗ 다시 생각해봐!" : "정답 확인"}
-          </button>
-        </div>
-        
         <div className="cf-card" style={{ marginBottom: 16 }}>
           <Explanations card={card} stage={stage} />
         </div>
+
+        <button className={`cf-cta ${status === "ok" ? "success" : status === "err" ? "error" : ""}`} onClick={check} style={{ width: '100%', borderRadius: 16, padding: "16px", fontSize: 17, fontWeight: 800, margin: "0 0 16px 0" }}>
+          {status === "ok" ? "✓ 정답 확인 완료!" : status === "err" ? "✗ 다시 생각해봐!" : "정답 확인"}
+        </button>
 
         <button
           style={{ width: "100%", padding: "16px", borderRadius: 16, background: isClaimed ? "rgba(52,199,89,0.12)" : (status === "ok" ? `linear-gradient(135deg, ${stage.color}, ${stage.color}bb)` : "#8e8e93"), color: isClaimed ? "var(--green)" : "#fff", fontWeight: 800, fontSize: 17, border: "none", cursor: status === "ok" ? "pointer" : "default", boxShadow: isClaimed || status !== "ok" ? "none" : `0 4px 16px ${stage.color}44`, transition: "all 0.3s" }}
