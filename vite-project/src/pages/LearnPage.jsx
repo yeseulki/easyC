@@ -198,11 +198,11 @@ function LineWithSlots({ raw, card, sel, onSel, color, slotColors }) {
 
 function SyntaxLine({ raw }) {
   const html = raw
-    .replace(/\b(int|float|char|void|return|if|else|for|while|include|stdio\.h|stdlib\.h)\b/g, '<span class="t-kw">$1</span>')
-    .replace(/\b(printf|scanf|malloc|free|sizeof|main)\b/g, '<span class="t-fn">$1</span>')
-    .replace(/"([^"]*)"/g, '<span class="t-str">"$1"</span>')
-    .replace(/\b(\d+(\.\d+)?)\b/g, '<span class="t-num">$1</span>')
-    .replace(/\/\/(.*)/g, '<span class="t-cmt">// $1</span>');
+    .replace(/\b(int|float|char|void|return|if|else|for|while|include|stdio\.h|stdlib\.h)\b/g, "<span class='t-kw'>$1</span>")
+    .replace(/\b(printf|scanf|malloc|free|sizeof|main)\b/g, "<span class='t-fn'>$1</span>")
+    .replace(/"([^"]*)"/g, "<span class='t-str'>\"$1\"</span>")
+    .replace(/\b(\d+(\.\d+)?)\b/g, "<span class='t-num'>$1</span>")
+    .replace(/\/\/(.*)/g, "<span class='t-cmt'>// $1</span>");
   return <span dangerouslySetInnerHTML={{ __html: html }} />;
 }
 

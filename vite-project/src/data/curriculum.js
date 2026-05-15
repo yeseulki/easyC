@@ -191,10 +191,10 @@ export const stages = [
     cards: [
       {
         type: "concept",
-        title: "배열은 아파트, 함수는 레시피야",
+        title: "배열은 아파트, 함수는 상자야",
         content:
-          "배열은 같은 종류의 값을 순서대로 저장하는 아파트야.\n동(배열명)과 호수(인덱스[0,1,2...])로 각 방을 찾아가!\n함수는 자주 쓰는 코드를 묶어놓은 레시피야. 한번 만들면 계속 쓸 수 있어.",
-        metaphor: "🏢 배열 = 아파트 (인덱스 = 호수)\n📖 함수 = 레시피 (재사용 가능)",
+          "배열은 같은 종류의 값을 순서대로 저장하는 아파트야!\n변수 여러개를 만드는 대신 하나의 이름 뒤에 인덱스([0], [1]..)를 붙여 많은 데이터를 쉽게 처리해.\n함수는 자주 쓰는 코드를 담은 상자야. 복잡한 과정을 상자 안에 넣고 계속 쓸 수 있어.",
+        metaphor: "🏢 배열 = 아파트 (인덱스 = 호수)\n📖 함수 = 상자",
         tip: "배열 인덱스는 항상 0부터 시작해! arr[0]이 첫 번째 방이야.",
         visualization: "array",
       },
@@ -226,7 +226,7 @@ export const stages = [
         fullCode:
           '#include <stdio.h>\nint main() {\n  int scores[5] = {90,85,92,78,88};\n  int sum = 0;\n  for(int i=0; i<5; i++) sum += scores[i];\n  printf("평균: %d\\n", sum/5);\n  return 0;\n}',
         expectedOutput: "평균: 86",
-        hint: "배열은 int 이름[크기] = {값들} 형태야!",
+        hint: "배열은 '자료형 이름[크기] = {값1, 값2, ...}' 형태야!",
       },
       {
         type: "project",
@@ -240,7 +240,7 @@ export const stages = [
             { id: 2, answer: "max" },
         ],
         expectedOutput: "최고점: 95",
-        hint: "첫 번째 점수를 최고점으로 가정하고, 배열을 돌며 더 큰 값을 찾으면 교체해봐.",
+        hint: "arr[0]은 arr 배열의 첫 번째 요소를 뜻해.\n첫 번째 점수를 최고점으로 가정하고, 배열을 돌며 더 큰 값을 찾으면 교체해봐.",
       },
     ],
   },

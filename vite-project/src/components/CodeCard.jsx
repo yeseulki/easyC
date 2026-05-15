@@ -1,14 +1,14 @@
 import { useState } from "react";
 import SlotCodePicker from "./SlotCodePicker";
 
-function colorize(line) {
-  return line
-    .replace(/\b(int|float|char|void|return|if|else|for|while|include|stdio\.h|stdlib\.h)\b/g, '<span class="t-kw">$1</span>')
-    .replace(/\b(printf|scanf|malloc|free|sizeof|main)\b/g, '<span class="t-fn">$1</span>')
-    .replace(/"([^"]*)"/g, '<span class="t-str">"$1"</span>')
-    .replace(/\b(\d+)\b/g, '<span class="t-num">$1</span>')
-    .replace(/\/\/(.*)/g, '<span class="t-cmt">// $1</span>');
-}
+const colorize = (str) => {
+  return str
+    .replace(/\b(int|float|char|void|return|if|else|for|while|include|stdio\.h|stdlib\.h)\b/g, "<span class='t-kw'>$1</span>")
+    .replace(/\b(printf|scanf|malloc|free|sizeof|main)\b/g, "<span class='t-fn'>$1</span>")
+    .replace(/"([^"]*)"/g, "<span class='t-str'>\"$1\"</span>")
+    .replace(/\b(\d+(\.\d+)?)\b/g, "<span class='t-num'>$1</span>")
+    .replace(/\/\/(.*)/g, "<span class='t-cmt'>// $1</span>");
+};
 
 function CodeViewer({ code }) {
   return (
