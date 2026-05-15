@@ -181,6 +181,7 @@
   font-weight: 800;
   letter-spacing: -0.6px;
   color: #000;
+  margin-top: 5.8px;
 }
 .cf-logo { font-size: 35px; font-weight: 900; letter-spacing: -2px; color: #000; }
 .cf-logo b { color: var(--blue); }
