@@ -1,4 +1,5 @@
 ﻿import { stages } from "../data/curriculum";
+import logo from "../assets/logo.png";
 
 const CORE_FEATURES = [
   { icon: "📖", type: "concept", title: "개념 학습", sub: "핵심 개념부터 차근차근" },
@@ -30,7 +31,7 @@ export default function HomePage({ onNavigate, progress }) {
       <div className="ios-nav">
         <div className="ios-nav-row">
           <div className="ios-nav-title-group">
-            <span className="cf-logo">easy<b>C</b></span>
+            <img src={logo} className="cf-logo-img" alt="logo" />
           </div>
           <span className="cf-beta">Beta</span>
         </div>

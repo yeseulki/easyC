@@ -184,6 +184,7 @@
 }
 .cf-logo { font-size: 35px; font-weight: 900; letter-spacing: -2px; color: #000; }
 .cf-logo b { color: var(--blue); }
+.cf-logo-img { height: 35px; cursor: pointer; object-fit: contain; display: block; }
 
 /* ══════════════════════════════════════
    Page
