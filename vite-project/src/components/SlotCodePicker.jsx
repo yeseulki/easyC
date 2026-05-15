@@ -1,5 +1,38 @@
 import { useState, useRef, useMemo, useEffect } from "react";
 
+function translateLine(raw) {
+  let text = raw.trim();
+  if (!text) return "";
+  if (text.startsWith("#include")) return text.replace(/#include\s*<(.*?)>/, "📦 $1 기능 가져오기");
+  if (text.includes("int main()")) return "🚀 메인 프로그램 시작";
+  if (text.includes("return 0;")) return "🏁 프로그램 정상 종료";
+  if (text.startsWith("printf")) {
+    let content = text.match(/printf\("([^"]*)"/);
+    return `🖨️ 화면에 ${content ? '"'+content[1].replace(/\\n/g, ' [줄바꿈]')+'"' : ''} 출력하기`;
+  }
+  if (text.startsWith("scanf")) return "⌨️ 사용자로부터 입력받기";
+  if (text.startsWith("struct")) return "📂 새로운 데이터 꾸러미(구조체) 정의하기";
+  if (text.startsWith("int") || text.startsWith("float") || text.startsWith("char")) {
+    if (text.includes("[]") || text.includes("[")) return "🏢 여러 값을 담는 배열 만들기";
+    if (text.includes("*")) return "🗺️ 메모리 주소를 담는 포인터 만들기";
+    return "📦 새로운 변수(저장 공간) 만들기";
+  }
+  if (text.includes("malloc")) return "🏗️ 필요한 만큼 메모리 공간 빌리기";
+  if (text.includes("free(")) return "🧹 다 쓴 메모리 공간 반납하기";
+  if (text.includes("fopen")) return "📖 파일 열기";
+  if (text.includes("fprintf")) return "✍️ 파일에 내용 쓰기";
+  if (text.includes("fclose")) return "📕 파일 닫기";
+  if (text.includes("strcpy")) return "✏️ 글자(문자열) 복사해서 넣기";
+  if (text.startsWith("for")) return "🔃 정해진 횟수/조건만큼 반복하기";
+  if (text.startsWith("while")) return "🚪 조건이 참인 동안 계속 반복하기";
+  if (text.startsWith("if")) return "🚦 만약 조건이 맞다면";
+  if (text.startsWith("else if")) return "🚦 아니면 만약 조건이 맞다면";
+  if (text.startsWith("else")) return "🚦 그 외의 경우라면";
+  if (text.includes("=")) return "✏️ 변수에 새로운 값 저장하기";
+  if (text === "}" || text === "};") return "블록 닫기";
+  return "👉 코드 실행";
+}
+
 function Drum({ options, selected, onSelect, fixed, color }) {
   const startY = useRef(null);
   const label  = options[selected];
@@ -105,9 +138,12 @@ export default function SlotCodePicker({ slots, color = "var(--blue)", onResult 
         animation: result === "err" ? "iosShake 0.4s ease" : "none",
         transition: "all 0.25s",
       }}>
-        <span style={{ fontFamily: "monospace", fontSize: 13, fontWeight: 600, color: result === "ok" ? "var(--green)" : result === "err" ? "var(--red)" : "var(--label2)" }}>
+        <div style={{ fontFamily: "monospace", fontSize: 13, fontWeight: 600, color: result === "ok" ? "var(--green)" : result === "err" ? "var(--red)" : "var(--label2)", marginBottom: 4 }}>
           {assembled}
-        </span>
+        </div>
+        <div style={{ fontSize: 12, color: color, fontWeight: 600, opacity: 0.85 }}>
+          {translateLine(assembled)}
+        </div>
       </div>
 
       {result === "ok" && (

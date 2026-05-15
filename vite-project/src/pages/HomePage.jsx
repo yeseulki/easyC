@@ -3,7 +3,7 @@
 const CORE_FEATURES = [
   { icon: "📖", type: "concept", title: "개념 학습", sub: "핵심 개념부터 차근차근" },
   { icon: "💻", type: "code",    title: "실습",      sub: "코드를 직접 완성하며 학습" },
-  { icon: "🚀", type: "project", title: "프로젝트",  sub: "만들며 배우는 커리큘큘럼" },
+  { icon: "🚀", type: "project", title: "프로젝트",  sub: "만들며 배우는 커리큘럼" },
 ];
 
 export default function HomePage({ onNavigate, progress }) {
@@ -32,7 +32,14 @@ export default function HomePage({ onNavigate, progress }) {
           <span className="cf-logo">easy<span style={{ color: "var(--blue)" }}>C</span></span>
           <span className="cf-beta">Beta</span>
         </div>
-        <div className="cf-tabs">
+        <div className="cf-tabs"
+          onMouseDown={e => { e.currentTarget._isDown = true; e.currentTarget._startX = e.pageX - e.currentTarget.offsetLeft; e.currentTarget._scrollLeft = e.currentTarget.scrollLeft; e.currentTarget.style.cursor = 'grabbing'; }}
+          onMouseLeave={e => { e.currentTarget._isDown = false; e.currentTarget.style.cursor = 'grab'; }}
+          onMouseUp={e => { e.currentTarget._isDown = false; e.currentTarget.style.cursor = 'grab'; }}
+          onMouseMove={e => { if (!e.currentTarget._isDown) return; e.preventDefault(); const x = e.pageX - e.currentTarget.offsetLeft; const walk = (x - e.currentTarget._startX) * 2; e.currentTarget.scrollLeft = e.currentTarget._scrollLeft - walk; }}
+          onWheel={e => { if (e.deltaY !== 0) { e.preventDefault(); e.currentTarget.scrollLeft += e.deltaY; } }}
+          style={{ cursor: 'grab' }}
+        >
           {["전체", "기초", "조건/반복", "배열/함수", "포인터", "심화"].map((t, i) => (
             <button key={t} className={`cf-tab ${i === 0 ? "active" : "inactive"}`}
               onClick={() => onNavigate("learn", { stageIdx: i === 0 ? 0 : [0, 0, 2, 3, 4, 5][i] })}>
@@ -49,7 +56,7 @@ export default function HomePage({ onNavigate, progress }) {
         <div style={s.heroCard}>
           <div style={s.heroBlob1} /><div style={s.heroBlob2} />
           <div style={{ position: "relative", zIndex: 1 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "#007aff", letterSpacing: 0.5, marginBottom: 12 }}>⚡ C언어 학습 플랫폼</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#007aff", letterSpacing: 0.5, marginBottom: 12 }}>⚡C언어 학습 플랫폼</div>
             <h1 style={s.heroTitle}>
               <span style={{ color: "rgba(0,0,0,0.35)", fontWeight: 300, fontSize: 32, display: "block", marginBottom: 2, letterSpacing: -0.8 }}>What is</span>
               <span style={{ display: "flex", alignItems: "baseline", gap: 6 }}>

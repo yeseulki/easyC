@@ -24,34 +24,40 @@ export default function ProfilePage({ badges, progress, savedItems = [], onNavig
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", background: "var(--bg2)" }}>
       {/* Nav with easyC logo */}
-      <div className="ios-nav" style={{ paddingTop: 54, background: "rgba(242,242,247,0.9)", display: "flex", alignItems: "center", gap: 12 }}>
-        <span style={{ fontSize: 24, fontWeight: 900, letterSpacing: -1.2, color: "var(--blue)", marginLeft: 20 }}>easyC</span>
-        <div className="ios-nav-large-title" style={{ padding: 0 }}>프로필</div>
+      <div className="ios-nav" style={{ paddingTop: 44, background: "#fff", display: "flex", alignItems: "center", gap: 12, paddingLeft: 20, paddingRight: 20, borderBottom: "0.5px solid var(--sep)" }}>
+        <span style={{ fontSize: 26, fontWeight: 900, letterSpacing: -1.2, color: "var(--blue)" }}>easyC</span>
+        <div className="ios-nav-large-title" style={{ padding: 0, fontWeight: 800, fontSize: 32 }}>프로필</div>
       </div>
 
       <div className="page" style={{ padding: "0 0 var(--nav-h)" }}>
 
-        {/* Hero */}
-        <div style={{ background: "#fff", padding: "28px 24px 24px", display: "flex", flexDirection: "column", alignItems: "center", borderBottom: "0.5px solid var(--sep2)", marginBottom: 16 }}>
-          <div style={{ width: 88, height: 88, borderRadius: "50%", background: "linear-gradient(135deg,rgba(0,122,255,0.12),rgba(88,86,214,0.1))", border: `2.5px solid ${level.color}55`, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 0 20px ${level.color}22` }}>
-            <span style={{ fontSize: 44 }}>🧑‍💻</span>
-          </div>
-          <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.5, marginTop: 14, color: "var(--label)" }}>코딩 학생</div>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6 }}>
-            <span style={{ fontSize: 16 }}>{level.emoji}</span>
-            <span style={{ fontSize: 15, fontWeight: 600, color: level.color }}>{level.label}</span>
-          </div>
-          {next && (
-            <div style={{ width: "100%", marginTop: 18 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "var(--label2)", marginBottom: 6 }}>
-                <span>다음: {next.emoji} {next.label}</span>
-                <span>{badges.length} / {next.min} 뱃지</span>
-              </div>
-              <div className="ios-prog-track" style={{ height: 5 }}>
-                <div className="ios-prog-fill" style={{ width: `${(badges.length / next.min) * 100}%`, background: `linear-gradient(90deg,${level.color},${next.color})` }} />
-              </div>
+        {/* Hero & Level Card */}
+        <div style={{ padding: "16px 20px 0" }}>
+          <div style={{ background: "#fff", padding: "24px", borderRadius: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.07)", display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 16 }}>
+            <div style={{ width: 88, height: 88, borderRadius: "50%", background: "linear-gradient(135deg,rgba(0,122,255,0.12),rgba(88,86,214,0.1))", border: `2.5px solid ${level.color}55`, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 0 20px ${level.color}22` }}>
+              <span style={{ fontSize: 44 }}>🧑‍💻</span>
             </div>
-          )}
+            <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.5, marginTop: 14, color: "var(--label)" }}>코딩 학생</div>
+            <div style={{ 
+              display: "flex", alignItems: "center", gap: 6, marginTop: 12,
+              background: level.color + "12", border: `1.5px solid ${level.color}33`,
+              padding: "6px 14px", borderRadius: 12,
+            }}>
+              <span style={{ fontSize: 16 }}>{level.emoji}</span>
+              <span style={{ fontSize: 14, fontWeight: 800, color: level.color, letterSpacing: -0.2 }}>{level.label}</span>
+            </div>
+            {next && (
+              <div style={{ width: "100%", marginTop: 22 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "var(--label2)", marginBottom: 8 }}>
+                  <span style={{ fontWeight: 600 }}>다음: {next.emoji} {next.label}</span>
+                  <span style={{ fontWeight: 600 }}>{badges.length} / {next.min} 뱃지</span>
+                </div>
+                <div className="ios-prog-track" style={{ height: 6, background: "rgba(0,0,0,0.05)" }}>
+                  <div className="ios-prog-fill" style={{ width: `${(badges.length / next.min) * 100}%`, background: `linear-gradient(90deg,${level.color},${next.color})` }} />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Stats */}

@@ -83,7 +83,7 @@ export default function App() {
         ))}
       </nav>
 
-      <main className="main-content">
+      <main className="main-content" style={{ position: "relative" }}>
         <div style={{ display: tab === "home"    ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}><HomePage onNavigate={navigate} progress={progress} /></div>
         <div style={{ display: tab === "learn"   ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}>
           <LearnPage 
@@ -102,24 +102,28 @@ export default function App() {
         </div>
         <div style={{ display: tab === "code"    ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}><CodePage onCorrect={handleCorrect} /></div>
         <div style={{ display: tab === "profile" ? "flex" : "none", flexDirection: "column", height: "100%", overflow: "hidden" }}><ProfilePage badges={badges} progress={progress} savedItems={savedItems} onNavigate={navigate} /></div>
-      </main>
 
-      {/* Badge/Correct Toast */}
-      {toast && (
-        <div style={{
-          position: "fixed", top: "35%", left: "50%", transform: "translate(-50%,-50%)",
-          background: isCorrectToast ? "rgba(52,199,89,0.97)" : "rgba(255,255,255,0.97)",
-          backdropFilter: "blur(30px)",
-          borderRadius: 28, padding: "28px 40px", textAlign: "center", zIndex: 200,
-          animation: "iosPop 0.4s cubic-bezier(0.34,1.56,0.64,1)",
-          boxShadow: "0 24px 60px rgba(0,0,0,0.18), 0 0 0 0.5px rgba(0,0,0,0.08)",
-          display: "flex", flexDirection: "column", alignItems: "center", gap: 10, minWidth: 220,
-        }}>
-          <div style={{ fontSize: 56, lineHeight: 1, animation: "iosBounce 1s infinite" }}>{isCorrectToast ? "🎉" : "🏆"}</div>
-          <div style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.3, color: isCorrectToast ? "#fff" : "#000" }}>{isCorrectToast ? "정답이야!" : "뱃지 획득!"}</div>
-          <div style={{ fontSize: 14, color: isCorrectToast ? "rgba(255,255,255,0.8)" : "#8e8e93", fontWeight: 500 }}>{toast}</div>
-        </div>
-      )}
+        {/* Badge/Correct Toast - Now inside main-content */}
+        {toast && (
+          <div style={{
+            position: "absolute", top: "35%", left: "50%", transform: "translate(-50%,-50%)",
+            zIndex: 200, pointerEvents: "none"
+          }}>
+            <div style={{
+              background: isCorrectToast ? "rgba(52,199,89,0.97)" : "rgba(255,255,255,0.97)",
+              backdropFilter: "blur(30px)",
+              borderRadius: 28, padding: "28px 40px", textAlign: "center",
+              animation: "iosPop 0.4s cubic-bezier(0.34,1.56,0.64,1)",
+              boxShadow: "0 24px 60px rgba(0,0,0,0.18), 0 0 0 0.5px rgba(0,0,0,0.08)",
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 10, minWidth: 220,
+            }}>
+              <div style={{ fontSize: 56, lineHeight: 1, animation: "iosBounce 1s infinite" }}>{isCorrectToast ? "🎉" : "🏆"}</div>
+              <div style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.3, color: isCorrectToast ? "#fff" : "#000" }}>{isCorrectToast ? "정답이야!" : "뱃지 획득!"}</div>
+              <div style={{ fontSize: 14, color: isCorrectToast ? "rgba(255,255,255,0.8)" : "#8e8e93", fontWeight: 500 }}>{toast}</div>
+            </div>
+          </div>
+        )}
+      </main>
     </div>
   );
 }

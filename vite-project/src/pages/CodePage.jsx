@@ -68,13 +68,20 @@ export default function CodePage({ onCorrect }) {
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", background: "var(--bg2)" }}>
       {/* Nav */}
-      <div className="ios-nav" style={{ paddingTop: 54, background: "rgba(242,242,247,0.9)" }}>
-        <div className="ios-nav-large-title">코딩 챌린지</div>
-        <div style={{ fontSize: 14, color: "var(--label2)", marginTop: 4 }}>{solved.size}/{CHALLENGES.length} 완료</div>
-        <div className="ios-prog-track" style={{ marginTop: 10, height: 5 }}>
-          <div className="ios-prog-fill" style={{ width: `${(solved.size / CHALLENGES.length) * 100}%`, background: "var(--blue)" }} />
-        </div>
-        <div className="ios-segment" style={{ marginTop: 14 }}>
+      <div className="ios-nav" style={{ paddingTop: 44, background: "#fff", paddingLeft: 20, paddingRight: 20, borderBottom: "0.5px solid var(--sep)" }}>
+        <div className="ios-nav-large-title" style={{ fontWeight: 800, fontSize: 32 }}>코딩 챌린지</div>
+        <div style={{ fontSize: 14, color: "var(--label2)", marginTop: 4, paddingBottom: 16 }}>{solved.size}/{CHALLENGES.length} 완료</div>
+      </div>
+
+      {/* Filter Card - Simplified */}
+      <div style={{ padding: "8px 20px 0" }}>
+        <div className="ios-segment"
+          onMouseDown={e => { e.currentTarget._isDown = true; e.currentTarget._startX = e.pageX - e.currentTarget.offsetLeft; e.currentTarget._scrollLeft = e.currentTarget.scrollLeft; e.currentTarget.style.cursor = 'grabbing'; }}
+          onMouseLeave={e => { e.currentTarget._isDown = false; e.currentTarget.style.cursor = 'grab'; }}
+          onMouseUp={e => { e.currentTarget._isDown = false; e.currentTarget.style.cursor = 'grab'; }}
+          onMouseMove={e => { if (!e.currentTarget._isDown) return; e.preventDefault(); const x = e.pageX - e.currentTarget.offsetLeft; const walk = (x - e.currentTarget._startX) * 2; e.currentTarget.scrollLeft = e.currentTarget._scrollLeft - walk; }}
+          onWheel={e => { if (e.deltaY !== 0) { e.preventDefault(); e.currentTarget.scrollLeft += e.deltaY; } }}
+        >
           <button className={`ios-seg-item ${filter === "all" ? "active" : ""}`} onClick={() => setFilter("all")}>전체</button>
           {stages.map(st => (
             <button key={st.id} className={`ios-seg-item ${filter === `${st.id}` ? "active" : ""}`} onClick={() => setFilter(`${st.id}`)}>

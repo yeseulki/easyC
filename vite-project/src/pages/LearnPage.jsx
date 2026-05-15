@@ -1,6 +1,40 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { stages } from "../data/curriculum";
 
+function translateLine(raw) {
+  let text = raw.trim();
+  if (!text) return "";
+  text = text.replace(/__SLOT_\d+__/g, "빈칸");
+  if (text.startsWith("#include")) return text.replace(/#include\s*<(.*?)>/, "📦 $1 기능 가져오기");
+  if (text.includes("int main()")) return "🚀 메인 프로그램 시작";
+  if (text.includes("return 0;")) return "🏁 프로그램 정상 종료";
+  if (text.startsWith("printf")) {
+    let content = text.match(/printf\("([^"]*)"/);
+    return `🖨️ 화면에 ${content ? '"'+content[1].replace(/\\n/g, ' [줄바꿈]')+'"' : ''} 출력하기`;
+  }
+  if (text.startsWith("scanf")) return "⌨️ 사용자로부터 입력받기";
+  if (text.startsWith("struct")) return "📂 새로운 데이터 꾸러미(구조체) 정의하기";
+  if (text.startsWith("int") || text.startsWith("float") || text.startsWith("char")) {
+    if (text.includes("[]") || text.includes("[")) return "🏢 여러 값을 담는 배열 만들기";
+    if (text.includes("*")) return "🗺️ 메모리 주소를 담는 포인터 만들기";
+    return "📦 새로운 변수(저장 공간) 만들기";
+  }
+  if (text.includes("malloc")) return "🏗️ 필요한 만큼 메모리 공간 빌리기";
+  if (text.includes("free(")) return "🧹 다 쓴 메모리 공간 반납하기";
+  if (text.includes("fopen")) return "📖 파일 열기";
+  if (text.includes("fprintf")) return "✍️ 파일에 내용 쓰기";
+  if (text.includes("fclose")) return "📕 파일 닫기";
+  if (text.includes("strcpy")) return "✏️ 글자(문자열) 복사해서 넣기";
+  if (text.startsWith("for")) return "🔃 정해진 횟수/조건만큼 반복하기";
+  if (text.startsWith("while")) return "🚪 조건이 참인 동안 계속 반복하기";
+  if (text.startsWith("if")) return "🚦 만약 조건이 맞다면";
+  if (text.startsWith("else if")) return "🚦 아니면 만약 조건이 맞다면";
+  if (text.startsWith("else")) return "🚦 그 외의 경우라면";
+  if (text.includes("=")) return "✏️ 변수에 새로운 값 저장하기";
+  if (text === "}" || text === "};") return "블록 닫기";
+  return "👉 코드 실행";
+}
+
 /* ── Memory Map Component ── */
 function MemoryMap({ color }) {
   const [activeAddr, setActiveAddr] = useState(null);
@@ -74,17 +108,37 @@ function InlineSlot({ options, selected, onSelect, color }) {
 }
 
 /* ── Build code lines with inline slots ── */
-function CodeWithSlots({ card, color, sel, onSel }) {
+function CodeWithSlots({ card, color, sel, onSel, showKorean }) {
   const slotColors = ["#007aff", "#af52de", "#ff9500", "#34c759", "#30b0c7"];
   const fullLines = card.fullCode.split("\n");
 
   return (
-    <div className="cf-code">
+    <div className="cf-code"
+      onMouseDown={e => { 
+        if (e.clientY - e.currentTarget.getBoundingClientRect().top >= e.currentTarget.clientHeight) return;
+        e.currentTarget._isDown = true; e.currentTarget._startX = e.pageX - e.currentTarget.offsetLeft; e.currentTarget._scrollLeft = e.currentTarget.scrollLeft; e.currentTarget.style.cursor = 'grabbing'; 
+      }}
+      onMouseLeave={e => { e.currentTarget._isDown = false; e.currentTarget.style.cursor = 'grab'; }}
+      onMouseUp={e => { e.currentTarget._isDown = false; e.currentTarget.style.cursor = 'grab'; }}
+      onMouseMove={e => { if (!e.currentTarget._isDown) return; e.preventDefault(); const x = e.pageX - e.currentTarget.offsetLeft; const walk = (x - e.currentTarget._startX) * 2; e.currentTarget.scrollLeft = e.currentTarget._scrollLeft - walk; }}
+      onWheel={e => { if (e.deltaY !== 0 && e.currentTarget.scrollWidth > e.currentTarget.clientWidth) { e.stopPropagation(); e.preventDefault(); e.currentTarget.scrollLeft += e.deltaY; } }}
+      onTouchStart={e => e.stopPropagation()}
+      onTouchMove={e => e.stopPropagation()}
+      onTouchEnd={e => e.stopPropagation()}
+      style={{ cursor: 'grab', userSelect: 'none' }}
+    >
       {fullLines.map((line, li) => {
         return (
-          <div key={li} style={{ display: "flex", alignItems: "center", gap: 0, whiteSpace: "pre" }}>
-            <span style={{ color: "#c7c7cc", minWidth: 22, textAlign: "right", marginRight: 14, fontSize: 11, userSelect: "none", flexShrink: 0 }}>{li + 1}</span>
-            <LineWithSlots raw={line} card={card} sel={sel} onSel={onSel} color={color} slotColors={slotColors} />
+          <div key={li} style={{ display: "flex", flexDirection: "column", width: "max-content", minWidth: "100%", marginBottom: showKorean ? 8 : 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 0, whiteSpace: "pre" }}>
+              <span style={{ color: "#c7c7cc", minWidth: 22, textAlign: "right", marginRight: 14, fontSize: 11, userSelect: "none", flexShrink: 0 }}>{li + 1}</span>
+              <LineWithSlots raw={line} card={card} sel={sel} onSel={onSel} color={color} slotColors={slotColors} />
+            </div>
+            {showKorean && line.trim() !== "" && (
+              <div style={{ paddingLeft: 36, marginTop: 2, fontSize: 12, color: "var(--blue)", fontWeight: 600, opacity: 0.8, animation: "iosFadeIn 0.3s ease" }}>
+                {translateLine(line)}
+              </div>
+            )}
           </div>
         );
       })}
@@ -182,6 +236,7 @@ function Explanations({ card, stage }) {
 /* ── One full code card ── */
 function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate, isLast, onSave, savedItems, onSolvedChange, onCorrect, initialAnswer, onUpdateAnswer, scrollRef }) {
   const isSaved = savedItems?.some(i => i.title === card.title);
+  const [showKorean, setShowKorean] = useState(false);
   const processedSlots = useMemo(() => {
     return card.slots.map(s => {
       if (s.fixed || s.options.length <= 1) return s;
@@ -252,15 +307,20 @@ function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate,
             <h2 style={{ fontSize: 18, fontWeight: 900, letterSpacing: -0.4, lineHeight: 1.3, color: "#000" }}>{card.title}</h2>
             <p style={{ fontSize: 13, color: "#8e8e93", marginTop: 6, lineHeight: 1.6 }}>{card.description}</p>
           </div>
-          <div className="cf-action-btn" onClick={() => onSave?.(card, stageIdx, cardIdx)} style={{ marginTop: 10 }}>
-            <div className="cf-action-icon" style={{ width: 38, height: 38, fontSize: 18, color: isSaved ? stage.color : "#000" }}>{isSaved ? "🔖" : "📌"}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 10 }}>
+            <button onClick={() => setShowKorean(!showKorean)} style={{ background: showKorean ? stage.color : "rgba(0,0,0,0.06)", color: showKorean ? "#fff" : "#000", padding: "6px 12px", borderRadius: 20, fontSize: 12, fontWeight: 700, transition: "all 0.2s", border: "none", cursor: "pointer" }}>
+              {showKorean ? "💡 원본 코드" : "💡 자연어 해석"}
+            </button>
+            <div className="cf-action-btn" onClick={() => onSave?.(card, stageIdx, cardIdx)}>
+              <div className="cf-action-icon" style={{ width: 38, height: 38, fontSize: 18, color: isSaved ? stage.color : "#000" }}>{isSaved ? "🔖" : "📌"}</div>
+            </div>
           </div>
         </div>
 
         <div style={{ margin: "0 16px", position: "relative" }}>
           <div className="cf-card">
             <div className="cf-dots"><div className="cf-dot red" /><div className="cf-dot yellow" /><div className="cf-dot green" /></div>
-            <CodeWithSlots card={processedCard} color={stage.color} sel={sel} onSel={pick} />
+            <CodeWithSlots card={processedCard} color={stage.color} sel={sel} onSel={pick} showKorean={showKorean} />
           </div>
         </div>
 
@@ -401,12 +461,19 @@ function LineWithTypingSlots({ raw, onInputChange, inputs }) {
   );
 }
 
-function CodeWithTypingSlots({ card, inputs, onInputChange }) {
+function CodeWithTypingSlots({ card, inputs, onInputChange, showKorean }) {
   const fullLines = card.fullCode.split("\n");
   let slotCounter = 0;
 
   return (
-    <div className="cf-code">
+    <div className="cf-code"
+      onMouseDown={e => { e.currentTarget._isDown = true; e.currentTarget._startX = e.pageX - e.currentTarget.offsetLeft; e.currentTarget._scrollLeft = e.currentTarget.scrollLeft; e.currentTarget.style.cursor = 'grabbing'; }}
+      onMouseLeave={e => { e.currentTarget._isDown = false; e.currentTarget.style.cursor = 'grab'; }}
+      onMouseUp={e => { e.currentTarget._isDown = false; e.currentTarget.style.cursor = 'grab'; }}
+      onMouseMove={e => { if (!e.currentTarget._isDown) return; e.preventDefault(); const x = e.pageX - e.currentTarget.offsetLeft; const walk = (x - e.currentTarget._startX) * 2; e.currentTarget.scrollLeft = e.currentTarget._scrollLeft - walk; }}
+      onWheel={e => { if (e.deltaY !== 0 && e.currentTarget.scrollWidth > e.currentTarget.clientWidth) { e.preventDefault(); e.currentTarget.scrollLeft += e.deltaY; } }}
+      style={{ cursor: 'grab', userSelect: 'none' }}
+    >
       {fullLines.map((line, li) => {
         const currentSlotStart = slotCounter;
         const slotsInLine = (line.match(/__SLOT_\d+__/g) || []).length;
@@ -417,13 +484,20 @@ function CodeWithTypingSlots({ card, inputs, onInputChange }) {
         slotCounter += slotsInLine;
         
         return (
-          <div key={li} style={{ display: "flex", alignItems: "center", gap: 0, whiteSpace: "pre" }}>
-            <span style={{ color: "#c7c7cc", minWidth: 22, textAlign: "right", marginRight: 14, fontSize: 11, userSelect: "none", flexShrink: 0 }}>{li + 1}</span>
-            <LineWithTypingSlots
-              raw={line}
-              onInputChange={handleLineInputChange}
-              inputs={lineInputs}
-            />
+          <div key={li} style={{ display: "flex", flexDirection: "column", width: "max-content", minWidth: "100%", marginBottom: showKorean ? 8 : 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 0, whiteSpace: "pre" }}>
+              <span style={{ color: "#c7c7cc", minWidth: 22, textAlign: "right", marginRight: 14, fontSize: 11, userSelect: "none", flexShrink: 0 }}>{li + 1}</span>
+              <LineWithTypingSlots
+                raw={line}
+                onInputChange={handleLineInputChange}
+                inputs={lineInputs}
+              />
+            </div>
+            {showKorean && line.trim() !== "" && (
+              <div style={{ paddingLeft: 36, marginTop: 2, fontSize: 12, color: "var(--blue)", fontWeight: 600, opacity: 0.8, animation: "iosFadeIn 0.3s ease" }}>
+                {translateLine(line)}
+              </div>
+            )}
           </div>
         );
       })}
@@ -434,6 +508,7 @@ function CodeWithTypingSlots({ card, inputs, onInputChange }) {
 /* ── Project card ── */
 function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge, onNavigate, isLast, onSolvedChange, onCorrect, initialAnswer, onUpdateAnswer, badges, scrollRef }) {
   const isClaimed = badges?.includes(card.badge);
+  const [showKorean, setShowKorean] = useState(false);
   const [confetti, setConfetti] = useState([]);
   const [inputs, setInputs] = useState(initialAnswer || Array(card.slots.length).fill(""));
   const [status, setStatus] = useState(() => {
@@ -489,15 +564,22 @@ function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge,
       </div>
 
       <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "0 16px 16px" }}>
-        <div style={{ paddingTop: 12, paddingBottom: 12 }}>
-          <div style={{ fontSize: 11, color: stage.color, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 6 }}>🚀 프로젝트</div>
-          <h2 style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.5, lineHeight: 1.3, color: "#000", marginBottom: 10 }}>{card.title}</h2>
-          <p style={{ fontSize: 14, color: "#8e8e93", lineHeight: 1.7, marginBottom: 16, whiteSpace: "pre-line" }}>{card.description}</p>
+        <div style={{ paddingTop: 12, paddingBottom: 12, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 11, color: stage.color, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 6 }}>🚀 프로젝트</div>
+            <h2 style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.5, lineHeight: 1.3, color: "#000", marginBottom: 10 }}>{card.title}</h2>
+            <p style={{ fontSize: 14, color: "#8e8e93", lineHeight: 1.7, marginBottom: 16, whiteSpace: "pre-line" }}>{card.description}</p>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 10 }}>
+            <button onClick={() => setShowKorean(!showKorean)} style={{ background: showKorean ? stage.color : "rgba(0,0,0,0.06)", color: showKorean ? "#fff" : "#000", padding: "6px 12px", borderRadius: 20, fontSize: 12, fontWeight: 700, transition: "all 0.2s", border: "none", cursor: "pointer" }}>
+              {showKorean ? "💡 원본 코드" : "💡 자연어 해석"}
+            </button>
+          </div>
         </div>
 
         <div className="cf-card" style={{ marginBottom: 16 }}>
           <div className="cf-dots"><div className="cf-dot red" /><div className="cf-dot yellow" /><div className="cf-dot green" /></div>
-          <CodeWithTypingSlots card={card} inputs={inputs} onInputChange={handleInputChange} />
+          <CodeWithTypingSlots card={card} inputs={inputs} onInputChange={handleInputChange} showKorean={showKorean} />
         </div>
         
         <div style={{ padding: '0 0 16px', display: 'flex', justifyContent: 'center' }}>
@@ -649,7 +731,14 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
   return (
     <div className="learn-page-container" onTouchStart={onTS} onTouchEnd={onTE} onWheel={onWheel}>
       <div style={{ background: "#fff", borderBottom: "1px solid rgba(0,0,0,0.08)", padding: "10px 16px", flexShrink: 0 }}>
-        <div className="ios-hscroll">
+        <div className="ios-hscroll"
+          onMouseDown={e => { e.currentTarget._isDown = true; e.currentTarget._startX = e.pageX - e.currentTarget.offsetLeft; e.currentTarget._scrollLeft = e.currentTarget.scrollLeft; e.currentTarget.style.cursor = 'grabbing'; }}
+          onMouseLeave={e => { e.currentTarget._isDown = false; e.currentTarget.style.cursor = 'grab'; }}
+          onMouseUp={e => { e.currentTarget._isDown = false; e.currentTarget.style.cursor = 'grab'; }}
+          onMouseMove={e => { if (!e.currentTarget._isDown) return; e.preventDefault(); const x = e.pageX - e.currentTarget.offsetLeft; const walk = (x - e.currentTarget._startX) * 2; e.currentTarget.scrollLeft = e.currentTarget._scrollLeft - walk; }}
+          onWheel={e => { if (e.deltaY !== 0) { e.preventDefault(); e.currentTarget.scrollLeft += e.deltaY; } }}
+          style={{ cursor: 'grab' }}
+        >
           {stages.map((st, i) => (
             <button key={st.id} className={`cf-tab ${i === stageIdx ? "active" : "inactive"}`} style={i === stageIdx ? { background: st.color } : {}} onClick={() => { if (i <= stageIdx) { setStageIdx(i); setCardIdx(0); setKey(k => k + 1); } }}>
               {st.emoji} {st.title}
