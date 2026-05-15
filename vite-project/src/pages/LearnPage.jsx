@@ -408,10 +408,11 @@ function CodeWithTypingSlots({ card, inputs, onInputChange }) {
   return (
     <div className="cf-code">
       {fullLines.map((line, li) => {
+        const currentSlotStart = slotCounter;
         const slotsInLine = (line.match(/__SLOT_\d+__/g) || []).length;
-        const lineInputs = inputs.slice(slotCounter, slotCounter + slotsInLine);
+        const lineInputs = inputs.slice(currentSlotStart, currentSlotStart + slotsInLine);
         const handleLineInputChange = (indexInLine, value) => {
-          onInputChange(slotCounter + indexInLine, value);
+          onInputChange(currentSlotStart + indexInLine, value);
         };
         slotCounter += slotsInLine;
         
