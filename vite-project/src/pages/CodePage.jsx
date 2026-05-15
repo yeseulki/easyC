@@ -68,9 +68,19 @@ export default function CodePage({ onCorrect }) {
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", background: "var(--bg2)" }}>
       {/* Nav */}
-      <div className="ios-nav" style={{ paddingTop: 44, background: "#fff", paddingLeft: 20, paddingRight: 20, borderBottom: "0.5px solid var(--sep)" }}>
-        <div className="ios-nav-large-title" style={{ fontWeight: 800, fontSize: 32 }}>코딩 챌린지</div>
-        <div style={{ fontSize: 14, color: "var(--label2)", marginTop: 4, paddingBottom: 16 }}>{solved.size}/{CHALLENGES.length} 완료</div>
+      <div className="ios-nav">
+        <div className="ios-nav-row">
+          <div className="ios-nav-title-group" style={{ gap: 16 }}>
+            <span className="cf-logo" style={{ fontSize: 28 }}>easy<b>C</b></span>
+            <div className="ios-nav-large-title">코딩 챌린지</div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--label2)" }}>{solved.size}/{CHALLENGES.length}</div>
+            <div style={{ width: 60, height: 4, background: "rgba(0,0,0,0.05)", borderRadius: 2, marginTop: 4 }}>
+              <div style={{ width: `${(solved.size / CHALLENGES.length) * 100}%`, height: "100%", background: "var(--blue)", borderRadius: 2 }} />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Filter Card - Simplified */}

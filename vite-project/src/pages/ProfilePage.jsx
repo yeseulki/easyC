@@ -24,9 +24,13 @@ export default function ProfilePage({ badges, progress, savedItems = [], onNavig
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", background: "var(--bg2)" }}>
       {/* Nav with easyC logo */}
-      <div className="ios-nav" style={{ paddingTop: 44, background: "#fff", display: "flex", alignItems: "center", gap: 12, paddingLeft: 20, paddingRight: 20, borderBottom: "0.5px solid var(--sep)" }}>
-        <span style={{ fontSize: 26, fontWeight: 900, letterSpacing: -1.2, color: "var(--blue)" }}>easyC</span>
-        <div className="ios-nav-large-title" style={{ padding: 0, fontWeight: 800, fontSize: 32 }}>프로필</div>
+      <div className="ios-nav">
+        <div className="ios-nav-row">
+          <div className="ios-nav-title-group" style={{ gap: 16 }}>
+            <span className="cf-logo" style={{ fontSize: 28 }}>easy<b>C</b></span>
+            <div className="ios-nav-large-title">프로필</div>
+          </div>
+        </div>
       </div>
 
       <div className="page" style={{ padding: "0 0 var(--nav-h)" }}>

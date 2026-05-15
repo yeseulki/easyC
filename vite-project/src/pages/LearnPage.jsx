@@ -730,6 +730,22 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
 
   return (
     <div className="learn-page-container" onTouchStart={onTS} onTouchEnd={onTE} onWheel={onWheel}>
+      {/* Unified Nav */}
+      <div className="ios-nav">
+        <div className="ios-nav-row">
+          <div className="ios-nav-title-group" style={{ gap: 16 }}>
+            <span className="cf-logo" style={{ fontSize: 28 }}>easy<b>C</b></span>
+            <div className="ios-nav-large-title">학습하기</div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--label2)" }}>{cardIdx + 1}/{total}</div>
+            <div style={{ width: 60, height: 4, background: "rgba(0,0,0,0.05)", borderRadius: 2, marginTop: 4 }}>
+              <div style={{ width: `${((cardIdx + 1) / total) * 100}%`, height: "100%", background: stage.color, borderRadius: 2 }} />
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div style={{ background: "#fff", borderBottom: "1px solid rgba(0,0,0,0.08)", padding: "10px 16px", flexShrink: 0 }}>
         <div className="ios-hscroll"
           onMouseDown={e => { e.currentTarget._isDown = true; e.currentTarget._startX = e.pageX - e.currentTarget.offsetLeft; e.currentTarget._scrollLeft = e.currentTarget.scrollLeft; e.currentTarget.style.cursor = 'grabbing'; }}

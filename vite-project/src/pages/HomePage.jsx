@@ -26,10 +26,13 @@ export default function HomePage({ onNavigate, progress }) {
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", background: "#f2f2f7" }}>
 
-      {/* CFeed-style header */}
-      <div className="cf-nav">
-        <div className="cf-nav-top">
-          <span className="cf-logo">easy<span style={{ color: "var(--blue)" }}>C</span></span>
+      {/* Unified Nav */}
+      <div className="ios-nav">
+        <div className="ios-nav-row">
+          <div className="ios-nav-title-group" style={{ gap: 16 }}>
+            <span className="cf-logo" style={{ fontSize: 28 }}>easy<b>C</b></span>
+            <div className="ios-nav-large-title">홈</div>
+          </div>
           <span className="cf-beta">Beta</span>
         </div>
         <div className="cf-tabs"
@@ -38,7 +41,7 @@ export default function HomePage({ onNavigate, progress }) {
           onMouseUp={e => { e.currentTarget._isDown = false; e.currentTarget.style.cursor = 'grab'; }}
           onMouseMove={e => { if (!e.currentTarget._isDown) return; e.preventDefault(); const x = e.pageX - e.currentTarget.offsetLeft; const walk = (x - e.currentTarget._startX) * 2; e.currentTarget.scrollLeft = e.currentTarget._scrollLeft - walk; }}
           onWheel={e => { if (e.deltaY !== 0) { e.preventDefault(); e.currentTarget.scrollLeft += e.deltaY; } }}
-          style={{ cursor: 'grab' }}
+          style={{ cursor: 'grab', marginTop: 14 }}
         >
           {["전체", "기초", "조건/반복", "배열/함수", "포인터", "심화"].map((t, i) => (
             <button key={t} className={`cf-tab ${i === 0 ? "active" : "inactive"}`}
