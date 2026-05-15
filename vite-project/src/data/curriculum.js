@@ -48,7 +48,7 @@ export const stages = [
       {
         type: "project",
         title: "미니 프로젝트: 나만의 명함 만들기",
-        description: "printf를 여러 번 써서 나만의 명함을 출력하는 코드야. 빈칸을 채워봐.",
+        description: "printf를 여러 번 써서 명함을 출력하는 코드야. \n빈칸을 채워봐!",
         badge: "🏆 Hello 마스터",
         fullCode: '#include <stdio.h>\nint main() {\n  printf("=== 나의 명함 ===\\n");\n  printf("이름: %s\\n", __SLOT_0__);\n  printf("학교: %s\\n", __SLOT_1__);\n  printf("취미: %s\\n", __SLOT_2__);\n  return 0;\n}',
         slots: [

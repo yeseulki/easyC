@@ -46,7 +46,7 @@ export default function App() {
 
   const handleCorrect = () => {
     setIsCorrectToast(true);
-    setToast("정답이야! 정말 잘했어! 🎉");
+    setToast("정말 잘했어🎉");
     setTimeout(() => { setToast(null); setIsCorrectToast(false); }, 2000);
   };
 

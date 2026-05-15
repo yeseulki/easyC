@@ -348,10 +348,19 @@ function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate,
 }
 
 /* ── Concept card ── */
-function ConceptLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate, isLast, onSave, savedItems, scrollRef }) {
+function ConceptLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate, isLast, onSave, savedItems, onTipViewed, scrollRef }) {
   const [flipped, setFlipped] = useState(false);
   const isSaved = savedItems?.some(i => i.title === card.title);
   const pct = Math.round(((cardIdx + 1) / totalCards) * 100);
+
+  const handleFlip = () => {
+    if (!flipped) {
+      setFlipped(true);
+      onTipViewed?.(true);
+    } else {
+      setFlipped(false);
+    }
+  };
 
   const handleNavigate = () => {
     onNavigate("code");
@@ -402,7 +411,7 @@ function ConceptLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNaviga
           <div style={{ fontSize: 15, color: "#3c3c43", lineHeight: 1.8 }}>{highlight(card.content)}</div>
         </div>
 
-        <div style={{ background: flipped ? stage.color + "10" : "#fff", border: `1px solid ${flipped ? stage.color + "44" : "rgba(0,0,0,0.08)"}`, borderRadius: 16, padding: "14px 16px", cursor: "pointer", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", transition: "all 0.25s", marginBottom: 24 }} onClick={() => setFlipped(f => !f)}>
+        <div style={{ background: flipped ? stage.color + "10" : "#fff", border: `1px solid ${flipped ? stage.color + "44" : "rgba(0,0,0,0.08)"}`, borderRadius: 16, padding: "14px 16px", cursor: "pointer", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", transition: "all 0.25s", marginBottom: 24 }} onClick={handleFlip}>
           {!flipped ? <div style={{ textAlign: "center", color: "#8e8e93", fontSize: 14 }}>💡 탭해서 핵심 팁 보기</div> : <div style={{ fontSize: 14, color: stage.color, lineHeight: 1.7, animation: "iosFadeIn 0.2s ease" }}><b>핵심 팁:</b> {card.tip}</div>}
         </div>
 
@@ -618,12 +627,14 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
   const [cardIdx,  setCardIdx]  = useState(initialCard);
   const [key,      setKey]      = useState(0);
   const [solved,   setSolved]   = useState(false);
+  const [tipViewed, setTipViewed] = useState(false);
   const touchY = useRef(null);
   const isScrolling = useRef(false);
 
   useEffect(() => { 
     setStageIdx(initialStage); 
     setCardIdx(initialCard); 
+    setTipViewed(false);
   }, [initialStage, initialCard]);
 
   const stage = stages[stageIdx];
@@ -658,7 +669,7 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
   const go = (d) => {
     const scrollableContent = scrollRef.current;
     if (d > 0 && scrollableContent) {
-      const isAtBottom = scrollableContent.scrollHeight - scrollableContent.scrollTop <= scrollableContent.clientHeight + 1; // 1px tolerance
+      const isAtBottom = scrollableContent.scrollHeight - scrollableContent.scrollTop <= scrollableContent.clientHeight + 5; // 5px tolerance for fractional scaling
       if (!isAtBottom) {
         scrollableContent.scrollBy({ top: 200, behavior: 'smooth' });
         return;
@@ -666,6 +677,10 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
     }
 
     if (d > 0) {
+      if (card.type === "concept" && !tipViewed) {
+        alert("핵심 팁을 꼭 확인해!");
+        return;
+      }
       if (card.type === "code" && !solved) {
         alert("문제를 맞혀야 다음으로 넘어갈 수 있어!");
         return;
@@ -687,18 +702,24 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
   };
 
   const onTS = e => { 
-    const scrollableContent = scrollRef.current;
-    if (scrollableContent && scrollableContent.scrollTop > 0) {
-      // If content is scrolled, don't initiate card swipe
-      touchY.current = null;
-      return;
-    }
     touchY.current = e.touches[0].clientY; 
   };
   const onTE = e => {
     if (!touchY.current) return;
     const dy = touchY.current - e.changedTouches[0].clientY;
-    if (Math.abs(dy) > 45) go(dy > 0 ? 1 : -1);
+    const scrollableContent = scrollRef.current;
+    
+    if (scrollableContent) {
+      const isAtBottom = scrollableContent.scrollHeight - scrollableContent.scrollTop <= scrollableContent.clientHeight + 5;
+      const isAtTop = scrollableContent.scrollTop <= 5;
+      if (dy > 45 && isAtBottom) {
+        go(1);
+      } else if (dy < -45 && isAtTop) {
+        go(-1);
+      }
+    } else {
+      if (Math.abs(dy) > 45) go(dy > 0 ? 1 : -1);
+    }
     touchY.current = null;
   };
 
@@ -708,8 +729,8 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
     
     const scrollableContent = scrollRef.current;
     if (scrollableContent) {
-      const isAtBottom = scrollableContent.scrollHeight - scrollableContent.scrollTop <= scrollableContent.clientHeight + 1;
-      const isAtTop = scrollableContent.scrollTop === 0;
+      const isAtBottom = scrollableContent.scrollHeight - scrollableContent.scrollTop <= scrollableContent.clientHeight + 5;
+      const isAtTop = scrollableContent.scrollTop <= 5;
 
       if (e.deltaY > 0 && !isAtBottom) { // Scrolling down, but not at bottom
         return; // Allow native scroll
@@ -764,7 +785,7 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
       </div>
 
       <div key={key} style={{ flex: 1, overflow: "hidden", animation: "iosFadeScale 0.24s ease" }}>
-        {card.type === "concept" && <ConceptLearnCard scrollRef={scrollRef} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={total} onNavigate={onNavigate} isLast={isLast} onSave={onSave} savedItems={savedItems} />}
+        {card.type === "concept" && <ConceptLearnCard scrollRef={scrollRef} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={total} onNavigate={onNavigate} isLast={isLast} onSave={onSave} savedItems={savedItems} onTipViewed={setTipViewed} />}
         {card.type === "code"    && <CodeLearnCard scrollRef={scrollRef} key={`code-${stageIdx}-${cardIdx}`} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={total} onNavigate={onNavigate} isLast={isLast} onSave={onSave} savedItems={savedItems} onSolvedChange={setSolved} onCorrect={onCorrect} initialAnswer={progress.cardAnswers[`${stage.id}-${cardIdx}`]} onUpdateAnswer={onUpdateAnswer} />}
         {card.type === "project" && <ProjectLearnCard scrollRef={scrollRef} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={total} onBadge={onBadge} onNavigate={onNavigate} isLast={isLast} onSolvedChange={setSolved} onCorrect={onCorrect} initialAnswer={progress.cardAnswers[`${stage.id}-${cardIdx}`]} onUpdateAnswer={onUpdateAnswer} badges={badges} />}
       </div>
@@ -776,7 +797,7 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
             <div key={i} style={{ width: 4, height: i === cardIdx ? 16 : 4, borderRadius: 2, background: i === cardIdx ? stage.color : "rgba(0,0,0,0.15)", transition: "all 0.3s" }} />
           ))}
         </div>
-        <button style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.95)", border: "1px solid rgba(0,0,0,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, boxShadow: "0 2px 8px rgba(0,0,0,0.1)", opacity: (card.type === "code" && !solved) || (card.type === "project" && !badges.includes(card.badge)) || isLast ? 0.2 : 0.9 }} onClick={() => go(1)} disabled={isLast}>↓</button>
+        <button style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.95)", border: "1px solid rgba(0,0,0,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, boxShadow: "0 2px 8px rgba(0,0,0,0.1)", opacity: (card.type === "concept" && !tipViewed) || (card.type === "code" && !solved) || (card.type === "project" && !badges.includes(card.badge)) || isLast ? 0.2 : 0.9 }} onClick={() => go(1)} disabled={isLast}>↓</button>
       </div>
     </div>
   );
