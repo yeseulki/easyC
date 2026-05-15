@@ -23,7 +23,7 @@ function translateLine(raw) {
   if (text.includes("fprintf")) return "✍️ 파일에 내용 쓰기";
   if (text.includes("fclose")) return "📕 파일 닫기";
   if (text.includes("strcpy")) return "✏️ 글자(문자열) 복사해서 넣기";
-  if (text.startsWith("for")) return "🔃 정해진 횟수/조건만큼 반복하기";
+  if (text.startsWith("for")) return "🔃 ~로 시작해서 ~일때까지 반복하기, ~씩 증가하면서!";
   if (text.startsWith("while")) return "🚪 조건이 참인 동안 계속 반복하기";
   if (text.startsWith("if")) return "🚦 만약 조건이 맞다면";
   if (text.startsWith("else if")) return "🚦 아니면 만약 조건이 맞다면";

@@ -127,7 +127,7 @@ export const stages = [
         type: "concept",
         title: "if는 갈림길, for는 에스컬레이터",
         content:
-          "if는 조건에 따라 다른 길로 가는 갈림길이야.\nfor는 정해진 횟수만큼 반복하는 에스컬레이터고,\nwhile은 '조건이 맞을 때까지 계속 문 두드리기'야!",
+          "if는 조건에 따라 다른 길로 가는 갈림길이야. 어떤 조건이 맞는지 확인하고 그 결과에 따라 다른 코드를 실행해.\nfor는 정해진 횟수만큼 반복하는 에스컬레이터고,\nwhile은 '조건이 맞을 때까지 계속 문 두드리기'야!\nfor문은 반복 횟수가 정해져 있을 때, while문은 반복 횟수가 불확실할 때 주로 사용해.",
         metaphor: "🚦 if/else = 신호등 갈림길\n🔃 for = 에스컬레이터\n🚪 while = 문 두드리기",
         tip: "for(시작; 조건; 증가) 형태로 써. 에스컬레이터처럼 단계가 있어!",
       },
@@ -163,7 +163,7 @@ export const stages = [
         fullCode:
           '#include <stdio.h>\nint main() {\n  for(int i=0; i<5; i++) {\n    printf("*");\n  }\n  return 0;\n}',
         expectedOutput: "*****",
-        hint: "i가 0부터 시작해서 5보다 작을 때까지 반복해야 해!",
+        hint: "i가 0부터 시작해서 5보다 작을 때까지 반복해야 해.\n증가는 i++로 하면 돼!",
       },
       {
         type: "project",
