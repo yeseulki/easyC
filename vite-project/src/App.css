@@ -107,7 +107,7 @@
     height: 100vh;
     flex-direction: column;
     justify-content: flex-start;
-    padding: 40px 12px;
+    padding: 44.5px 12px;
     border-top: none;
     border-right: 1px solid rgba(0,0,0,0.08);
     background: #fff;
@@ -182,7 +182,7 @@
   letter-spacing: -0.6px;
   color: #000;
 }
-.cf-logo { font-size: 35px; font-weight: 900; letter-spacing: -2.5px; color: #000; }
+.cf-logo { font-size: 35px; font-weight: 900; letter-spacing: -2px; color: #000; }
 .cf-logo b { color: var(--blue); }
 
 /* ══════════════════════════════════════
