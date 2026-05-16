@@ -28,6 +28,14 @@ html, body, #root { height: 100%; font-family: -apple-system, BlinkMacSystemFont
   background: #f2f2f7;
 }
 
+.profile-content-inner {
+  max-width: 360px; /* Compact mobile width */
+  margin: 0 auto;
+  width: 100%;
+  padding-top: 24px;    /* Vertical margin top */
+  padding-bottom: 40px; /* Vertical margin bottom */
+}
+
 .main-content {
   flex: 1;
   overflow: hidden;
@@ -167,17 +175,23 @@ html, body, #root { height: 100%; font-family: -apple-system, BlinkMacSystemFont
 
   .page { padding-bottom: 0; }
 
-  /* Constrain Profile Components to a Compact Width */
+  /* Maximize Profile Width on Desktop with standard 20px padding */
   .profile-content-inner {
-    max-width: 480px;
-    margin: 0 auto;
+    max-width: none; /* Full width */
+    margin: 0;
     width: 100%;
     display: flex;
     flex-direction: column;
+    padding-top: 40px;
+    padding-bottom: 60px;
   }
   .profile-content-inner .ios-section {
-    padding-left: 16px !important;
-    padding-right: 16px !important;
+    padding-left: 20px !important; /* Match other pages */
+    padding-right: 20px !important;
+  }
+  .profile-content-inner > div:first-child {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
   }
 }
 
@@ -197,3 +211,4 @@ html, body, #root { height: 100%; font-family: -apple-system, BlinkMacSystemFont
   border: 0.5px solid rgba(0,0,0,0.05); animation: iosToastIn 0.5s cubic-bezier(0.2, 1, 0.2, 1);
 }
 .ios-toast.success { background: rgba(52,199,89,0.95); color: #fff; }
+fff; }
