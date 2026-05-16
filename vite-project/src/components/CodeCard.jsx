@@ -48,7 +48,7 @@ export default function CodeCard({ card, color, onDrC }) {
 
       {tab === "slot" && (
         <div style={{ animation: "iosFadeScale 0.22s ease" }}>
-          <SlotCodePicker slots={card.slots} color={color} onResult={ok => !ok && onDrC?.("wrongSlot")} />
+          <SlotCodePicker slots={card.slots} color={color} hint={card.hint} onResult={ok => !ok && onDrC?.("wrongSlot")} />
         </div>
       )}
 

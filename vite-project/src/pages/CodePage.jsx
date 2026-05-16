@@ -41,7 +41,7 @@ function SolveSheet({ ch, onClose, onSolved, onCorrect }) {
           <div style={{ fontSize: 14, color: "var(--label2)", lineHeight: 1.65 }}>{ch.description}</div>
         </div>
         <div style={{ padding: "20px 20px 0" }}>
-          <SlotCodePicker slots={ch.slots} color={ch.color} onResult={ok => { if (ok) { setTimeout(onSolved, 700); onCorrect?.(); } }} />
+          <SlotCodePicker slots={ch.slots} color={ch.color} hint={ch.hint} onResult={ok => { if (ok) { setTimeout(onSolved, 700); onCorrect?.(); } }} />
         </div>
         <div style={{ margin: "16px 20px 0" }}>
           <div style={{ fontSize: 12, color: "var(--label3)", fontWeight: 600, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 8 }}>예상 출력</div>
