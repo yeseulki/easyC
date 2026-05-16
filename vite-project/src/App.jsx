@@ -72,19 +72,34 @@ export default function App() {
     }
   };
 
+  const getPageTitle = () => {
+    switch(tab) {
+      case "home":    return "홈";
+      case "learn":   return "학습하기";
+      case "code":    return "코딩하기";
+      case "profile": return "내 정보";
+      default:        return "";
+    }
+  };
+
   return (
     <div className="app-container">
       {/* Sidebar / Tab Bar */}
       <nav className="tab-bar">
-        <div className="sidebar-logo">
-          <span className="cf-logo" onClick={() => setTab("home")}>easy<b>C</b></span>
+        <div className="sidebar-logo-group">
+          <div className="sidebar-logo" onClick={() => setTab("home")}>
+            <span className="cf-logo">easy<b>C</b></span>
+          </div>
+          <div className="desktop-page-title">{getPageTitle()}</div>
         </div>
-        {TABS.map(t => (
-          <button key={t.id} className={`tab-item ${tab === t.id ? "active" : ""}`} onClick={() => setTab(t.id)}>
-            <span className="tab-icon">{t.icon}</span>
-            <span className="tab-label">{t.label}</span>
-          </button>
-        ))}
+        <div className="tab-items-wrapper">
+          {TABS.map(t => (
+            <button key={t.id} className={`tab-item ${tab === t.id ? "active" : ""}`} onClick={() => setTab(t.id)}>
+              <span className="tab-icon">{t.icon}</span>
+              <span className="tab-label">{t.label}</span>
+            </button>
+          ))}
+        </div>
       </nav>
 
       <main className="main-content">
