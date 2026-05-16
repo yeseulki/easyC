@@ -1,3 +1,22 @@
+:root {
+  --blue: #007aff;
+  --green: #34c759;
+  --red: #ff3b30;
+  --orange: #ff9500;
+  --purple: #af52de;
+  --gray: #8e8e93;
+  --bg: #ffffff;
+  --bg2: #f2f2f7;
+  --label: #000000;
+  --label2: #3c3c4399;
+  --label3: #3c3c434d;
+  --sep: #c6c6c8;
+  --nav-h: 83px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body, #root { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #000; overflow: hidden; }
+
 .app-container {
   display: flex;
   flex-direction: column;
@@ -21,9 +40,51 @@
 
 @media (min-width: 1024px) {
   .main-content {
-    background: #f2f2f7;
+    background: linear-gradient(180deg, #f2f2f7 0%, #e8ecf3 100%);
     height: 100vh;
+    --content-w: 880px;
+    --side-gap: max(56px, calc((100% - var(--content-w)) / 2));
+    padding-left: var(--side-gap);
+    padding-right: var(--side-gap);
+    padding-top: 24px;
+    box-sizing: border-box;
   }
+
+  /* Header sits INSIDE the centered column — no edge-to-edge white bar */
+  .main-content .ios-nav {
+    padding: 24px 28px 20px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: saturate(160%) blur(12px);
+    -webkit-backdrop-filter: saturate(160%) blur(12px);
+    border: 0.5px solid rgba(0,0,0,0.06);
+    border-bottom: 0.5px solid rgba(0,0,0,0.06);
+    box-shadow: 0 4px 18px rgba(0,0,0,0.04);
+    margin-bottom: 16px;
+  }
+
+  /* Larger, more legible desktop typography */
+  .ios-nav-large-title { font-size: 30px; letter-spacing: -0.8px; }
+  .ios-section-title   { font-size: 26px; }
+  .ios-subsection-title { font-size: 12px; letter-spacing: 0.6px; }
+
+  /* Cards & list cells get a slightly more refined look on desktop */
+  .cf-card {
+    border-radius: 22px;
+    box-shadow: 0 6px 28px rgba(0,0,0,0.06), 0 0 0 0.5px rgba(0,0,0,0.05);
+  }
+  .ios-cell { padding: 16px 20px; }
+  .ios-cell + .ios-cell::before { left: 78px; }
+
+  /* Modal sheets should not stretch on desktop */
+  .ios-sheet {
+    max-width: 720px;
+    margin: 0 auto;
+    border-radius: 24px 24px 0 0;
+  }
+
+  /* Bigger, easier-to-read code blocks on desktop */
+  .cf-code { font-size: 14.5px; line-height: 2.05; }
 }
 
 .responsive-grid {
@@ -72,16 +133,6 @@
   }
 }
 
-.sidebar-logo { display: none; }
-@media (min-width: 1024px) {
-  .sidebar-logo {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    margin-bottom: 32px;
-  }
-}
-
 /* ══════════════════════════════════════
    Bottom Tab Bar — CFeed style
 ══════════════════════════════════════ */
@@ -103,7 +154,7 @@
   .tab-bar {
     position: static;
     left: auto; transform: none;
-    width: 120px; max-width: 120px; /* Restored original width */
+    width: 120px; max-width: 120px;
     height: 100vh;
     flex-direction: column;
     justify-content: flex-start;
@@ -115,7 +166,7 @@
     flex-shrink: 0;
   }
   .tab-item {
-    width: 96px; height: 96px; /* Restored original square shape */
+    width: 96px; height: 96px;
     flex-direction: column;
     padding: 16px 0;
     border-radius: 20px;
@@ -127,16 +178,17 @@
     background: rgba(0,122,255,0.08);
   }
   .tab-label {
-    font-size: 16px; /* Larger text than original (15px -> 16px) */
+    font-size: 16px;
     font-weight: 800;
   }
   .tab-icon {
-    font-size: 40px; /* Larger icons than original (32px -> 40px) */
+    font-size: 40px;
   }
   .page {
     padding-bottom: 0;
   }
 }
+
 .tab-item {
   display: flex; flex-direction: column;
   align-items: center; gap: 4px;
@@ -153,6 +205,16 @@
   transition: color 0.2s;
 }
 .tab-item.active .tab-label { color: var(--blue); font-weight: 700; }
+
+.sidebar-logo { display: none; }
+@media (min-width: 1024px) {
+  .sidebar-logo {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-bottom: 32px;
+  }
+}
 
 /* Standard iOS Header Style */
 .ios-nav {
@@ -324,6 +386,7 @@
   font-size: 22px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
+.cf-action-icon:active { transform: scale(0.92); }
 .cf-action-label { font-size: 11px; font-weight: 600; color: #3c3c43; }
 
 /* ══════════════════════════════════════
@@ -392,3 +455,26 @@
 .ios-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:14px 20px;border-radius:14px;font-size:17px;font-weight:600;letter-spacing:-0.2px;transition:opacity 0.12s;}
 .ios-btn-fill{background:var(--blue);color:#fff;} .ios-btn-tint{background:rgba(0,122,255,0.1);color:var(--blue);} .ios-btn-gray{background:rgba(118,118,128,0.16);color:#000;} .ios-btn-green{background:rgba(52,199,89,0.12);color:var(--green);}
 .ios-btn-sm{padding:8px 16px;border-radius:100px;font-size:14px;font-weight:600;}
+
+/* Custom Animations */
+@keyframes iosSlideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes iosFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes iosFadeScale { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+@keyframes iosProgress { from { width: 0; } }
+@keyframes iosShake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+@keyframes iosConfetti {
+  0% { transform: translateY(0) rotate(0); opacity: 1; }
+  100% { transform: translateY(200px) rotate(360deg); opacity: 0; }
+}
+@keyframes iosTyping { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
+
+/* Toast */
+.ios-toast-container { position: fixed; top: 60px; left: 0; right: 0; display: flex; justify-content: center; z-index: 999; pointer-events: none; }
+.ios-toast {
+  background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  padding: 12px 20px; border-radius: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  display: flex; flexDirection: column; align-items: center; text-align: center;
+  border: 0.5px solid rgba(0,0,0,0.05); animation: iosToastIn 0.5s cubic-bezier(0.2, 1, 0.2, 1);
+}
+.ios-toast.success { background: rgba(52,199,89,0.95); color: #fff; }
+@keyframes iosToastIn { from { opacity: 0; transform: translateY(-20px) scale(0.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
