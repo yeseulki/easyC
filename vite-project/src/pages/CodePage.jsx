@@ -44,6 +44,12 @@ function SolveSheet({ ch, onClose, onSolved, onCorrect }) {
           <SlotCodePicker slots={ch.slots} color={ch.color} onResult={ok => { if (ok) { setTimeout(onSolved, 700); onCorrect?.(); } }} />
         </div>
         <div style={{ margin: "16px 20px 0" }}>
+          <div style={{ fontSize: 12, color: "var(--label3)", fontWeight: 600, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 8 }}>도움말 (힌트)</div>
+          <div style={{ background: ch.color + "10", borderRadius: 12, padding: "12px 14px", border: `1px dashed ${ch.color}44` }}>
+            <span style={{ color: "var(--label)", fontSize: 14, lineHeight: 1.5 }}>{ch.hint}</span>
+          </div>
+        </div>
+        <div style={{ margin: "16px 20px 0" }}>
           <div style={{ fontSize: 12, color: "var(--label3)", fontWeight: 600, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 8 }}>예상 출력</div>
           <div style={{ background: "#1c1c1e", borderRadius: 12, padding: "12px 14px" }}>
             <span style={{ fontFamily: "monospace", color: "#30d158", fontSize: 14 }}>{ch.expectedOutput}</span>

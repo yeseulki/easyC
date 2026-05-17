@@ -39,12 +39,14 @@ function translateLine(raw) {
 function MemoryMap({ color }) {
   const [activeAddr, setActiveAddr] = useState(null);
   const cells = [
-    { addr: "0x100", name: "age", type: "int", val: "15", size: 4 },
-    { addr: "0x104", name: "(empty)", type: "-", val: "??", size: 4 },
-    { addr: "0x108", name: "pi", type: "float", val: "3.14", size: 4 },
-    { addr: "0x10C", name: "grade", type: "char", val: "'A'", size: 1 },
-    { addr: "0x10D", name: "(empty)", type: "-", val: "??", size: 3 },
+    { addr: "0x100", name: "age", type: "int", val: "15", size: 4, desc: "정수(int)를 저장하는 칸이야. 4바이트 크기를 차지하고, 지금은 '15'라는 숫자가 들어있어!" },
+    { addr: "0x104", name: "(empty)", type: "-", val: "??", size: 4, desc: "아직 아무것도 저장되지 않은 빈 공간이야. 컴퓨터는 이런 빈 공간도 주소로 꼼꼼히 관리해." },
+    { addr: "0x108", name: "pi", type: "float", val: "3.14", size: 4, desc: "실수(float)를 저장하는 칸이야. 소수점이 있는 정밀한 숫자를 기억할 때 사용해!" },
+    { addr: "0x10C", name: "grade", type: "char", val: "'A'", size: 1, desc: "문자(char) 한 글자를 저장하는 칸이야. 딱 1바이트만 사용하는 아주 경제적인 칸이지." },
+    { addr: "0x10D", name: "(empty)", type: "-", val: "??", size: 3, desc: "여기도 빈 공간! 나중에 포인터나 배열을 만들 때 이 주소들을 가져다 쓸 수 있어." },
   ];
+
+  const activeCell = cells.find(c => c.addr === activeAddr);
 
   return (
     <div style={{ background: "#1c1c1e", borderRadius: 20, padding: "20px", marginBottom: 20, boxShadow: "0 4px 20px rgba(0,0,0,0.2)" }}>
@@ -77,9 +79,9 @@ function MemoryMap({ color }) {
       </div>
 
       <div style={{ marginTop: 16, padding: "12px", background: "rgba(255,255,255,0.03)", borderRadius: 12, fontSize: 13, color: "#c7c7cc", lineHeight: 1.5 }}>
-        {activeAddr ? (
+        {activeCell ? (
           <div style={{ animation: "iosFadeIn 0.3s ease" }}>
-            <b>주소 {activeAddr}</b>: 이 칸에 데이터가 저장되어 있어. C언어는 이런 주소를 직접 다룰 수 있는 아주 강력한 언어야! 🚀
+            <b style={{ color: "#fff" }}>[{activeCell.name}] {activeCell.addr}</b>: {activeCell.desc} 🚀
           </div>
         ) : (
           <div style={{ textAlign: "center", opacity: 0.6 }}>주소를 클릭해서 상세 정보를 확인해봐!</div>

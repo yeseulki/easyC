@@ -131,7 +131,7 @@
     font-weight: 800;
   }
   .tab-icon {
-    font-size: 40px; /* Larger icons than original (32px -> 40px) */
+    font-size: 40px; /* Restored to correct larger size */
   }
   .page {
     padding-bottom: 0;
