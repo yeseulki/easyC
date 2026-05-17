@@ -2,7 +2,7 @@ export const stages = [
   {
     id: 1,
     title: "안녕, 컴퓨터!",
-    subtitle: "Hello, World",
+    subtitle: "출력",
     emoji: "👋",
     color: "#6C63FF",
     colorLight: "#EEF0FF",
@@ -298,7 +298,7 @@ export const stages = [
             { id: 1, answer: "free" },
         ],
         expectedOutput: "연락처 1: 123\n연락처 2: 456\n연락처 3: 789",
-        hint: "메모리를 할당할 땐 malloc, 해제할 땐 free 함수를 사용해.",
+        hint: "메모리를 할당할 땐 malloc, 해제할 땐 free 함수를 사용해.\nmalloc(n * sizeof(int))는 n개의 int를 저장할 수 있는 메모리를 만들어줘.",
       },
     ],
   },
@@ -316,7 +316,7 @@ export const stages = [
         content:
           "서로 다른 종류의 정보(이름, 나이, 점수)를 하나로 묶고 싶을 때 '구조체'를 써.\n학생 한 명의 정보를 하나의 변수로 관리할 수 있어 편리해!",
         metaphor: "📂 구조체 = 개인 프로필 폴더\n📑 공용체 = 한 칸을 돌려쓰는 사물함",
-        tip: "struct Student { char name[20]; int age; }; 처럼 정의해.",
+        tip: "struct Student { char name[20]; int age; };  라고 정의하면 Student라는 새로운 자료형이 만들어지는 거야!",
       },
       {
         type: "code",
@@ -331,7 +331,7 @@ export const stages = [
         fullCode:
           '#include <stdio.h>\nstruct Student { int age; };\nint main() {\n  struct Student s1;\n  s1.age = 20;\n  printf("나이: %d\\n", s1.age);\n  return 0;\n}',
         expectedOutput: "나이: 20",
-        hint: "구조체 멤버에 접근할 때는 점(.)을 사용해!",
+        hint: "나이를 저장하는 구조체 변수를 만들고\ns1.age = 20; 처럼 점(.)을 사용해서 멤버에 접근해봐!",
       },
       {
         type: "project",
@@ -346,7 +346,7 @@ export const stages = [
             { id: 3, answer: "list[i].score" },
         ],
         expectedOutput: "Kim: 90\nLee: 85",
-        hint: "구조체 배열의 각 요소에 접근하려면 'list[i].멤버' 형식을 사용해.",
+        hint: "list[0].name이라고 하면 list[0]의 name 멤버에 접근하는 거야. list에는 두 개의 Student 구조체가 저장되어 있어.\n구조체 배열의 각 요소에 접근하려면 'list[i].멤버' 형식을 사용해.",
       },
     ],
   },
@@ -377,7 +377,7 @@ export const stages = [
         fullCode:
           '#include <stdio.h>\nint main() {\n  FILE *fp = fopen("hello.txt", "w");\n  fprintf(fp, "Hello File!");\n  fclose(fp);\n  return 0;\n}',
         expectedOutput: "",
-        hint: "파일 쓰기 모드는 'write'의 약자인 'w'야!",
+        hint: "이 코드는 hello.txt 파일을 쓰기 모드로 열고, \"Hello File!\"이라는 문자열을 파일에 쓴 후, 파일을 닫는 코드야.\n파일 쓰기 모드는 'write'의 약자인 'w'야!",
       },
       {
         type: "project",
@@ -392,7 +392,7 @@ export const stages = [
             { id: 3, answer: "fclose" },
         ],
         expectedOutput: "(diary.txt 파일에 내용이 추가됩니다)",
-        hint: "파일을 열 땐 fopen, 내용을 쓸 땐 fprintf, 닫을 땐 fclose를 사용해. 추가 모드는 'a'야.",
+        hint: "파일을 열 땐 fopen, 내용을 쓸 땐 fprintf, 닫을 땐 fclose를 사용해. 추가 모드는 a야.",
       },
     ],
   },
@@ -423,7 +423,7 @@ export const stages = [
         fullCode:
           '#include <stdio.h>\nstruct Node { int data; struct Node *next; };\nint main() {\n  struct Node n1 = {10, NULL}, n2 = {20, NULL};\n  n1.next = &n2;\n  printf("n1 -> n2: %d", n1.next->data);\n  return 0;\n}',
         expectedOutput: "n1 -> n2: 20",
-        hint: "포인터를 통해 멤버에 접근할 때는 -> 기호를 써!",
+        hint: "이 코드는 두 개의 구조체 변수 n1과 n2를 만들고, n1의 next 포인터를 통해 n2에 접근하는 코드야.\n포인터를 통해 멤버에 접근할 때는 -> 기호를 써!",
       },
       {
         type: "project",
@@ -438,7 +438,7 @@ export const stages = [
             { id: 3, answer: "curr->next" },
         ],
         expectedOutput: "할 일: C언어 공부\n할 일: 저녁 식사",
-        hint: "다음 노드를 가리키려면 'current->next'와 같이 포인터를 사용해.",
+        hint: "이 코드는 동적 할당으로 투두리스트를 생성하고, 첫 번째 칸부터 마지막 칸까지 순서대로 방문하며 할 일을 모두 출력하는 코드야.\n다음 노드를 가리키려면 'current->next'와 같이 포인터를 사용해.",
       },
     ],
   },

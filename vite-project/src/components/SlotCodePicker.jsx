@@ -73,7 +73,7 @@ function Drum({ options, selected, onSelect, fixed, color }) {
   );
 }
 
-export default function SlotCodePicker({ slots, color = "var(--blue)", onResult }) {
+export default function SlotCodePicker({ slots, color = "var(--blue)", onResult, hint }) {
   const processedSlots = useMemo(() => {
     return slots.map(s => {
       if (s.fixed || s.options.length <= 1) return s;
@@ -157,8 +157,8 @@ export default function SlotCodePicker({ slots, color = "var(--blue)", onResult 
         </div>
       )}
       {showHint && (
-        <div style={{ padding: "10px 14px", background: "rgba(88,86,214,0.06)", border: "0.5px solid rgba(88,86,214,0.2)", borderRadius: 12, fontSize: 13, color: "var(--indigo)", marginBottom: 12, animation: "iosFadeScale 0.2s ease" }}>
-          💡 고정된 슬롯은 이미 맞아. 나머지 슬롯을 바꿔봐!
+        <div style={{ padding: "10px 14px", background: "rgba(88,86,214,0.06)", border: "0.5px solid rgba(88,86,214,0.2)", borderRadius: 12, fontSize: 13, color: "var(--indigo)", marginBottom: 12, animation: "iosFadeScale 0.2s ease", whiteSpace: "pre-line", lineHeight: 1.6 }}>
+          💡 {hint || "고정된 슬롯은 이미 맞아. 나머지 슬롯을 바꿔봐!"}
         </div>
       )}
 

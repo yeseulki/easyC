@@ -478,12 +478,7 @@ function CodeWithTypingSlots({ card, inputs, onInputChange, showKorean }) {
 
   return (
     <div className="cf-code"
-      onMouseDown={e => { e.currentTarget._isDown = true; e.currentTarget._startX = e.pageX - e.currentTarget.offsetLeft; e.currentTarget._scrollLeft = e.currentTarget.scrollLeft; e.currentTarget.style.cursor = 'grabbing'; }}
-      onMouseLeave={e => { e.currentTarget._isDown = false; e.currentTarget.style.cursor = 'grab'; }}
-      onMouseUp={e => { e.currentTarget._isDown = false; e.currentTarget.style.cursor = 'grab'; }}
-      onMouseMove={e => { if (!e.currentTarget._isDown) return; e.preventDefault(); const x = e.pageX - e.currentTarget.offsetLeft; const walk = (x - e.currentTarget._startX) * 2; e.currentTarget.scrollLeft = e.currentTarget._scrollLeft - walk; }}
-      onWheel={e => { if (e.deltaY !== 0 && e.currentTarget.scrollWidth > e.currentTarget.clientWidth) { e.preventDefault(); e.currentTarget.scrollLeft += e.deltaY; } }}
-      style={{ cursor: 'grab', userSelect: 'none' }}
+      style={{ userSelect: 'text', WebkitUserSelect: 'text', cursor: 'text' }}
     >
       {fullLines.map((line, li) => {
         const currentSlotStart = slotCounter;

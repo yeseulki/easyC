@@ -1,4 +1,4 @@
-﻿import { stages } from "../data/curriculum";
+import { stages } from "../data/curriculum";
 
 const CORE_FEATURES = [
   { icon: "📖", type: "concept", title: "개념 학습", sub: "핵심 개념부터 차근차근" },
