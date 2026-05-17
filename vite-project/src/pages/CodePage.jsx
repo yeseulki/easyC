@@ -63,7 +63,7 @@ function SolveSheet({ ch, onClose, onSolved, onCorrect }) {
   );
 }
 
-export default function CodePage({ onCorrect }) {
+export default function CodePage({ onCorrect, onNavigate }) {
   const [filter,   setFilter]   = useState("all");
   const [selected, setSelected] = useState(null);
   const [solved,   setSolved]   = useState(new Set());
@@ -77,7 +77,7 @@ export default function CodePage({ onCorrect }) {
       <div className="ios-nav">
         <div className="ios-nav-row">
           <div className="ios-nav-title-group" style={{ gap: 16 }}>
-            <span className="cf-logo">easy<b>C</b></span>
+            <span className="cf-logo" onClick={() => onNavigate("home")} style={{ cursor: "pointer" }}>easy<b>C</b></span>
             <div className="ios-nav-large-title">코딩 챌린지</div>
           </div>
           <div style={{ textAlign: "right" }}>

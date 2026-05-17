@@ -30,7 +30,7 @@ export default function HomePage({ onNavigate, progress }) {
       <div className="ios-nav">
         <div className="ios-nav-row">
           <div className="ios-nav-title-group">
-            <span className="cf-logo">easy<b>C</b></span>
+            <span className="cf-logo" onClick={() => onNavigate("home")} style={{ cursor: "pointer" }}>easy<b>C</b></span>
           </div>
           <span className="cf-beta">Beta</span>
         </div>
@@ -60,7 +60,7 @@ export default function HomePage({ onNavigate, progress }) {
       </div>
 
       {/* Scrollable content */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "16px 16px var(--nav-h)" }}>
+      <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px var(--nav-h)" }}>
 
         {/* Hero card */}
         <div style={s.heroCard}>

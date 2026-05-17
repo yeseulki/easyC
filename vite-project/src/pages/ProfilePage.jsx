@@ -27,7 +27,7 @@ export default function ProfilePage({ badges, progress, savedItems = [], onNavig
       <div className="ios-nav">
         <div className="ios-nav-row">
           <div className="ios-nav-title-group" style={{ gap: 16 }}>
-            <span className="cf-logo">easy<b>C</b></span>
+            <span className="cf-logo" onClick={() => onNavigate("home")} style={{ cursor: "pointer" }}>easy<b>C</b></span>
             <div className="ios-nav-large-title">프로필</div>
           </div>
         </div>
@@ -98,7 +98,7 @@ export default function ProfilePage({ badges, progress, savedItems = [], onNavig
                     style={{ background: "#fff", borderRadius: 14, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", cursor: "pointer" }}
                     onClick={() => onNavigate("learn", { stageIdx: item.stageIdx, cardIdx: item.cardIdx })}
                   >
-                    <div style={{ width: 36, height: 36, borderRadius: 8, background: "rgba(0,122,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🔖</div>
+                    <div style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(0,122,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>🔖</div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 14, fontWeight: 700, color: "var(--label)" }}>{item.title}</div>
                       <div style={{ fontSize: 11, color: "var(--label2)", marginTop: 2 }}>{item.type === "concept" ? "개념 카드" : "실습 카드"}</div>
@@ -136,7 +136,7 @@ export default function ProfilePage({ badges, progress, savedItems = [], onNavig
                 const completed = done.includes(stage.id);
                 return (
                   <div key={stage.id} className="ios-cell" style={{ cursor: "pointer" }} onClick={() => onNavigate("learn", { stageIdx: i })}>
-                    <div style={{ width: 40, height: 40, borderRadius: 10, background: stage.color + "15", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>
+                    <div style={{ width: 44, height: 44, borderRadius: 12, background: stage.color + "15", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>
                       {stage.emoji}
                     </div>
                     <div style={{ flex: 1 }}>
