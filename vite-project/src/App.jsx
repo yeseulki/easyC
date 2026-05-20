@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Analytics } from "@vercel/analytics/react";
 import "./App.css";
 import HomePage    from "./pages/HomePage";
 import LearnPage   from "./pages/LearnPage";
@@ -135,5 +136,6 @@ export default function App() {
         )}
       </main>
     </div>
+    <Analytics />
   );
 }
