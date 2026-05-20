@@ -84,6 +84,7 @@ export default function App() {
   };
 
   return (
+    <>
     <div className="app-container">
       {/* Sidebar / Tab Bar */}
       <nav className="tab-bar">
@@ -137,5 +138,6 @@ export default function App() {
       </main>
     </div>
     <Analytics />
+    </>
   );
 }
