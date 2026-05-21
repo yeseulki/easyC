@@ -123,7 +123,7 @@ export default function HomePage({ onNavigate, progress }) {
                   </div>
                   <div style={{ marginTop: 10, fontSize: 14, fontWeight: 800, letterSpacing: -0.3, color: "#000" }}>{stage.title}</div>
                   <div style={{ fontSize: 12, color: stage.color, marginTop: 3, fontWeight: 600 }}>{stage.subtitle}</div>
-                  <div style={{ fontSize: 11, color: "#8e8e93", marginTop: 8 }}>카드 {stage.cards.length}개</div>
+                  <div style={{ fontSize: 11, color: "#8e8e93", marginTop: 8 }}>카드 {stage.cards.length + stage.cards.filter(c => c.type === "project").length}개</div>
                 </div>
               );
             })}
