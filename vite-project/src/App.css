@@ -142,17 +142,22 @@ html, body, #root { height: 100%; font-family: -apple-system, BlinkMacSystemFont
 
 /* Input slot */
 .cf-input-slot {
-  background: #eef0ff;
-  border: 1px solid #c8cfff;
+  background: #e8ecff;
+  border: 1.5px solid #7b8cff;
   border-radius: 4px;
   padding: 2px 6px;
   font-family: 'SF Mono', 'Menlo', 'monospace';
   font-size: 13px;
-  min-width: 30px;
+  min-width: 40px;
   text-align: center;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 4px rgba(99,110,255,0.15);
   transition: all 0.2s;
   color: #000 !important;
+}
+
+@media (max-width: 480px) {
+  .cf-code { font-size: 12px; line-height: 1.85; }
+  .cf-input-slot { font-size: 12px; min-width: 36px; padding: 2px 4px; }
 }
 .cf-input-slot:focus {
   outline: none;
@@ -242,7 +247,7 @@ html, body, #root { height: 100%; font-family: -apple-system, BlinkMacSystemFont
 /* Standard iOS Header Style (Mobile) */
 .ios-nav {
   background: #fff; border-bottom: 0.5px solid var(--sep);
-  padding: 44px 20px 16px; position: sticky; top: 0; z-index: 50;
+  padding: 12px 20px 10px; position: sticky; top: 0; z-index: 50;
   display: flex; flex-direction: column;
 }
 .ios-nav-row { display: flex; align-items: center; justify-content: space-between; width: 100%; }
@@ -356,7 +361,7 @@ html, body, #root { height: 100%; font-family: -apple-system, BlinkMacSystemFont
 @keyframes iosMemBlock { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 @keyframes iosToastIn { from { opacity: 0; transform: translateY(-20px) scale(0.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
-.ios-toast-container { position: fixed; top: 60px; left: 0; right: 0; display: flex; justify-content: center; z-index: 999; pointer-events: none; }
+.ios-toast-container { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999; pointer-events: none; }
 .ios-toast {
   background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); padding: 12px 20px; border-radius: 20px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.12); display: flex; flex-direction: column; align-items: center;

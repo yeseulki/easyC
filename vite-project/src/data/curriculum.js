@@ -99,6 +99,18 @@ export const stages = [
         hint: "나이는 정수니까 'int'를 써야 해!\n 변수 선언은 '자료형 변수명 = 값;' 형태야.",
       },
       {
+        type: "code",
+        title: "소수점 변수와 문자 변수!",
+        description: "float와 char 자료형으로 변수를 만들어봐.",
+        slots: [
+          { id: 0, options: ["float", "int", "char", "double"], correct: 0, fixed: false },
+          { id: 1, options: ["char", "int", "float", "string"], correct: 0, fixed: false },
+        ],
+        fullCode: '#include <stdio.h>\nint main() {\n  float pi = 3.14;\n  char grade = \'A\';\n  printf("pi=%.2f, grade=%c\\n", pi, grade);\n  return 0;\n}',
+        expectedOutput: "pi=3.14, grade=A",
+        hint: "소수점이 있는 숫자는 float, 문자 하나는 char로 선언해!",
+      },
+      {
         type: "project",
         title: "미니 프로젝트: BMI 계산기",
         description: "키와 몸무게를 변수에 저장하고 BMI를 계산해봐!\n올바른 자료형과 계산식을 채워보자.",
@@ -130,6 +142,19 @@ export const stages = [
           "if는 조건에 따라 다른 길로 가는 갈림길이야. 어떤 조건이 맞는지 확인하고 그 결과에 따라 다른 코드를 실행해.\nfor는 정해진 횟수만큼 반복하는 에스컬레이터고,\nwhile은 '조건이 맞을 때까지 계속 문 두드리기'야!\nfor문은 반복 횟수가 정해져 있을 때, while문은 반복 횟수가 불확실할 때 주로 사용해.",
         metaphor: "🚦 if/else = 신호등 갈림길\n🔃 for = 에스컬레이터\n🚪 while = 문 두드리기",
         tip: "for(시작; 조건; 증가) 형태로 써. 에스컬레이터처럼 단계가 있어!",
+      },
+      {
+        type: "code",
+        title: "점수로 등급 판단하기!",
+        description: "점수가 90 이상이면 'A등급', 아니면 'B등급'을 출력해봐.",
+        slots: [
+          { id: 0, options: ["if", "for", "while", "switch"], correct: 0, fixed: false },
+          { id: 1, options: ["score >= 90", "score > 90", "score == 90", "score <= 90"], correct: 0, fixed: false },
+          { id: 2, options: ["else", "elif", "if", "for"], correct: 0, fixed: false },
+        ],
+        fullCode: '#include <stdio.h>\nint main() {\n  int score = 95;\n  if(score >= 90) printf("A등급\\n");\n  else printf("B등급\\n");\n  return 0;\n}',
+        expectedOutput: "A등급",
+        hint: "if(조건) 형태로 써. 90 이상은 '>=' 연산자를 사용해!",
       },
       {
         type: "code",
@@ -200,6 +225,18 @@ export const stages = [
       },
       {
         type: "code",
+        title: "두 수를 더하는 함수 만들기!",
+        description: "두 정수를 받아 합계를 반환하는 함수를 완성해봐.",
+        slots: [
+          { id: 0, options: ["int", "void", "float", "char"], correct: 0, fixed: false },
+          { id: 1, options: ["return a + b", "return a - b", "return a * b", "a + b"], correct: 0, fixed: false },
+        ],
+        fullCode: '#include <stdio.h>\nint add(int a, int b) {\n  return a + b;\n}\nint main() {\n  printf("합계: %d\\n", add(3, 7));\n  return 0;\n}',
+        expectedOutput: "합계: 10",
+        hint: "함수는 'return 값;'으로 결과를 돌려줘. 두 수의 합은 a + b야!",
+      },
+      {
+        type: "code",
         title: "배열로 성적 저장하기!",
         description: "5명의 점수를 배열에 저장하고 평균을 구해봐.",
         slots: [
@@ -264,6 +301,18 @@ export const stages = [
       },
       {
         type: "code",
+        title: "포인터로 두 값 교환하기!",
+        description: "포인터를 이용해 두 변수의 값을 서로 바꿔봐.",
+        slots: [
+          { id: 0, options: ["int *pa", "int pa", "*int pa", "pa int"], correct: 0, fixed: false },
+          { id: 1, options: ["*pa", "pa", "&pa", "a"], correct: 0, fixed: false },
+        ],
+        fullCode: '#include <stdio.h>\nint main() {\n  int a = 10, b = 20;\n  int *pa = &a;\n  int tmp = *pa;\n  *pa = b;\n  b = tmp;\n  printf("a=%d, b=%d\\n", a, b);\n  return 0;\n}',
+        expectedOutput: "a=20, b=10",
+        hint: "포인터 변수는 'int *pa'처럼 선언해. *pa는 pa가 가리키는 주소의 값이야!",
+      },
+      {
+        type: "code",
         title: "포인터로 변수 값 바꾸기!",
         description: "포인터를 이용해 변수 a의 값을 100으로 바꿔봐.",
         slots: [
@@ -320,6 +369,19 @@ export const stages = [
       },
       {
         type: "code",
+        title: "좌표 구조체 만들기!",
+        description: "x, y 좌표를 갖는 구조체를 만들고 출력해봐.",
+        slots: [
+          { id: 0, options: ["struct Point", "Point", "class Point", "struct"], correct: 0, fixed: false },
+          { id: 1, options: ["p1.x", "p1->x", "x.p1", "p1[x]"], correct: 0, fixed: false },
+          { id: 2, options: ["p1.y", "p1->y", "y.p1", "p1[y]"], correct: 0, fixed: false },
+        ],
+        fullCode: '#include <stdio.h>\nstruct Point { int x; int y; };\nint main() {\n  struct Point p1;\n  p1.x = 3;\n  p1.y = 4;\n  printf("x=%d, y=%d\\n", p1.x, p1.y);\n  return 0;\n}',
+        expectedOutput: "x=3, y=4",
+        hint: "구조체 변수는 'struct 이름 변수명;'으로 선언하고, 점(.)으로 멤버에 접근해!",
+      },
+      {
+        type: "code",
         title: "학생 정보 출력하기",
         description: "구조체 변수를 만들고 값을 넣어봐.",
         slots: [
@@ -368,6 +430,19 @@ export const stages = [
       },
       {
         type: "code",
+        title: "파일 열고 쓰고 닫기!",
+        description: "파일을 열어 내용을 쓰고 닫는 순서를 완성해봐.",
+        slots: [
+          { id: 0, options: ["fopen", "fclose", "fprintf", "fread"], correct: 0, fixed: false },
+          { id: 1, options: ["fprintf", "printf", "fopen", "fclose"], correct: 0, fixed: false },
+          { id: 2, options: ["fclose", "fopen", "fprintf", "scanf"], correct: 0, fixed: false },
+        ],
+        fullCode: '#include <stdio.h>\nint main() {\n  FILE *fp = fopen("test.txt", "w");\n  fprintf(fp, "Hello File!\\n");\n  fclose(fp);\n  printf("저장 완료!\\n");\n  return 0;\n}',
+        expectedOutput: "저장 완료!",
+        hint: "파일 열기는 fopen, 내용 쓰기는 fprintf, 닫기는 fclose야. 순서를 기억해!",
+      },
+      {
+        type: "code",
         title: "파일에 인사말 쓰기",
         description: "파일을 쓰기 모드('w')로 열어봐.",
         slots: [
@@ -411,6 +486,18 @@ export const stages = [
           "배열은 칸이 붙어있는 기차라면, 연결 리스트는 고리로 연결된 기차 칸들이야.\n중간에 칸을 넣거나 빼기가 훨씬 쉬워!",
         metaphor: "🔗 노드 = 기차 한 칸\n👉 next = 다음 칸으로 연결하는 고리",
         tip: "자기 자신과 같은 구조체를 가리키는 포인터가 핵심이야!",
+      },
+      {
+        type: "code",
+        title: "노드에 데이터 저장하기!",
+        description: "동적으로 노드를 만들어 데이터를 저장해봐.",
+        slots: [
+          { id: 0, options: ["malloc", "free", "calloc", "sizeof"], correct: 0, fixed: false },
+          { id: 1, options: ["node->data", "node.data", "data->node", "*node"], correct: 0, fixed: false },
+        ],
+        fullCode: '#include <stdio.h>\n#include <stdlib.h>\nstruct Node { int data; struct Node *next; };\nint main() {\n  struct Node *node = (struct Node*)malloc(sizeof(struct Node));\n  node->data = 42;\n  node->next = NULL;\n  printf("data: %d\\n", node->data);\n  free(node);\n  return 0;\n}',
+        expectedOutput: "data: 42",
+        hint: "동적 메모리 할당은 malloc, 노드 멤버 접근은 포인터이므로 '->'를 사용해!",
       },
       {
         type: "code",
