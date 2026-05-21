@@ -152,12 +152,21 @@ function LineWithSlots({ raw, card, sel, onSel, color, slotColors }) {
   const nonFixed = card.slots.filter(s => !s.fixed);
   const foundSlots = [];
   
+  const isWordChar = (ch) => ch !== undefined && /[a-zA-Z0-9_]/.test(ch);
+
   nonFixed.forEach((slot, si) => {
     const correctVal = slot.options[slot.correct];
+    const isAlpha = /^[a-zA-Z_]/.test(correctVal);
     let startIdx = 0;
     while (true) {
       const idx = raw.indexOf(correctVal, startIdx);
       if (idx === -1) break;
+      const before = raw[idx - 1];
+      const after = raw[idx + correctVal.length];
+      if (isAlpha && (isWordChar(before) || isWordChar(after))) {
+        startIdx = idx + 1;
+        continue;
+      }
       if (!foundSlots.some(f => f.idx === idx)) {
         foundSlots.push({ idx, si, val: correctVal });
       }
@@ -652,13 +661,12 @@ function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge,
 }
 
 /* ── Main LearnPage ── */
-export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, onCorrect, onComplete, onNavigate, onSave, savedItems, onUpdateAnswer, progress, badges }) {
+export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, onCorrect, onComplete, onNavigate, onSave, savedItems, onUpdateAnswer, onTipViewed, progress, badges }) {
   const [stageIdx, setStageIdx] = useState(initialStage);
   const [cardIdx,  setCardIdx]  = useState(initialCard);
   const [key,      setKey]      = useState(0);
   const [solved,   setSolved]   = useState(false);
   const [showBadgePage, setShowBadgePage] = useState(false);
-  const [viewedTips, setViewedTips] = useState(new Set());
   const touchY = useRef(null);
   const isScrolling = useRef(false);
 
@@ -699,10 +707,12 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
   // Initialize showBadgePage only when navigating to a card (not on every keystroke)
   useEffect(() => {
     if (card.type === "project") {
+      // Only show badge page automatically if answer was saved but badge not yet claimed
       const claimed = badges.includes(card.badge);
       const saved = progress.cardAnswers[`${stage.id}-${cardIdx}`];
       const alreadyCorrect = !!saved && card.slots.every((slot, i) => (saved[i] || "").trim() === slot.answer.trim());
-      setShowBadgePage(claimed || alreadyCorrect);
+      // If already claimed, show code page (not badge page) so user can review the code
+      setShowBadgePage(!claimed && alreadyCorrect);
     } else {
       setShowBadgePage(false);
     }
@@ -721,7 +731,7 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
 
     const currentTipKey = `${stageIdx}-${cardIdx}`;
     if (d > 0) {
-      if (card.type === "concept" && !viewedTips.has(currentTipKey)) {
+      if (card.type === "concept" && !progress.viewedTips?.[currentTipKey]) {
         alert("핵심 팁을 꼭 확인해!");
         return;
       }
@@ -849,14 +859,14 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
       </div>
 
       <div key={key} style={{ flex: 1, overflow: "hidden", animation: "iosFadeScale 0.24s ease" }}>
-        {card.type === "concept" && <ConceptLearnCard scrollRef={scrollRef} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={total} onNavigate={onNavigate} isLast={isLast} onSave={onSave} savedItems={savedItems} onTipViewed={() => setViewedTips(prev => { const next = new Set(prev); next.add(`${stageIdx}-${cardIdx}`); return next; })} />}
+        {card.type === "concept" && <ConceptLearnCard scrollRef={scrollRef} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={total} onNavigate={onNavigate} isLast={isLast} onSave={onSave} savedItems={savedItems} onTipViewed={() => onTipViewed?.(stageIdx, cardIdx)} />}
         {card.type === "code"    && <CodeLearnCard scrollRef={scrollRef} key={`code-${stageIdx}-${cardIdx}`} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={total} onNavigate={onNavigate} isLast={isLast} onSave={onSave} savedItems={savedItems} onSolvedChange={setSolved} onCorrect={onCorrect} onGoNext={() => go(1)} initialAnswer={progress.cardAnswers[`${stage.id}-${cardIdx}`]} onUpdateAnswer={onUpdateAnswer} />}
         {card.type === "project" && <ProjectLearnCard scrollRef={scrollRef} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={total} onBadge={onBadge} onNavigate={onNavigate} isLast={isLast} onSolvedChange={setSolved} onCorrect={onCorrect} onGoNext={() => go(1)} initialAnswer={progress.cardAnswers[`${stage.id}-${cardIdx}`]} onUpdateAnswer={onUpdateAnswer} badges={badges} onSave={onSave} savedItems={savedItems} showBadgePage={showBadgePage} />}
       </div>
 
       <div style={{ position: "fixed", right: 8, top: "50%", transform: "translateY(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, zIndex: 50 }}>
         {(() => {
-          const downBlocked = (card.type === "concept" && !viewedTips.has(`${stageIdx}-${cardIdx}`)) || (card.type === "code" && !solved) || (card.type === "project" && !solved) || (card.type === "project" && showBadgePage && !badges.includes(card.badge)) || isLast;
+          const downBlocked = (card.type === "concept" && !progress.viewedTips?.[`${stageIdx}-${cardIdx}`]) || (card.type === "code" && !solved) || (card.type === "project" && !solved) || (card.type === "project" && showBadgePage && !badges.includes(card.badge)) || isLast;
           const btnBase = { width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.95)", border: "1px solid rgba(0,0,0,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, boxShadow: "0 2px 8px rgba(0,0,0,0.1)" };
           return (
             <>

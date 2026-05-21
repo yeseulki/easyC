@@ -19,7 +19,8 @@ export default function App() {
   const [badges, setBadges] = useState(["🏆 환경 설정 완료"]);
   const [progress, setProgress] = useState({
     completedStages: [],
-    cardAnswers: {}
+    cardAnswers: {},
+    viewedTips: {}
   });
   const [savedItems, setSavedItems] = useState([]);
   const [toast, setToast] = useState(null);
@@ -41,6 +42,13 @@ export default function App() {
       setBadges([...badges, b]);
       showToast(`🏆 뱃지 획득: ${b}`, true);
     }
+  };
+
+  const handleTipViewed = (stageIdx, cardIdx) => {
+    setProgress(prev => ({
+      ...prev,
+      viewedTips: { ...prev.viewedTips, [`${stageIdx}-${cardIdx}`]: true }
+    }));
   };
 
   const handleUpdateAnswer = (stageId, cardIdx, answer) => {
@@ -118,6 +126,7 @@ export default function App() {
             onSave={handleSave}
             savedItems={savedItems}
             onUpdateAnswer={handleUpdateAnswer}
+            onTipViewed={handleTipViewed}
             progress={progress}
             badges={badges}
           />

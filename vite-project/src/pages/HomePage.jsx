@@ -78,8 +78,15 @@ export default function HomePage({ onNavigate, progress }) {
               쉽게 시작하는 C언어
             </p>
             <div style={{ display: "flex", gap: 10 }}>
-              <button style={{ flex: 1, padding: "13px 0", background: "var(--blue)", color: "#fff", borderRadius: 14, fontWeight: 700, fontSize: 15, border: "none", cursor: "pointer", boxShadow: "0 4px 14px rgba(0,122,255,0.3)" }} onClick={() => onNavigate("learn")}>
-                학습 시작하기 →
+              <button style={{ flex: 1, padding: "13px 0", background: "var(--blue)", color: "#fff", borderRadius: 14, fontWeight: 700, fontSize: 15, border: "none", cursor: "pointer", boxShadow: "0 4px 14px rgba(0,122,255,0.3)" }} onClick={() => {
+                if (done.length > 0) {
+                  const nextStageIdx = Math.min(done.length, stages.length - 1);
+                  onNavigate("learn", { stageIdx: nextStageIdx, cardIdx: 0 });
+                } else {
+                  onNavigate("learn");
+                }
+              }}>
+                {done.length > 0 ? "이어서 진행하기 →" : "학습 시작하기 →"}
               </button>
             </div>
             {done.length > 0 && (

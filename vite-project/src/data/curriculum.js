@@ -39,7 +39,7 @@ export const stages = [
         description: "printf와 줄바꿈(\\n)을 사용해 세 줄을 출력해봐.",
         slots: [
           { id: 0, options: ['"Line 1\\n"', '"Line 1"', '"Line 1;\\n"'], correct: 0, fixed: false },
-          { id: 1, options: [";", "."], correct: 0, fixed: false },
+          { id: 1, options: [";", ".", ","], correct: 0, fixed: false },
         ],
         fullCode: '#include <stdio.h>\nint main() {\n  printf("Line 1\\n");\n  printf("Line 2\\n");\n  printf("Line 3\\n");\n  return 0;\n}',
         expectedOutput: "Line 1\nLine 2\nLine 3",
