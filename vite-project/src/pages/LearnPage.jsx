@@ -673,6 +673,7 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
   const [showBadgePage, setShowBadgePage] = useState(false);
   const [inputFocused, setInputFocused] = useState(false);
   const inputFocusTimer = useRef(null);
+  const navDirection = useRef(0); // 1=앞으로, -1=뒤로
   const touchY = useRef(null);
   const isScrolling = useRef(false);
 
@@ -729,10 +730,14 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
     }
   }, [stageIdx, cardIdx, card.type, progress.cardAnswers, badges, stage.id]);
 
-  // showBadgePage: 카드 진입 시 항상 false (프로젝트 폼이 먼저 보임)
-  // → 앞으로 이동할 때만 go(1)에서 true로 전환됨
+  // showBadgePage: 뒤로 이동 시 뱃지가 있으면 칭호 카드, 그 외는 폼 먼저
   useEffect(() => {
-    setShowBadgePage(false);
+    const c = stages[stageIdx].cards[cardIdx];
+    if (c.type === "project" && navDirection.current < 0 && badges.includes(c.badge)) {
+      setShowBadgePage(true);
+    } else {
+      setShowBadgePage(false);
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stageIdx, cardIdx]);
 
@@ -779,6 +784,7 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
       }
     }
     onCardChange?.(); // 카드 이동 시 토스트 제거
+    navDirection.current = d;
     setKey(k => k + 1);
     if (d > 0) {
       if (cardIdx < total - 1)               { setCardIdx(c => c + 1); }
