@@ -865,7 +865,7 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
         </div>
       </div>
 
-      <div style={{ background: "#fff", borderBottom: "1px solid rgba(0,0,0,0.08)", padding: "10px 20px", flexShrink: 0, display: inputFocused ? "none" : undefined }}>
+      <div style={{ background: "#fff", borderBottom: "1px solid rgba(0,0,0,0.08)", padding: "8px 20px", flexShrink: 0, display: inputFocused ? "none" : undefined }}>
         <div className="ios-hscroll"
           onMouseDown={e => { e.currentTarget._isDown = true; e.currentTarget._startX = e.pageX - e.currentTarget.offsetLeft; e.currentTarget._scrollLeft = e.currentTarget.scrollLeft; e.currentTarget.style.cursor = 'grabbing'; }}
           onMouseLeave={e => { e.currentTarget._isDown = false; e.currentTarget.style.cursor = 'grab'; }}

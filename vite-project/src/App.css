@@ -82,7 +82,7 @@ html, body, #root { height: 100%; font-family: -apple-system, BlinkMacSystemFont
   .grid-3 { grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr; }
 }
 
-.cf-logo { font-size: 35px; font-weight: 900; letter-spacing: -2px; color: #000; cursor: pointer; }
+.cf-logo { font-size: 28px; font-weight: 900; letter-spacing: -2px; color: #000; cursor: pointer; }
 .cf-logo b { color: var(--blue); }
 
 .cf-tab {
@@ -248,12 +248,12 @@ html, body, #root { height: 100%; font-family: -apple-system, BlinkMacSystemFont
 /* Standard iOS Header Style (Mobile) */
 .ios-nav {
   background: #fff; border-bottom: 0.5px solid var(--sep);
-  padding: 12px 20px 10px; position: sticky; top: 0; z-index: 50;
+  padding: 8px 20px; position: sticky; top: 0; z-index: 50;
   display: flex; flex-direction: column;
 }
 .ios-nav-row { display: flex; align-items: center; justify-content: space-between; width: 100%; }
 .ios-nav-title-group { display: flex; align-items: center; gap: 12px; }
-.ios-nav-large-title { font-size: 30px; font-weight: 900; letter-spacing: -0.8px; color: #000; margin-top: 4px; white-space: nowrap; }
+.ios-nav-large-title { font-size: 22px; font-weight: 900; letter-spacing: -0.5px; color: #000; white-space: nowrap; }
 
 /* ══════════════════════════════════════
    DESKTOP OPTIMIZATIONS (1024px+)
