@@ -250,7 +250,7 @@ function Explanations({ card, stage }) {
 }
 
 /* ── One full code card ── */
-function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate, isLast, onSave, savedItems, onSolvedChange, onCorrect, onGoNext, initialAnswer, onUpdateAnswer, scrollRef, restoreStatus }) {
+function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate, isLast, onSave, savedItems, onSolvedChange, onCorrect, onGoNext, initialAnswer, onUpdateAnswer, scrollRef }) {
   const isSaved = savedItems?.some(i => i.title === card.title);
   const [showKorean, setShowKorean] = useState(false);
   const processedSlots = useMemo(() => {
@@ -267,8 +267,7 @@ function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate,
   const nonFixed = processedSlots.filter(s => !s.fixed);
   const [sel,    setSel]    = useState(initialAnswer || nonFixed.map(() => 0));
   const [status, setStatus] = useState(() => {
-    // 새로고침 시(restoreStatus=true)만 저장된 정답 상태 복원
-    if (!restoreStatus || !initialAnswer) return null;
+    if (!initialAnswer) return null;
     const ok = nonFixed.every((s, i) => initialAnswer[i] === s.correct);
     return ok ? "ok" : null;
   });
@@ -534,15 +533,14 @@ function CodeWithTypingSlots({ card, inputs, onInputChange, showKorean }) {
 }
 
 /* ── Project card ── */
-function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge, onNavigate, isLast, onSolvedChange, onCorrect, onGoNext, initialAnswer, onUpdateAnswer, badges, scrollRef, onSave, savedItems, showBadgePage, onInputFocus, onInputBlur, restoreStatus }) {
+function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge, onNavigate, isLast, onSolvedChange, onCorrect, onGoNext, initialAnswer, onUpdateAnswer, badges, scrollRef, onSave, savedItems, showBadgePage, onInputFocus, onInputBlur }) {
   const isClaimed = badges?.includes(card.badge);
   const isSaved = savedItems?.some(i => i.title === card.title);
   const [showKorean, setShowKorean] = useState(false);
   const [confetti, setConfetti] = useState([]);
   const [inputs, setInputs] = useState(initialAnswer || Array(card.slots.length).fill(""));
   const [status, setStatus] = useState(() => {
-    // 새로고침 시(restoreStatus=true)만 저장된 정답 상태 복원
-    if (!restoreStatus || !initialAnswer) return null;
+    if (!initialAnswer) return null;
     const normalize = s => (s || "").trim().replace(/\s+/g, " ");
     const isCorrect = card.slots.every((slot, i) => normalize(initialAnswer[i] || "") === normalize(slot.answer));
     return isCorrect ? "ok" : null;
@@ -665,7 +663,7 @@ function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge,
 }
 
 /* ── Main LearnPage ── */
-export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, onCorrect, onComplete, onNavigate, onSave, savedItems, onUpdateAnswer, onTipViewed, progress, badges }) {
+export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, onCorrect, onComplete, onNavigate, onSave, savedItems, onUpdateAnswer, onTipViewed, progress, badges, onCardChange }) {
   const maxAccessibleStage = (progress.completedStages || []).length;
   const clampStage = (idx) => Math.min(idx, maxAccessibleStage);
   const [stageIdx, setStageIdx] = useState(clampStage(initialStage));
@@ -675,7 +673,6 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
   const [showBadgePage, setShowBadgePage] = useState(false);
   const [inputFocused, setInputFocused] = useState(false);
   const inputFocusTimer = useRef(null);
-  const hasNavigatedRef = useRef(false); // 첫 로드(새로고침)와 이동을 구분
   const touchY = useRef(null);
   const isScrolling = useRef(false);
 
@@ -732,15 +729,10 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
     }
   }, [stageIdx, cardIdx, card.type, progress.cardAnswers, badges, stage.id]);
 
-  // Initialize showBadgePage only when navigating to a card (not on every keystroke)
+  // showBadgePage: 배지 수령 완료 시에만 자동으로 표시 (정답만으로는 X → 프로젝트 폼 유지)
   useEffect(() => {
     if (card.type === "project") {
-      const claimed = badges.includes(card.badge);
-      const saved = progress.cardAnswers[`${stage.id}-${cardIdx}`];
-      const normalize = s => (s || "").trim().replace(/\s+/g, " ");
-      const alreadyCorrect = !!saved && card.slots.every((slot, i) => normalize(saved[i]) === normalize(slot.answer));
-      // Show badge page if claimed OR if answer is already correct
-      setShowBadgePage(claimed || alreadyCorrect);
+      setShowBadgePage(badges.includes(card.badge));
     } else {
       setShowBadgePage(false);
     }
@@ -780,8 +772,16 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
         alert(`${card.badge}를 획득해야 다음 단계로 넘어갈 수 있어!`);
         return;
       }
+    } else {
+      // 뒤로 가기: 배지 페이지 → 프로젝트 폼으로 돌아가기
+      if (card.type === "project" && showBadgePage) {
+        onCardChange?.();
+        setShowBadgePage(false);
+        setKey(k => k + 1);
+        return;
+      }
     }
-    hasNavigatedRef.current = true; // 이동 발생 → 다음 카드는 상태 복원 안 함
+    onCardChange?.(); // 카드 이동 시 토스트 제거
     setKey(k => k + 1);
     if (d > 0) {
       if (cardIdx < total - 1)               { setCardIdx(c => c + 1); }
@@ -881,7 +881,7 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
                   ...(i === stageIdx ? { background: st.color } : {}),
                   ...(isLocked ? { opacity: 0.4, filter: "grayscale(1)", cursor: "not-allowed" } : {})
                 }} 
-                onClick={() => { if (!isLocked) { hasNavigatedRef.current = true; setStageIdx(i); setCardIdx(0); setKey(k => k + 1); } }}
+                onClick={() => { if (!isLocked) { onCardChange?.(); setStageIdx(i); setCardIdx(0); setKey(k => k + 1); } }}
               >
                 {isLocked ? "🔒" : st.emoji} {st.title}
               </button>
@@ -892,8 +892,8 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
 
       <div key={key} style={{ flex: 1, overflow: "hidden", animation: "iosFadeScale 0.24s ease" }}>
         {card.type === "concept" && <ConceptLearnCard scrollRef={scrollRef} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={displayTotal} onNavigate={onNavigate} isLast={isLast} onSave={onSave} savedItems={savedItems} onTipViewed={() => onTipViewed?.(stageIdx, cardIdx)} />}
-        {card.type === "code"    && <CodeLearnCard scrollRef={scrollRef} key={`code-${stageIdx}-${cardIdx}`} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={displayTotal} onNavigate={onNavigate} isLast={isLast} onSave={onSave} savedItems={savedItems} onSolvedChange={setSolved} onCorrect={onCorrect} onGoNext={() => go(1)} initialAnswer={progress.cardAnswers[`${stage.id}-${cardIdx}`]} onUpdateAnswer={onUpdateAnswer} restoreStatus={!hasNavigatedRef.current} />}
-        {card.type === "project" && <ProjectLearnCard scrollRef={scrollRef} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={displayTotal} onBadge={onBadge} onNavigate={onNavigate} isLast={isLast} onSolvedChange={setSolved} onCorrect={onCorrect} onGoNext={() => go(1)} initialAnswer={progress.cardAnswers[`${stage.id}-${cardIdx}`]} onUpdateAnswer={onUpdateAnswer} badges={badges} onSave={onSave} savedItems={savedItems} showBadgePage={showBadgePage} onInputFocus={handleInputFocus} onInputBlur={handleInputBlur} restoreStatus={!hasNavigatedRef.current} />}
+        {card.type === "code"    && <CodeLearnCard scrollRef={scrollRef} key={`code-${stageIdx}-${cardIdx}`} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={displayTotal} onNavigate={onNavigate} isLast={isLast} onSave={onSave} savedItems={savedItems} onSolvedChange={setSolved} onCorrect={onCorrect} onGoNext={() => go(1)} initialAnswer={progress.cardAnswers[`${stage.id}-${cardIdx}`]} onUpdateAnswer={onUpdateAnswer} />}
+        {card.type === "project" && <ProjectLearnCard scrollRef={scrollRef} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={displayTotal} onBadge={onBadge} onNavigate={onNavigate} isLast={isLast} onSolvedChange={setSolved} onCorrect={onCorrect} onGoNext={() => go(1)} initialAnswer={progress.cardAnswers[`${stage.id}-${cardIdx}`]} onUpdateAnswer={onUpdateAnswer} badges={badges} onSave={onSave} savedItems={savedItems} showBadgePage={showBadgePage} onInputFocus={handleInputFocus} onInputBlur={handleInputBlur} />}
       </div>
 
       <div style={{ position: "fixed", right: 8, top: "50%", transform: "translateY(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, zIndex: 50 }}>

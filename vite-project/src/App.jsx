@@ -156,6 +156,7 @@ export default function App() {
               onTipViewed={handleTipViewed}
               progress={progress}
               badges={badges}
+              onCardChange={() => setToast(null)}
             />
           )}
           {tab === "code"    && <CodePage onCorrect={() => showToast("코드가 실행되었습니다!", true)} onNavigate={handleNavigate} />}
