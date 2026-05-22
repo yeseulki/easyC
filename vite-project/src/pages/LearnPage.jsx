@@ -729,13 +729,10 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
     }
   }, [stageIdx, cardIdx, card.type, progress.cardAnswers, badges, stage.id]);
 
-  // showBadgePage: 배지 수령 완료 시에만 자동으로 표시 (정답만으로는 X → 프로젝트 폼 유지)
+  // showBadgePage: 카드 진입 시 항상 false (프로젝트 폼이 먼저 보임)
+  // → 앞으로 이동할 때만 go(1)에서 true로 전환됨
   useEffect(() => {
-    if (card.type === "project") {
-      setShowBadgePage(badges.includes(card.badge));
-    } else {
-      setShowBadgePage(false);
-    }
+    setShowBadgePage(false);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stageIdx, cardIdx]);
 

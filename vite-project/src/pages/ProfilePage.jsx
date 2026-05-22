@@ -28,7 +28,7 @@ export default function ProfilePage({ badges, progress, savedItems = [], onNavig
         <div className="ios-nav-row">
           <div className="ios-nav-title-group" style={{ gap: 16 }}>
             <span className="cf-logo" onClick={() => onNavigate("home")} style={{ cursor: "pointer" }}>easy<b>C</b></span>
-            <div className="ios-nav-large-title">프로필</div>
+            <div className="ios-nav-large-title">내 정보</div>
           </div>
         </div>
       </div>
