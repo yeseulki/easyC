@@ -4,7 +4,7 @@ function translateLine(raw) {
   let text = raw.trim();
   if (!text) return "";
   if (text.startsWith("#include")) return text.replace(/#include\s*<(.*?)>/, "📦 $1 기능 가져오기");
-  if (text.includes("int main()")) return "🚀 메인 프로그램 시작";
+  if (text.includes("int main()")) return "▶️ 메인 프로그램 시작";
   if (text.includes("return 0;")) return "🏁 프로그램 정상 종료";
   if (text.startsWith("printf")) {
     let content = text.match(/printf\("([^"]*)"/);

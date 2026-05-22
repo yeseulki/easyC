@@ -13,7 +13,7 @@ const CORE_FEATURES = [
     desc: "코드 속 빈 토큰을 눌러 직접 수정하며 완성해요.\n정답을 맞혀야 다음 단계로 진행할 수 있어요.",
   },
   {
-    icon: "🚀", type: "project", title: "프로젝트", sub: "만들며 배우는 커리큘럼",
+    icon: "🛠️", type: "project", title: "프로젝트", sub: "만들며 배우는 커리큘럼",
     color: "#ff9500",
     desc: "배운 개념으로 미니 프로젝트를 완성해요.\n완성하면 특별한 뱃지를 획득할 수 있어요!",
   },
@@ -91,8 +91,12 @@ function FeaturePopup({ feature, onClose }) {
         onClick={e => e.stopPropagation()}
       >
         {/* Drag handle */}
-        <div style={{ display: "flex", justifyContent: "center", padding: "12px 0 4px" }}>
+        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: "12px 16px 4px", position: "relative" }}>
           <div style={{ width: 36, height: 4, background: "rgba(0,0,0,0.18)", borderRadius: 2 }} />
+          <button
+            onClick={onClose}
+            style={{ position: "absolute", right: 16, width: 28, height: 28, borderRadius: "50%", background: "rgba(118,118,128,0.12)", border: "none", cursor: "pointer", fontSize: 20, color: "#6c6c70", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}
+          >×</button>
         </div>
 
         {/* Header */}
@@ -251,7 +255,7 @@ export default function HomePage({ onNavigate, progress, nickname }) {
 
         {/* Curriculum stage grid */}
         <div style={{ marginBottom: 24 }}>
-          <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: -0.5, marginBottom: 12, color: "#000" }}>커리큘럼</div>
+          <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: -0.5, marginBottom: 12, color: "#000" }}>스테이지</div>
           <div className="responsive-grid grid-2">
             {stages.map((stage, i) => {
               const completed = done.includes(stage.id);

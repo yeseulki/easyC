@@ -14,7 +14,7 @@ const SLIDES = [
     accent: "#5856d6",
   },
   {
-    emoji: "🚀",
+    emoji: "🎯",
     title: "3가지 학습으로\n완성해요",
     desc: "📖 개념 학습으로 이해하고\n💻 실습으로 손에 익히고\n🏆 프로젝트로 완성해요!",
     accent: "#ff9500",
@@ -111,7 +111,7 @@ export default function OnboardingOverlay({ onComplete }) {
               letterSpacing: -0.3,
             }}
           >
-            easyC 시작하기 🚀
+            easyC 시작하기 ✨
           </button>
         </div>
       </div>

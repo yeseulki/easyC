@@ -5,7 +5,7 @@ import CodeCard from "./CodeCard";
 import DrC from "./DrC";
 
 const CARD_TYPES = { concept: "개념", project: "프로젝트" };
-const CARD_ICONS = { concept: "💡", code: "💻", project: "🚀" };
+const CARD_ICONS = { concept: "💡", code: "💻", project: "🛠️" };
 
 function ProjectCard({ card, color, onBadge }) {
   const [claimed, setClaimed] = useState(false);

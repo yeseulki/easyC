@@ -81,7 +81,7 @@ function MemoryMap({ color }) {
       <div style={{ marginTop: 16, padding: "12px", background: "rgba(255,255,255,0.03)", borderRadius: 12, fontSize: 13, color: "#c7c7cc", lineHeight: 1.5 }}>
         {activeCell ? (
           <div style={{ animation: "iosFadeIn 0.3s ease" }}>
-            <b style={{ color: "#fff" }}>[{activeCell.name}] {activeCell.addr}</b>: {activeCell.desc} 🚀
+            <b style={{ color: "#fff" }}>[{activeCell.name}] {activeCell.addr}</b>: {activeCell.desc} ✨
           </div>
         ) : (
           <div style={{ textAlign: "center", opacity: 0.6 }}>주소를 클릭해서 상세 정보를 확인해봐!</div>
@@ -629,7 +629,7 @@ function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge,
       <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "0 20px 20px" }}>
         <div style={{ paddingTop: 12, paddingBottom: 12, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 11, color: stage.color, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 6 }}>🚀 프로젝트</div>
+            <div style={{ fontSize: 11, color: stage.color, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 6 }}>🛠️ 프로젝트</div>
             <h2 style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.5, lineHeight: 1.3, color: "#000", marginBottom: 10 }}>{card.title}</h2>
             <p style={{ fontSize: 14, color: "#8e8e93", lineHeight: 1.7, marginBottom: 16, whiteSpace: "pre-line" }}>{card.description}</p>
           </div>

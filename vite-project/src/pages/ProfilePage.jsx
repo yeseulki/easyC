@@ -71,7 +71,7 @@ export default function ProfilePage({ badges, progress, savedItems = [], onNavig
                 { icon: "🏅", val: badges.length, label: "획득 뱃지",    c: "var(--orange)" },
                 { icon: "📚", val: done.length,   label: "완료 스테이지", c: "var(--blue)"   },
                 { icon: "💯", val: `${pct}%`,     label: "전체 진도",    c: "var(--green)"  },
-                { icon: "🚀", val: stages.length, label: "전체 스테이지", c: "var(--purple)" },
+                { icon: "🗺️", val: stages.length, label: "전체 스테이지", c: "var(--purple)" },
               ].map(st => (
                 <div key={st.label} style={{ background: "#fff", borderRadius: 16, padding: "18px 16px", boxShadow: "0 1px 4px rgba(0,0,0,0.07)", display: "flex", flexDirection: "column", gap: 4 }}>
                   <div style={{ fontSize: 28 }}>{st.icon}</div>
@@ -172,7 +172,7 @@ export default function ProfilePage({ badges, progress, savedItems = [], onNavig
                 {badges.length === 0 ? "첫 번째 뱃지를 획득해봐!" : badges.length < 3 ? "훌륭해! 계속 도전해봐!" : "정말 대단해!"}
               </div>
               <div style={{ fontSize: 14, color: "var(--label2)", lineHeight: 1.7 }}>
-                C언어를 배운다는 건 컴퓨터와 직접 대화하는 법을 익히는 것.{"\n"}너는 지금 그 언어를 배우고 있어! 🚀
+                C언어를 배운다는 건 컴퓨터와 직접 대화하는 법을 익히는 것.{"\n"}너는 지금 그 언어를 배우고 있어! ⚡
               </div>
             </div>
           </div>

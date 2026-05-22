@@ -208,7 +208,7 @@ function CodeTypingChallenge({ ch, onSolved, onCorrect, onBecameSolved, savedInp
           style={{ flex: 2, padding: "12px 0", background: status === "ok" ? "#34c759" : ch.color, color: "#fff", borderRadius: 12, fontWeight: 700, fontSize: 15, border: "none", cursor: "pointer", boxShadow: `0 4px 14px ${ch.color}44` }}
           onClick={check}
         >
-          {status === "ok" ? "다음으로 →" : "확인하기 ✓"}
+          {status === "ok" ? "닫기 ✓" : "확인하기 ✓"}
         </button>
       </div>
     </div>
@@ -236,6 +236,8 @@ function Terminal({ expectedOutput }) {
 
 function SolveSheet({ ch, onClose, onSolved, onCorrect, savedInputs, onSaveInputs, alreadySolved }) {
   const [solvedNow, setSolvedNow] = useState(false);
+  // 마운트 시점의 높이를 고정해 키보드가 올라와도 패널이 밀리지 않게 함
+  const [sheetHeight] = useState(() => `${Math.floor(window.innerHeight * 0.96)}px`);
 
   const handleClose = () => {
     if (solvedNow && !alreadySolved) {
@@ -247,7 +249,7 @@ function SolveSheet({ ch, onClose, onSolved, onCorrect, savedInputs, onSaveInput
 
   return (
     <div className="ios-sheet-bg" onClick={handleClose}>
-      <div className="ios-sheet" onClick={e => e.stopPropagation()}>
+      <div className="ios-sheet" style={{ height: sheetHeight }} onClick={e => e.stopPropagation()}>
         <div className="ios-sheet-handle" />
 
         {/* 헤더 */}
