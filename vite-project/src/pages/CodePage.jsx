@@ -205,10 +205,10 @@ function CodeTypingChallenge({ ch, onSolved, onCorrect, onBecameSolved, savedInp
           ↩ 초기화
         </button>
         <button
-          style={{ flex: 2, padding: "12px 0", background: status === "ok" ? "#34c759" : ch.color, color: "#fff", borderRadius: 12, fontWeight: 700, fontSize: 15, border: "none", cursor: "pointer", boxShadow: `0 4px 14px ${ch.color}44` }}
+          style={{ flex: 2, padding: "12px 0", background: status === "ok" ? "rgba(118,118,128,0.16)" : ch.color, color: status === "ok" ? "#3c3c43" : "#fff", borderRadius: 12, fontWeight: 700, fontSize: 15, border: "none", cursor: "pointer", boxShadow: status === "ok" ? "none" : `0 4px 14px ${ch.color}44` }}
           onClick={check}
         >
-          {status === "ok" ? "닫기 ✓" : "확인하기 ✓"}
+          {status === "ok" ? "닫기" : "확인하기 ✓"}
         </button>
       </div>
     </div>
@@ -235,20 +235,21 @@ function Terminal({ expectedOutput }) {
 }
 
 function SolveSheet({ ch, onClose, onSolved, onCorrect, savedInputs, onSaveInputs, alreadySolved }) {
-  const [solvedNow, setSolvedNow] = useState(false);
-  // 마운트 시점의 높이를 고정해 키보드가 올라와도 패널이 밀리지 않게 함
+  // useRef로 최신 solved 상태를 항상 참조해 클로저 stale 문제 방지
+  const solvedNowRef = useRef(false);
   const [sheetHeight] = useState(() => `${Math.floor(window.innerHeight * 0.96)}px`);
 
-  const handleClose = () => {
-    if (solvedNow && !alreadySolved) {
-      onSolved(); // 정답 상태로 닫으면 완료 처리 후 닫기
+  const handleNext = (e) => {
+    e?.stopPropagation();
+    if (solvedNowRef.current && !alreadySolved) {
+      onSolved();
     } else {
       onClose();
     }
   };
 
   return (
-    <div className="ios-sheet-bg" onClick={handleClose}>
+    <div className="ios-sheet-bg" onClick={handleNext}>
       <div className="ios-sheet" style={{ height: sheetHeight }} onClick={e => e.stopPropagation()}>
         <div className="ios-sheet-handle" />
 
@@ -274,14 +275,17 @@ function SolveSheet({ ch, onClose, onSolved, onCorrect, savedInputs, onSaveInput
             ch={ch}
             savedInputs={savedInputs}
             onSave={onSaveInputs}
-            onBecameSolved={() => setSolvedNow(true)}
+            onBecameSolved={() => { solvedNowRef.current = true; }}
             onSolved={() => { if (!alreadySolved) onSolved(); }}
             onCorrect={onCorrect}
           />
         </div>
 
         <div style={{ padding: "12px 20px 4px" }}>
-          <button className="ios-btn ios-btn-gray" style={{ width: "100%", borderRadius: 14 }} onClick={handleClose}>다음으로</button>
+          <button
+            style={{ width: "100%", padding: "14px 0", background: "#34c759", color: "#fff", borderRadius: 14, fontWeight: 700, fontSize: 17, border: "none", cursor: "pointer", boxShadow: "0 4px 14px rgba(52,199,89,0.35)" }}
+            onClick={handleNext}
+          >다음으로</button>
         </div>
       </div>
     </div>
