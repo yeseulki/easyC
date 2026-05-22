@@ -81,13 +81,14 @@ function ProjectPreview() {
 }
 
 function FeaturePopup({ feature, onClose }) {
+  const [sheetHeight] = useState(() => `${Math.floor(window.innerHeight * 0.96)}px`);
   return (
     <div
       style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "flex-end", backdropFilter: "blur(6px)" }}
       onClick={onClose}
     >
       <div
-        style={{ background: "#f2f2f7", borderRadius: "24px 24px 0 0", width: "100%", height: "92vh", overflowY: "auto", paddingBottom: 40 }}
+        style={{ background: "#f2f2f7", borderRadius: "24px 24px 0 0", width: "100%", height: sheetHeight, overflowY: "auto", paddingBottom: 40 }}
         onClick={e => e.stopPropagation()}
       >
         {/* Drag handle */}

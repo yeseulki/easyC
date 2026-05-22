@@ -281,7 +281,7 @@ function SolveSheet({ ch, onClose, onSolved, onCorrect, savedInputs, onSaveInput
         </div>
 
         <div style={{ padding: "12px 20px 4px" }}>
-          <button className="ios-btn ios-btn-gray" style={{ width: "100%", borderRadius: 14 }} onClick={handleClose}>닫기</button>
+          <button className="ios-btn ios-btn-gray" style={{ width: "100%", borderRadius: 14 }} onClick={handleClose}>다음으로</button>
         </div>
       </div>
     </div>
