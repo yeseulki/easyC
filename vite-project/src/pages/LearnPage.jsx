@@ -722,11 +722,8 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
         setSolved(false);
       }
     } else if (card.type === "project") {
-      const claimed = badges.includes(card.badge);
-      const saved = progress.cardAnswers[`${stage.id}-${cardIdx}`];
-      const normalize = s => (s || "").trim().replace(/\s+/g, " ");
-      const alreadyCorrect = !!saved && Array.isArray(saved) && card.slots.every((slot, i) => normalize(saved[i]) === normalize(slot.answer));
-      setSolved(claimed || alreadyCorrect);
+      // 뱃지를 획득한 경우에만 solved — 버튼을 눌러야만 진행 가능
+      setSolved(badges.includes(card.badge));
     }
   }, [stageIdx, cardIdx, card.type, progress.cardAnswers, badges, stage.id]);
 

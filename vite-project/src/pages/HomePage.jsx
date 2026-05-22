@@ -272,7 +272,7 @@ export default function HomePage({ onNavigate, progress, nickname }) {
                   }}
                   onClick={() => { if (!locked) onNavigate("learn", { stageIdx: i }); }}
                 >
-                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span style={{ fontSize: 26 }}>{locked ? "🔒" : stage.emoji}</span>
                     {completed
                       ? <span style={{ fontSize: 11, color: stage.color, fontWeight: 700, background: stage.color + "15", padding: "3px 8px", borderRadius: 100 }}>완료 ✓</span>
