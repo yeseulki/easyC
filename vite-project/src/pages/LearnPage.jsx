@@ -266,11 +266,7 @@ function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate,
   const processedCard = { ...card, slots: processedSlots };
   const nonFixed = processedSlots.filter(s => !s.fixed);
   const [sel,    setSel]    = useState(initialAnswer || nonFixed.map(() => 0));
-  const [status, setStatus] = useState(() => {
-    if (!initialAnswer) return null;
-    const ok = nonFixed.every((s, i) => initialAnswer[i] === s.correct);
-    return ok ? "ok" : null;
-  });
+  const [status, setStatus] = useState(null); // 카드 이동 시 항상 초기 상태
   const [confetti, setConfetti] = useState([]);
 
   const pct = Math.round(((cardIdx + 1) / totalCards) * 100);
@@ -533,17 +529,13 @@ function CodeWithTypingSlots({ card, inputs, onInputChange, showKorean }) {
 }
 
 /* ── Project card ── */
-function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge, onNavigate, isLast, onSolvedChange, onCorrect, onGoNext, initialAnswer, onUpdateAnswer, badges, scrollRef, onSave, savedItems, showBadgePage }) {
+function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge, onNavigate, isLast, onSolvedChange, onCorrect, onGoNext, initialAnswer, onUpdateAnswer, badges, scrollRef, onSave, savedItems, showBadgePage, onInputFocus, onInputBlur }) {
   const isClaimed = badges?.includes(card.badge);
   const isSaved = savedItems?.some(i => i.title === card.title);
   const [showKorean, setShowKorean] = useState(false);
   const [confetti, setConfetti] = useState([]);
   const [inputs, setInputs] = useState(initialAnswer || Array(card.slots.length).fill(""));
-  const [status, setStatus] = useState(() => {
-    if (!initialAnswer) return null;
-    const isCorrect = card.slots.every((slot, i) => (initialAnswer[i] || "") === slot.answer);
-    return isCorrect ? "ok" : null;
-  });
+  const [status, setStatus] = useState(null); // 카드 이동 시 항상 초기 상태
   const pct = Math.round(((cardIdx + 1) / totalCards) * 100);
 
   const handleInputChange = (index, value) => {
@@ -637,7 +629,7 @@ function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge,
           </div>
         </div>
 
-        <div className="cf-card" style={{ marginBottom: 16 }}>
+        <div className="cf-card" style={{ marginBottom: 16 }} onFocus={onInputFocus} onBlur={onInputBlur}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px 8px" }}>
             <div style={{ display: "flex", gap: 6 }}>
               <div className="cf-dot red" /><div className="cf-dot yellow" /><div className="cf-dot green" />
@@ -670,6 +662,8 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
   const [key,      setKey]      = useState(0);
   const [solved,   setSolved]   = useState(false);
   const [showBadgePage, setShowBadgePage] = useState(false);
+  const [inputFocused, setInputFocused] = useState(false);
+  const inputFocusTimer = useRef(null);
   const touchY = useRef(null);
   const isScrolling = useRef(false);
 
@@ -678,10 +672,20 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
     setCardIdx(initialCard);
   }, [initialStage, initialCard]);
 
-  // stageIdx/cardIdx 변경 시 위치 저장
+  // stageIdx/cardIdx 변경 시 위치 저장 & inputFocused 초기화
   useEffect(() => {
     localStorage.setItem("easycLastPos", JSON.stringify({ stageIdx, cardIdx }));
+    setInputFocused(false);
   }, [stageIdx, cardIdx]);
+
+  const handleInputFocus = () => {
+    clearTimeout(inputFocusTimer.current);
+    setInputFocused(true);
+  };
+  const handleInputBlur = () => {
+    // 딜레이를 줘서 input 간 이동 시 깜빡임 방지
+    inputFocusTimer.current = setTimeout(() => setInputFocused(false), 150);
+  };
 
   const stage = stages[stageIdx];
   const total = stage.cards.length;
@@ -826,7 +830,7 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
   return (
     <div className="learn-page-container" onTouchStart={onTS} onTouchEnd={onTE} onWheel={onWheel}>
       {/* Unified Nav */}
-      <div className="ios-nav">
+      <div className="ios-nav" style={{ display: inputFocused ? "none" : undefined }}>
         <div className="ios-nav-row">
           <div className="ios-nav-title-group" style={{ gap: 16 }}>
             <span className="cf-logo" onClick={() => onNavigate("home")} style={{ cursor: "pointer" }}>easy<b>C</b></span>
@@ -841,7 +845,7 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
         </div>
       </div>
 
-      <div style={{ background: "#fff", borderBottom: "1px solid rgba(0,0,0,0.08)", padding: "10px 20px", flexShrink: 0 }}>
+      <div style={{ background: "#fff", borderBottom: "1px solid rgba(0,0,0,0.08)", padding: "10px 20px", flexShrink: 0, display: inputFocused ? "none" : undefined }}>
         <div className="ios-hscroll"
           onMouseDown={e => { e.currentTarget._isDown = true; e.currentTarget._startX = e.pageX - e.currentTarget.offsetLeft; e.currentTarget._scrollLeft = e.currentTarget.scrollLeft; e.currentTarget.style.cursor = 'grabbing'; }}
           onMouseLeave={e => { e.currentTarget._isDown = false; e.currentTarget.style.cursor = 'grab'; }}
@@ -872,7 +876,7 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
       <div key={key} style={{ flex: 1, overflow: "hidden", animation: "iosFadeScale 0.24s ease" }}>
         {card.type === "concept" && <ConceptLearnCard scrollRef={scrollRef} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={displayTotal} onNavigate={onNavigate} isLast={isLast} onSave={onSave} savedItems={savedItems} onTipViewed={() => onTipViewed?.(stageIdx, cardIdx)} />}
         {card.type === "code"    && <CodeLearnCard scrollRef={scrollRef} key={`code-${stageIdx}-${cardIdx}`} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={displayTotal} onNavigate={onNavigate} isLast={isLast} onSave={onSave} savedItems={savedItems} onSolvedChange={setSolved} onCorrect={onCorrect} onGoNext={() => go(1)} initialAnswer={progress.cardAnswers[`${stage.id}-${cardIdx}`]} onUpdateAnswer={onUpdateAnswer} />}
-        {card.type === "project" && <ProjectLearnCard scrollRef={scrollRef} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={displayTotal} onBadge={onBadge} onNavigate={onNavigate} isLast={isLast} onSolvedChange={setSolved} onCorrect={onCorrect} onGoNext={() => go(1)} initialAnswer={progress.cardAnswers[`${stage.id}-${cardIdx}`]} onUpdateAnswer={onUpdateAnswer} badges={badges} onSave={onSave} savedItems={savedItems} showBadgePage={showBadgePage} />}
+        {card.type === "project" && <ProjectLearnCard scrollRef={scrollRef} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={displayTotal} onBadge={onBadge} onNavigate={onNavigate} isLast={isLast} onSolvedChange={setSolved} onCorrect={onCorrect} onGoNext={() => go(1)} initialAnswer={progress.cardAnswers[`${stage.id}-${cardIdx}`]} onUpdateAnswer={onUpdateAnswer} badges={badges} onSave={onSave} savedItems={savedItems} showBadgePage={showBadgePage} onInputFocus={handleInputFocus} onInputBlur={handleInputBlur} />}
       </div>
 
       <div style={{ position: "fixed", right: 8, top: "50%", transform: "translateY(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, zIndex: 50 }}>
