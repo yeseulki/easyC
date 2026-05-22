@@ -134,18 +134,29 @@ export default function ProfilePage({ badges, progress, savedItems = [], onNavig
             <div style={{ background: "#fff", borderRadius: 14, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
               {stages.map((stage, i) => {
                 const completed = done.includes(stage.id);
+                const locked = i > done.length;
                 return (
-                  <div key={stage.id} className="ios-cell" style={{ cursor: "pointer" }} onClick={() => onNavigate("learn", { stageIdx: i })}>
-                    <div style={{ width: 44, height: 44, borderRadius: 12, background: stage.color + "15", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>
-                      {stage.emoji}
+                  <div
+                    key={stage.id}
+                    className="ios-cell"
+                    style={{
+                      cursor: locked ? "default" : "pointer",
+                      opacity: locked ? 0.45 : 1,
+                    }}
+                    onClick={() => { if (!locked) onNavigate("learn", { stageIdx: i }); }}
+                  >
+                    <div style={{ width: 44, height: 44, borderRadius: 12, background: locked ? "rgba(0,0,0,0.06)" : stage.color + "15", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>
+                      {locked ? "🔒" : stage.emoji}
                     </div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 600, fontSize: 15, color: "var(--label)" }}>{stage.title}</div>
-                      <div style={{ fontSize: 12, color: stage.color, marginTop: 1 }}>{stage.subtitle}</div>
+                      <div style={{ fontWeight: 600, fontSize: 15, color: locked ? "var(--label3)" : "var(--label)" }}>{stage.title}</div>
+                      <div style={{ fontSize: 12, color: locked ? "var(--label3)" : stage.color, marginTop: 1 }}>{stage.subtitle}</div>
                     </div>
                     {completed
                       ? <span style={{ fontSize: 13, color: "var(--green)", fontWeight: 700 }}>완료 ✓</span>
-                      : <span style={{ fontSize: 12, color: "var(--label3)" }}>미완료</span>
+                      : locked
+                        ? <span style={{ fontSize: 12, color: "var(--label3)" }}>미개방</span>
+                        : <span style={{ fontSize: 12, color: "var(--label3)" }}>미완료</span>
                     }
                   </div>
                 );

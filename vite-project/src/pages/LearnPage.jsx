@@ -555,7 +555,8 @@ function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge,
   };
 
   const check = () => {
-    const isCorrect = card.slots.every((slot, i) => inputs[i].trim() === slot.answer.trim());
+    const normalize = s => (s || "").trim().replace(/\s+/g, " ");
+    const isCorrect = card.slots.every((slot, i) => normalize(inputs[i]) === normalize(slot.answer));
     setStatus(isCorrect ? "ok" : "err");
     if (isCorrect) {
       onSolvedChange?.(true);
@@ -662,7 +663,9 @@ function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge,
 
 /* ── Main LearnPage ── */
 export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, onCorrect, onComplete, onNavigate, onSave, savedItems, onUpdateAnswer, onTipViewed, progress, badges }) {
-  const [stageIdx, setStageIdx] = useState(initialStage);
+  const maxAccessibleStage = (progress.completedStages || []).length;
+  const clampStage = (idx) => Math.min(idx, maxAccessibleStage);
+  const [stageIdx, setStageIdx] = useState(clampStage(initialStage));
   const [cardIdx,  setCardIdx]  = useState(initialCard);
   const [key,      setKey]      = useState(0);
   const [solved,   setSolved]   = useState(false);
@@ -671,9 +674,14 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
   const isScrolling = useRef(false);
 
   useEffect(() => {
-    setStageIdx(initialStage);
+    setStageIdx(Math.min(initialStage, maxAccessibleStage));
     setCardIdx(initialCard);
   }, [initialStage, initialCard]);
+
+  // stageIdx/cardIdx 변경 시 위치 저장
+  useEffect(() => {
+    localStorage.setItem("easycLastPos", JSON.stringify({ stageIdx, cardIdx }));
+  }, [stageIdx, cardIdx]);
 
   const stage = stages[stageIdx];
   const total = stage.cards.length;
@@ -707,12 +715,12 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
   // Initialize showBadgePage only when navigating to a card (not on every keystroke)
   useEffect(() => {
     if (card.type === "project") {
-      // Only show badge page automatically if answer was saved but badge not yet claimed
       const claimed = badges.includes(card.badge);
       const saved = progress.cardAnswers[`${stage.id}-${cardIdx}`];
-      const alreadyCorrect = !!saved && card.slots.every((slot, i) => (saved[i] || "").trim() === slot.answer.trim());
-      // If already claimed, show code page (not badge page) so user can review the code
-      setShowBadgePage(!claimed && alreadyCorrect);
+      const normalize = s => (s || "").trim().replace(/\s+/g, " ");
+      const alreadyCorrect = !!saved && card.slots.every((slot, i) => normalize(saved[i]) === normalize(slot.answer));
+      // Show badge page if claimed OR if answer is already correct
+      setShowBadgePage(claimed || alreadyCorrect);
     } else {
       setShowBadgePage(false);
     }
@@ -811,6 +819,9 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
   const isFirst = stageIdx === 0 && cardIdx === 0;
   const isLast  = stageIdx === stages.length - 1 && cardIdx === total - 1;
   const scrollRef = useRef(null);
+  const hasBadgeStep  = stage.cards.some(c => c.type === "project");
+  const displayTotal   = hasBadgeStep ? total + 1 : total;
+  const displayCurrent = showBadgePage ? total + 1 : cardIdx + 1;
 
   return (
     <div className="learn-page-container" onTouchStart={onTS} onTouchEnd={onTE} onWheel={onWheel}>
@@ -822,9 +833,9 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
             <div className="ios-nav-large-title">학습하기</div>
           </div>
           <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--label2)" }}>{cardIdx + 1}/{total}</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--label2)" }}>{displayCurrent}/{displayTotal}</div>
             <div style={{ width: 60, height: 4, background: "rgba(0,0,0,0.05)", borderRadius: 2, marginTop: 4 }}>
-              <div style={{ width: `${((cardIdx + 1) / total) * 100}%`, height: "100%", background: stage.color, borderRadius: 2 }} />
+              <div style={{ width: `${(displayCurrent / displayTotal) * 100}%`, height: "100%", background: stage.color, borderRadius: 2 }} />
             </div>
           </div>
         </div>
@@ -840,7 +851,7 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
           style={{ cursor: 'grab' }}
         >
           {stages.map((st, i) => {
-            const isLocked = i > stageIdx;
+            const isLocked = i > maxAccessibleStage;
             return (
               <button 
                 key={st.id} 
@@ -859,9 +870,9 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
       </div>
 
       <div key={key} style={{ flex: 1, overflow: "hidden", animation: "iosFadeScale 0.24s ease" }}>
-        {card.type === "concept" && <ConceptLearnCard scrollRef={scrollRef} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={total} onNavigate={onNavigate} isLast={isLast} onSave={onSave} savedItems={savedItems} onTipViewed={() => onTipViewed?.(stageIdx, cardIdx)} />}
-        {card.type === "code"    && <CodeLearnCard scrollRef={scrollRef} key={`code-${stageIdx}-${cardIdx}`} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={total} onNavigate={onNavigate} isLast={isLast} onSave={onSave} savedItems={savedItems} onSolvedChange={setSolved} onCorrect={onCorrect} onGoNext={() => go(1)} initialAnswer={progress.cardAnswers[`${stage.id}-${cardIdx}`]} onUpdateAnswer={onUpdateAnswer} />}
-        {card.type === "project" && <ProjectLearnCard scrollRef={scrollRef} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={total} onBadge={onBadge} onNavigate={onNavigate} isLast={isLast} onSolvedChange={setSolved} onCorrect={onCorrect} onGoNext={() => go(1)} initialAnswer={progress.cardAnswers[`${stage.id}-${cardIdx}`]} onUpdateAnswer={onUpdateAnswer} badges={badges} onSave={onSave} savedItems={savedItems} showBadgePage={showBadgePage} />}
+        {card.type === "concept" && <ConceptLearnCard scrollRef={scrollRef} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={displayTotal} onNavigate={onNavigate} isLast={isLast} onSave={onSave} savedItems={savedItems} onTipViewed={() => onTipViewed?.(stageIdx, cardIdx)} />}
+        {card.type === "code"    && <CodeLearnCard scrollRef={scrollRef} key={`code-${stageIdx}-${cardIdx}`} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={displayTotal} onNavigate={onNavigate} isLast={isLast} onSave={onSave} savedItems={savedItems} onSolvedChange={setSolved} onCorrect={onCorrect} onGoNext={() => go(1)} initialAnswer={progress.cardAnswers[`${stage.id}-${cardIdx}`]} onUpdateAnswer={onUpdateAnswer} />}
+        {card.type === "project" && <ProjectLearnCard scrollRef={scrollRef} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={displayTotal} onBadge={onBadge} onNavigate={onNavigate} isLast={isLast} onSolvedChange={setSolved} onCorrect={onCorrect} onGoNext={() => go(1)} initialAnswer={progress.cardAnswers[`${stage.id}-${cardIdx}`]} onUpdateAnswer={onUpdateAnswer} badges={badges} onSave={onSave} savedItems={savedItems} showBadgePage={showBadgePage} />}
       </div>
 
       <div style={{ position: "fixed", right: 8, top: "50%", transform: "translateY(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, zIndex: 50 }}>
@@ -873,8 +884,11 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
               <button style={{ ...btnBase, opacity: isFirst ? 0.25 : 0.9 }} onClick={() => go(-1)} disabled={isFirst}>↑</button>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
                 {stage.cards.map((_, i) => (
-                  <div key={i} style={{ width: 4, height: i === cardIdx ? 16 : 4, borderRadius: 2, background: i === cardIdx ? stage.color : "rgba(0,0,0,0.15)", transition: "all 0.3s" }} />
+                  <div key={i} style={{ width: 4, height: (!showBadgePage && i === cardIdx) ? 16 : 4, borderRadius: 2, background: (!showBadgePage && i === cardIdx) ? stage.color : "rgba(0,0,0,0.15)", transition: "all 0.3s" }} />
                 ))}
+                {hasBadgeStep && (
+                  <div style={{ width: 4, height: showBadgePage ? 16 : 4, borderRadius: 2, background: showBadgePage ? stage.color : "rgba(0,0,0,0.15)", transition: "all 0.3s" }} />
+                )}
               </div>
               <button style={{ ...btnBase, opacity: downBlocked ? 0.25 : 0.9 }} onClick={() => go(1)} disabled={isLast}>↓</button>
             </>
