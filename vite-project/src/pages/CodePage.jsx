@@ -234,13 +234,12 @@ function Terminal({ expectedOutput }) {
   );
 }
 
-function SolveSheet({ ch, onClose, onSolved, onCorrect, savedInputs, onSaveInputs, alreadySolved }) {
-  // useRef로 최신 solved 상태를 항상 참조해 클로저 stale 문제 방지
+function SolveSheet({ ch, onClose, onSolved, onNext, onCorrect, savedInputs, onSaveInputs, alreadySolved }) {
   const solvedNowRef = useRef(false);
   const [sheetHeight] = useState(() => `${Math.floor(window.innerHeight * 0.96)}px`);
 
-  const handleNext = (e) => {
-    e?.stopPropagation();
+  // 닫기: 방금 풀었으면 완료 처리 후 닫기, 아니면 그냥 닫기
+  const closeSheet = () => {
     if (solvedNowRef.current && !alreadySolved) {
       onSolved();
     } else {
@@ -248,8 +247,14 @@ function SolveSheet({ ch, onClose, onSolved, onCorrect, savedInputs, onSaveInput
     }
   };
 
+  // 다음으로: 완료 처리 후 다음 챌린지로 이동
+  const goNext = (e) => {
+    e?.stopPropagation();
+    onNext(solvedNowRef.current);
+  };
+
   return (
-    <div className="ios-sheet-bg" onClick={handleNext}>
+    <div className="ios-sheet-bg" onClick={closeSheet}>
       <div className="ios-sheet" style={{ height: sheetHeight }} onClick={e => e.stopPropagation()}>
         <div className="ios-sheet-handle" />
 
@@ -276,7 +281,7 @@ function SolveSheet({ ch, onClose, onSolved, onCorrect, savedInputs, onSaveInput
             savedInputs={savedInputs}
             onSave={onSaveInputs}
             onBecameSolved={() => { solvedNowRef.current = true; }}
-            onSolved={() => { if (!alreadySolved) onSolved(); }}
+            onSolved={closeSheet}
             onCorrect={onCorrect}
           />
         </div>
@@ -284,7 +289,7 @@ function SolveSheet({ ch, onClose, onSolved, onCorrect, savedInputs, onSaveInput
         <div style={{ padding: "12px 20px 4px" }}>
           <button
             style={{ width: "100%", padding: "14px 0", background: "#34c759", color: "#fff", borderRadius: 14, fontWeight: 700, fontSize: 17, border: "none", cursor: "pointer", boxShadow: "0 4px 14px rgba(52,199,89,0.35)" }}
-            onClick={handleNext}
+            onClick={goNext}
           >다음으로</button>
         </div>
       </div>
@@ -341,6 +346,16 @@ export default function CodePage({ onCorrect, onNavigate }) {
     });
   };
 
+  // 다음 챌린지로 이동 (방금 풀었으면 완료 처리 후 이동, 마지막이면 닫기)
+  const handleNext = (solvedNow) => {
+    if (solvedNow && selected && !solved.has(selected.title)) {
+      markSolved(selected.title);
+    }
+    const idx = CHALLENGES.findIndex(c => c.title === selected?.title);
+    const next = idx >= 0 && idx < CHALLENGES.length - 1 ? CHALLENGES[idx + 1] : null;
+    setSelected(next);
+  };
+
   const filtered = filter === "all" ? CHALLENGES : CHALLENGES.filter(c => `${c.stageId}` === filter);
   const grouped  = stages.map(st => ({ stage: st, items: filtered.filter(c => c.stageId === st.id) })).filter(g => g.items.length > 0);
 
@@ -394,6 +409,7 @@ export default function CodePage({ onCorrect, onNavigate }) {
           ch={selected}
           onClose={() => setSelected(null)}
           onSolved={() => { markSolved(selected.title); setSelected(null); }}
+          onNext={handleNext}
           onCorrect={onCorrect}
           savedInputs={challengeInputs[selected.title]}
           onSaveInputs={(inputs) => saveInputs(selected.title, inputs)}
