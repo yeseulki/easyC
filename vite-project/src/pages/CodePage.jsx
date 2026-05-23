@@ -230,23 +230,15 @@ function Terminal({ expectedOutput }) {
   );
 }
 
-function SolveSheet({ ch, onClose, onSolved, onNext, onCorrect, savedInputs, onSaveInputs, alreadySolved }) {
+function SolveSheet({ ch, onClose, onMarkSolved, onNext, onCorrect, onSaveInputs, alreadySolved }) {
   const solvedNowRef = useRef(false);
   const [sheetHeight] = useState(() => `${Math.floor(window.innerHeight * 0.96)}px`);
 
-  // 닫기: 방금 풀었으면 완료 처리 후 닫기, 아니면 그냥 닫기
-  const closeSheet = () => {
-    if (solvedNowRef.current && !alreadySolved) {
-      onSolved();
-    } else {
-      onClose();
-    }
-  };
+  const closeSheet = () => onClose();
 
-  // 다음으로: 완료 처리 후 다음 챌린지로 이동
   const goNext = (e) => {
     e?.stopPropagation();
-    onNext(solvedNowRef.current);
+    onNext();
   };
 
   return (
@@ -275,7 +267,10 @@ function SolveSheet({ ch, onClose, onSolved, onNext, onCorrect, savedInputs, onS
           <CodeTypingChallenge
             ch={ch}
             onSave={onSaveInputs}
-            onBecameSolved={() => { solvedNowRef.current = true; }}
+            onBecameSolved={() => {
+              solvedNowRef.current = true;
+              if (!alreadySolved) onMarkSolved(); // 정답 즉시 저장
+            }}
             onNext={goNext}
             onCorrect={onCorrect}
           />
@@ -341,11 +336,8 @@ export default function CodePage({ onCorrect, onNavigate }) {
     });
   };
 
-  // 다음 챌린지로 이동 (방금 풀었으면 완료 처리 후 이동, 마지막이면 닫기)
-  const handleNext = (solvedNow) => {
-    if (solvedNow && selected && !solved.has(selected.title)) {
-      markSolved(selected.title);
-    }
+  // 다음 챌린지로 이동 (저장은 onBecameSolved 시점에 이미 완료)
+  const handleNext = () => {
     const idx = CHALLENGES.findIndex(c => c.title === selected?.title);
     const next = idx >= 0 && idx < CHALLENGES.length - 1 ? CHALLENGES[idx + 1] : null;
     setSelected(next);
@@ -404,10 +396,9 @@ export default function CodePage({ onCorrect, onNavigate }) {
           key={selected.title}
           ch={selected}
           onClose={() => setSelected(null)}
-          onSolved={() => { markSolved(selected.title); setSelected(null); }}
+          onMarkSolved={() => markSolved(selected.title)}
           onNext={handleNext}
           onCorrect={onCorrect}
-          savedInputs={challengeInputs[selected.title]}
           onSaveInputs={(inputs) => saveInputs(selected.title, inputs)}
           alreadySolved={solved.has(selected.title)}
         />
