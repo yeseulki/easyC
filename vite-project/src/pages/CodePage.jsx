@@ -401,6 +401,7 @@ export default function CodePage({ onCorrect, onNavigate }) {
 
       {selected && (
         <SolveSheet
+          key={selected.title}
           ch={selected}
           onClose={() => setSelected(null)}
           onSolved={() => { markSolved(selected.title); setSelected(null); }}
