@@ -49,7 +49,7 @@ function ProjectCard({ card, color, onBadge }) {
         }}
         onClick={() => { setClaimed(true); onBadge && onBadge(card.badge); }}
       >
-        {claimed ? `${card.badge} 획득!` : `${card.badge} 배지 받기`}
+        {claimed ? `${card.badge} 획득!` : `${card.badge} 뱃지 받기`}
       </button>
     </div>
   );

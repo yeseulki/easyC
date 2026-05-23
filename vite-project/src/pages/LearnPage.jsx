@@ -591,7 +591,7 @@ function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge,
             {card.badge}
           </h2>
           <p style={{ fontSize: 15, color: "#8e8e93", textAlign: "center", marginBottom: 40, lineHeight: 1.6 }}>
-            코드를 완성했어! 이제 배지를 획득해봐.
+            코드를 완성했어! 이제 뱃지를 획득해봐.
           </p>
           {isClaimed ? (
             <div style={{ width: "100%", padding: "18px", borderRadius: 16, background: "rgba(52,199,89,0.12)", color: "var(--green)", fontWeight: 800, fontSize: 17, textAlign: "center", marginBottom: 16 }}>
@@ -772,7 +772,7 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
         return;
       }
     } else {
-      // 뒤로 가기: 배지 페이지 → 프로젝트 폼으로 돌아가기
+      // 뒤로 가기: 뱃지 페이지 → 프로젝트 폼으로 돌아가기
       if (card.type === "project" && showBadgePage) {
         onCardChange?.();
         setShowBadgePage(false);
