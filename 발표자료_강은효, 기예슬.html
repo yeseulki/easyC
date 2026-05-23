@@ -313,7 +313,6 @@
     .demo-phone{width:240px;height:480px}
     .demo-copy{text-align:center}
     .stats{grid-template-columns:1fr 1fr}
-    .stats .stat:last-child{grid-column:span 2}
     .phone{width:140px;height:260px}
     .presenters{gap:18px;padding:10px 18px;font-size:13px;flex-wrap:wrap;justify-content:center}
   }
@@ -333,16 +332,12 @@
     <div class="stage">
       <div class="brand-mark"><span class="pip"></span> C-LEARNING · 2026</div>
       <div class="logo"><span class="e">e</span><span class="asy">asy</span><span class="c">C</span></div>
-      <p class="lead" style="margin-top:22px">위로 스와이프하며 배우는 C언어<br>이 발표자료부터 그 방식대로 만들었습니다</p>
+      <p class="lead" style="margin-top:22px">위로 스와이프하며 배우는 C언어. 이 발표자료부터 그 방식대로 만들었습니다.</p>
       <div class="presenters">
         <div class="who"><div class="avatar">기</div>기예슬</div>
         <span class="sep">·</span>
         <div class="who"><div class="avatar">강</div>강은효</div>
       </div>
-    </div>
-    <div class="hint">
-      <span>위로 스와이프 / ↑↓ / Space</span>
-      <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
     </div>
   </section>
 
@@ -351,7 +346,7 @@
     <div class="stage">
       <p class="eyebrow">문제 ①</p>
       <h1 class="display">누구나 하루의 대부분을<br>이 화면 안에서 보냅니다.</h1>
-      <p class="lead">인스타·틱톡·유튜브<br>콘텐츠는 '세로로 넘기는' 형식이 일상 표준이 됐습니다.</p>
+      <p class="lead">인스타·틱톡·유튜브 — 콘텐츠는 '세로로 넘기는' 형식이 일상 표준이 됐습니다.</p>
       <div class="phone-stack" aria-hidden="true">
         <div class="phone">
           <div class="notch"></div>
@@ -387,16 +382,16 @@
     <div class="stage">
       <p class="eyebrow">인사이트</p>
       <h1 class="display">책상 앞에 앉히지 말고,<br>학습을 <span class="accent">손바닥 위로</span> 옮기자.</h1>
-      <p class="lead">하루에 수백 번 하는 '세로 스와이프'<br>위에 학습을 얹으면, 진입장벽이 0이 됩니다.</p>
+      <p class="lead">하루에 수백 번 하는 '세로 스와이프' 위에 학습을 얹으면, 진입장벽이 0이 됩니다.</p>
     </div>
   </section>
 
   <!-- 5. Solution -->
   <section class="slide ink">
     <div class="stage">
-      <p class="eyebrow">솔루션</p>
-      <div class="logo" style="font-size:clamp(72px,16vw,160px)"><span class="e" style="color:#fff">e</span><span class="asy" style="color:#fff">asy</span><span class="c" style="color:#2997ff">C</span></div>
-      <p class="lead" style="margin-top:20px">한 손, 위로 스와이프. 모바일 퍼스트 C언어 학습 웹사이트.</p>
+      <p class="eyebrow" style="margin-bottom:0">솔루션</p>
+      <div class="logo" style="font-size:clamp(72px,16vw,160px);margin-bottom:30px"><span class="e" style="color:#fff">e</span><span class="asy" style="color:#fff">asy</span><span class="c" style="color:#2997ff">C</span></div>
+      <p class="lead" style="margin-top:0">한 손, 위로 스와이프. 모바일 퍼스트 C언어 학습 웹사이트.</p>
     </div>
   </section>
 
@@ -446,7 +441,7 @@
     <div class="stage">
       <p class="eyebrow">라이브 데모</p>
       <h1 class="display">실제 easyC 화면입니다.</h1>
-      <div class="demo-wrap">
+      <div class="demo-wrap" style="justify-content:center">
         <div class="demo-phone">
           <div class="notch"></div>
           <div class="statusbar">
@@ -544,11 +539,6 @@
           </div>
         </div>
 
-        <div class="demo-copy">
-          <h2>스와이프 해보세요 ↑</h2>
-          <p>오른쪽 폰을 위로 밀어보세요. 한 개념의 학습이 5장으로 끝납니다.<br>설명 → 문제① → 문제② → 미니 프로젝트 → 마스터.</p>
-          <span class="hint-pill"><span class="pulse"></span> 실제 작동하는 데모</span>
-        </div>
       </div>
     </div>
   </section>
@@ -562,6 +552,9 @@
         <div class="stat"><div class="big">0</div><div class="lbl">설치·환경설정 단계</div></div>
         <div class="stat"><div class="big">5</div><div class="lbl">스와이프로 한 개념 완성</div></div>
         <div class="stat"><div class="big">📱</div><div class="lbl">버스·지하철·쉬는시간에도</div></div>
+        <div class="stat"><div class="big" style="color:#5e5ce6">8</div><div class="lbl">스테이지</div></div>
+        <div class="stat"><div class="big" style="color:#34c759">40</div><div class="lbl">카드</div></div>
+        <div class="stat"><div class="big" style="color:#ff9f0a">100%</div><div class="lbl">자율학습</div></div>
       </div>
     </div>
   </section>
@@ -570,7 +563,7 @@
   <section class="slide dark">
     <div class="stage">
       <p class="eyebrow">마무리</p>
-      <h1 class="display">가장 익숙한 화면에서,<br>가장 어렵다고 느낀 언어를.</h1>
+      <h1 class="display">가장 익숙한 화면에서, 가장 어렵다고 느낀 언어를.</h1>
       <p class="lead" style="margin-top:18px">— easyC</p>
       <p style="margin-top:48px;font-size:14px;color:var(--on-dark-muted)">발표자 · 기예슬 &nbsp; 강은효</p>
     </div>
@@ -661,6 +654,22 @@
       btn.textContent=ok?'다음으로 →':'정답 확인하기';
     });
   });
+
+  // 마지막 슬라이드 제외 — h1.display, p.lead 한 줄 강제
+  function fitLines(){
+    const allSlides=[...document.querySelectorAll('.slide')];
+    allSlides.slice(0,-1).forEach(slide=>{
+      slide.querySelectorAll('h1.display,p.lead').forEach(el=>{
+        el.style.whiteSpace='nowrap';
+        el.style.fontSize='';
+        const maxW=slide.clientWidth*0.9;
+        let sz=parseFloat(getComputedStyle(el).fontSize);
+        while(el.scrollWidth>maxW&&sz>10){sz-=0.5;el.style.fontSize=sz+'px'}
+      });
+    });
+  }
+  fitLines();
+  window.addEventListener('resize',fitLines);
 </script>
 </body>
 </html>
