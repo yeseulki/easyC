@@ -62,19 +62,15 @@ function buildLineParts(line, slots) {
   return parts;
 }
 
-function CodeTypingChallenge({ ch, onSolved, onCorrect, onBecameSolved, savedInputs, onSave }) {
+function CodeTypingChallenge({ ch, onNext, onCorrect, onBecameSolved, onSave }) {
   const slots = ch.slots;
-  // fixed 슬롯은 이미 코드에 보여지므로 non-fixed 슬롯만 입력 대상
   const nonFixedSlots = slots.filter(s => !s.fixed);
   const answers = nonFixedSlots.map(s => s.options[s.correct]);
   const normalize = s => (s || "").trim().replace(/\s+/g, " ");
-  const isAlreadySolved = savedInputs && savedInputs.length === answers.length &&
-    answers.every((ans, i) => normalize(savedInputs[i]) === normalize(ans));
 
-  const [inputs, setInputs] = useState(
-    savedInputs && savedInputs.length === answers.length ? savedInputs : answers.map(() => "")
-  );
-  const [status, setStatus] = useState(isAlreadySolved ? "ok" : null);
+  // 항상 빈칸으로 시작 (이전 정답 자동입력 없음)
+  const [inputs, setInputs] = useState(answers.map(() => ""));
+  const [status, setStatus] = useState(null);
   const [showHint, setShowHint] = useState(false);
   const [confetti, setConfetti] = useState([]);
   const refs = useRef([]);
@@ -90,7 +86,7 @@ function CodeTypingChallenge({ ch, onSolved, onCorrect, onBecameSolved, savedInp
   };
 
   const check = () => {
-    if (status === "ok") { onSolved?.(); return; }
+    if (status === "ok") { onNext?.(); return; }
     const ok = answers.every((ans, i) => normalize(inputs[i]) === normalize(ans));
     setStatus(ok ? "ok" : "err");
     if (ok) {
@@ -205,10 +201,10 @@ function CodeTypingChallenge({ ch, onSolved, onCorrect, onBecameSolved, savedInp
           ↩ 초기화
         </button>
         <button
-          style={{ flex: 2, padding: "12px 0", background: status === "ok" ? "rgba(118,118,128,0.16)" : ch.color, color: status === "ok" ? "#3c3c43" : "#fff", borderRadius: 12, fontWeight: 700, fontSize: 15, border: "none", cursor: "pointer", boxShadow: status === "ok" ? "none" : `0 4px 14px ${ch.color}44` }}
+          style={{ flex: 2, padding: "12px 0", background: status === "ok" ? "#34c759" : ch.color, color: "#fff", borderRadius: 12, fontWeight: 700, fontSize: 15, border: "none", cursor: "pointer", boxShadow: `0 4px 14px ${(status === "ok" ? "#34c759" : ch.color)}44` }}
           onClick={check}
         >
-          {status === "ok" ? "닫기" : "확인하기 ✓"}
+          {status === "ok" ? "다음으로 →" : "확인하기 ✓"}
         </button>
       </div>
     </div>
@@ -278,19 +274,18 @@ function SolveSheet({ ch, onClose, onSolved, onNext, onCorrect, savedInputs, onS
           <div style={{ fontSize: 11, fontWeight: 700, color: "var(--label3)", letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 10 }}>빈칸을 직접 입력해봐</div>
           <CodeTypingChallenge
             ch={ch}
-            savedInputs={savedInputs}
             onSave={onSaveInputs}
             onBecameSolved={() => { solvedNowRef.current = true; }}
-            onSolved={closeSheet}
+            onNext={goNext}
             onCorrect={onCorrect}
           />
         </div>
 
         <div style={{ padding: "12px 20px 4px" }}>
           <button
-            style={{ width: "100%", padding: "14px 0", background: "#34c759", color: "#fff", borderRadius: 14, fontWeight: 700, fontSize: 17, border: "none", cursor: "pointer", boxShadow: "0 4px 14px rgba(52,199,89,0.35)" }}
-            onClick={goNext}
-          >다음으로</button>
+            style={{ width: "100%", padding: "14px 0", background: "rgba(118,118,128,0.16)", color: "#3c3c43", borderRadius: 14, fontWeight: 700, fontSize: 17, border: "none", cursor: "pointer" }}
+            onClick={closeSheet}
+          >닫기</button>
         </div>
       </div>
     </div>
