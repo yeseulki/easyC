@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { stages } from "../data/curriculum";
+import DrumTutorialOverlay from "../components/DrumTutorialOverlay";
 
 function translateLine(raw) {
   let text = raw.trim();
@@ -228,6 +229,12 @@ function Explanations({ card, stage }) {
 
   return (
     <div className="cf-explain">
+      {card.description && (
+        <div className="cf-explain-item" style={{ borderBottom: "1px solid rgba(0,0,0,0.07)", marginBottom: 6, paddingBottom: 10 }}>
+          <span style={{ fontSize: 16, flexShrink: 0 }}>📋</span>
+          <span style={{ whiteSpace: "pre-wrap", lineHeight: 1.6 }}>{card.description}</span>
+        </div>
+      )}
       {card.expectedOutput && (
         <div className="cf-explain-item" style={{ borderBottom: "1px solid rgba(0,0,0,0.07)", marginBottom: 6, paddingBottom: 10 }}>
           <span style={{ fontSize: 11, fontWeight: 800, color: stage.color, flexShrink: 0, letterSpacing: 0.5, textTransform: "uppercase", marginTop: 2 }}>출력</span>
@@ -273,6 +280,14 @@ function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate,
   });
   const [confetti, setConfetti] = useState([]);
 
+  const [showTutorial, setShowTutorial] = useState(
+    () => !localStorage.getItem("easycDrumTutorialSeen")
+  );
+  const dismissTutorial = () => {
+    localStorage.setItem("easycDrumTutorialSeen", "true");
+    setShowTutorial(false);
+  };
+
   const pct = Math.round(((cardIdx + 1) / totalCards) * 100);
   const pick = (i, v) => {
     const n = [...sel];
@@ -305,6 +320,7 @@ function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate,
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", background: "#f2f2f7", position: "relative" }}>
+      {showTutorial && <DrumTutorialOverlay color={stage.color} onDismiss={dismissTutorial} />}
       {confetti.map(c => (
         <div key={c.id} style={{ position: "absolute", left: `${c.x}%`, top: "50%", width: 8, height: 8, borderRadius: 2, background: c.c, animation: `iosConfetti 0.8s ease ${c.d}s forwards`, pointerEvents: "none", zIndex: 100 }} />
       ))}
@@ -323,7 +339,6 @@ function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate,
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 11, color: stage.color, fontWeight: 800, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 4 }}>💻 실습</div>
             <h2 style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.4, lineHeight: 1.3, color: "#000" }}>{card.title}</h2>
-            <p style={{ fontSize: 14, color: "#8e8e93", marginTop: 6, lineHeight: 1.6 }}>{card.description}</p>
           </div>
           <div className="cf-action-btn" style={{ marginTop: 10 }} onClick={() => onSave?.(card, stageIdx, cardIdx)}>
             <div className="cf-action-icon" style={{ width: 38, height: 38, fontSize: 18, color: isSaved ? stage.color : "#000" }}>{isSaved ? "🔖" : "📌"}</div>

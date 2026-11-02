@@ -91,3 +91,4 @@ button:active { opacity: 0.55; transition: opacity 0.08s; }
 @keyframes iosMemBlock  { from { transform: scaleY(0); opacity: 0; transform-origin: bottom; } to { transform: scaleY(1); opacity: 1; } }
 @keyframes iosArrow     { 0%,100% { transform: translateX(0); } 50% { transform: translateX(5px); } }
 @keyframes iosPulse     { 0%,100% { transform: scale(1); } 50% { transform: scale(1.03); } }
+@keyframes iosPress     { 0%,100% { transform: scale(1); } 40% { transform: scale(0.92); } }
