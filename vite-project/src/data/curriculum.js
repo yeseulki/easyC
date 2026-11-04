@@ -11,53 +11,102 @@ export const stages = [
         type: "concept",
         title: "코드는 컴퓨터에게 보내는 편지야",
         content:
-          "우리가 친구에게 문자를 보내듯, 프로그래머는 컴퓨터에게 '코드'로 말을 걸어.\n문장 끝에 마침표(.)를 붙이듯, C언어에선 세미콜론(;)을 꼭 붙여야 해!\nC언어에서 출력을 할 때는 'printf'라는 함수를 사용해.",
-        metaphor: "📬 편지 → 코드 / 마침표 → 세미콜론(;)",
-        tip: "세미콜론은 '이 문장 끝!'을 컴퓨터에게 알려주는 신호야.",
+          "C 코드에는 항상 쓰는 틀이 있어. 그 안에 내가 원하는 내용을 채우면 돼.\n\n틀 (항상 같음) → #include / main( ) { } / return 0\n내가 쓰는 줄 → printf 줄\n\n컴퓨터는 위에서 아래로 한 줄씩 실행해.",
+        metaphor: "📬 편지 봉투 (항상 같은 형식) → #include / main( ) { } / return 0\n✏️ 편지 본문 (내가 쓰는 내용) → printf(\"...\");",
+        tip: "#include나 main은 지금 외울 필요 없어. printf 한 줄에만 집중해봐.",
       },
       {
         type: "code",
-        title: "첫 번째 코드를 완성해봐!",
-        description: "화면에 'Hello, World!'를 출력하는 코드야. 빈칸을 채워봐.",
+        title: "Hello, World! 출력하기",
+        description: "printf는 화면에 글자를 출력하는 함수야.\n문장 끝에는 세미콜론(;)을 꼭 붙여야 해. 빈칸을 채워봐.",
         slots: [
-          {
-            id: 0,
-            options: ["printf", "print", "scanf", "write"],
-            correct: 0,
-            fixed: false,
-          },
+          { id: 0, options: ["printf", "print", "scanf", "write"], correct: 0, fixed: false },
           { id: 1, options: ['("Hello, World!")'], correct: 0, fixed: true },
           { id: 2, options: [";", ",", ".", "!"], correct: 0, fixed: false },
         ],
         fullCode: '#include <stdio.h>\nint main() {\n  printf("Hello, World!");\n  return 0;\n}',
         expectedOutput: "Hello, World!",
-        hint: "화면에 출력할 때 쓰는 함수는 'printf'야!",
+        hints: [
+          "화면에 출력하는 함수 이름이 뭔지 생각해봐.",
+          "C언어에서 출력 함수는 printf야. print는 Python에서 쓰는 거야.",
+        ],
       },
       {
         type: "code",
-        title: "여러 번 출력해보기!",
-        description: "printf와 줄바꿈(\\n)을 사용해 세 줄을 출력해봐.",
+        title: "두 줄 출력하기",
+        description: "빈칸이 두 종류야. 같은 종류는 하나 고르면 나머지도 같이 채워져.\n목표 출력이랑 현재 출력을 비교해봐.",
+        useSlotPlaceholders: true,
         slots: [
-          { id: 0, options: ['"Line 1\\n"', '"Line 1"', '"Line 1;\\n"'], correct: 0, fixed: false },
-          { id: 1, options: [";", ".", ","], correct: 0, fixed: false },
+          { id: 0, options: ["'", '"', '/'], correct: 1, fixed: false, groupId: "quote", skipSort: true },
+          { id: 1, options: ['/n', '\\n', '\\t'], correct: 1, fixed: false, groupId: "newline", skipSort: true },
+          { id: 2, options: ["'", '"', '/'], correct: 1, fixed: false, groupId: "quote", skipSort: true },
+          { id: 3, options: ["'", '"', '/'], correct: 1, fixed: false, groupId: "quote", skipSort: true },
+          { id: 4, options: ['/n', '\\n', '\\t'], correct: 1, fixed: false, groupId: "newline", skipSort: true },
+          { id: 5, options: ["'", '"', '/'], correct: 1, fixed: false, groupId: "quote", skipSort: true },
         ],
-        fullCode: '#include <stdio.h>\nint main() {\n  printf("Line 1\\n");\n  printf("Line 2\\n");\n  printf("Line 3\\n");\n  return 0;\n}',
-        expectedOutput: "Line 1\nLine 2\nLine 3",
-        hint: "줄을 바꿀 때는 \\n을 사용해!",
+        fullCode: '#include <stdio.h>\nint main() {\n  printf(__SLOT_0__Line 1__SLOT_1____SLOT_2__);\n  printf(__SLOT_3__Line 2__SLOT_4____SLOT_5__);\n  return 0;\n}',
+        expectedOutput: "Line 1\nLine 2",
+        dynamicOutput: (groupValues) => {
+          const q = groupValues.quote;
+          const nl = groupValues.newline;
+          if (q !== '"') return `⚠️ 출력 실패\n'${q}'는 글자를 묶는 기호가 아니야.`;
+          const actualNl = nl === '\\n' ? '\n' : (nl || '');
+          return `Line 1${actualNl}Line 2`;
+        },
+        hints: [
+          "빈칸이 두 종류야. 글자를 묶는 기호 하나, 줄을 나누는 기호 하나.",
+          "C언어에서 텍스트는 큰따옴표로 묶어. 줄바꿈 기호는 백슬래시로 시작해.",
+        ],
       },
       {
         type: "project",
         title: "미니 프로젝트: 나만의 명함 만들기",
-        description: "printf를 여러 번 써서 명함을 출력하는 코드야. \n빈칸을 채워봐!",
+        description: "지금까지 배운 걸 써서 직접 완성해봐.\n괄호만 미리 넣어뒀어.",
         badge: "🏆 Hello 마스터",
-        fullCode: '#include <stdio.h>\nint main() {\n  printf("=== 나의 명함 ===\\n");\n  printf("이름: %s\\n", __SLOT_0__);\n  printf("학교: %s\\n", __SLOT_1__);\n  printf("취미: %s\\n", __SLOT_2__);\n  return 0;\n}',
+        displayMode: "cells",
+        prefilledCode: '  printf("=== 나의 명함 ===\\n");',
+        fullCode: '#include <stdio.h>\nint main() {\n  printf("=== 나의 명함 ===\\n");\n  return 0;\n}',
+        // 각 슬롯마다 6개 input cell: printf / " / 자유입력 / \n / " / ;
+        // flat index: 슬롯 i → i*6+0 ~ i*6+5, 자유입력은 i*6+2
         slots: [
-          { id: 0, answer: '"홍길동"' },
-          { id: 1, answer: '"서울중학교"' },
-          { id: 2, answer: '"게임"' },
+          {
+            id: 0,
+            label: "이름",
+            cells: [
+              { type: "input", answer: "printf",  placeholder: "함수 이름" },
+              { type: "fixed", value: "(" },
+              { type: "input", answer: '"',        placeholder: "" },
+              { type: "input", free: true,         placeholder: "이름" },
+              { type: "input", answer: "\\n",      placeholder: "" },
+              { type: "input", answer: '"',        placeholder: "" },
+              { type: "fixed", value: ")" },
+              { type: "input", answer: ";",        placeholder: "" },
+            ],
+          },
+          {
+            id: 1,
+            label: "학교",
+            cells: [
+              { type: "input", answer: "printf",  placeholder: "함수 이름" },
+              { type: "fixed", value: "(" },
+              { type: "input", answer: '"',        placeholder: "" },
+              { type: "input", free: true,         placeholder: "학교" },
+              { type: "input", answer: "\\n",      placeholder: "" },
+              { type: "input", answer: '"',        placeholder: "" },
+              { type: "fixed", value: ")" },
+              { type: "input", answer: ";",        placeholder: "" },
+            ],
+          },
         ],
-        expectedOutput: "=== 나의 명함 ===\n이름: 홍길동\n학교: 서울중학교\n취미: 게임",
-        hint: "글자를 출력할 때는 큰따옴표(\")로 감싸야 해!",
+        // flat inputs per slot: printf(0) / "(1) / 자유입력(2) / \n(3) / "(4) / ;(5)
+        // 슬롯 0 → index 0~5, 슬롯 1 → index 6~11
+        // 자유입력(이름/학교)은 index 2, 8
+        dynamicOutput: (inputs) => {
+          const name   = inputs[2] || "___";
+          const school = inputs[8] || "___";
+          return `=== 나의 명함 ===\n${name}\n${school}`;
+        },
+        hints: ["각 칸에 맞는 걸 직접 입력해봐. 괄호는 미리 채워져 있어."],
       },
     ],
   },

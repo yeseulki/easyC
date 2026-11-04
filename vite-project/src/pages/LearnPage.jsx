@@ -6,12 +6,24 @@ function translateLine(raw) {
   let text = raw.trim();
   if (!text) return "";
   text = text.replace(/__SLOT_\d+__/g, "빈칸");
-  if (text.startsWith("#include")) return text.replace(/#include\s*<(.*?)>/, "$1 기능 가져오기");
-  if (text.includes("int main()")) return "메인 프로그램 시작";
+  if (text.startsWith("#include")) {
+    if (text.includes("stdio.h")) return "화면 출력 도구(stdio.h) 불러오기";
+    if (text.includes("stdlib.h")) return "메모리 관리 도구(stdlib.h) 불러오기";
+    if (text.includes("string.h")) return "문자열 처리 도구(string.h) 불러오기";
+    return text.replace(/#include\s*<(.*?)>/, "$1 기능 가져오기");
+  }
+  if (text.includes("int main()")) return "프로그램 시작";
   if (text.includes("return 0;")) return "프로그램 정상 종료";
   if (text.startsWith("printf")) {
-    let content = text.match(/printf\("([^"]*)"/);
-    return `화면에 ${content ? '"'+content[1].replace(/\\n/g, ' [줄바꿈]')+'"' : ''} 출력하기`;
+    const q = text.match(/printf\("([^"]*)"/);
+    if (q) {
+      const content = q[1].replace(/\\n/g, '[줄바꿈]').replace(/\\t/g, '[탭]');
+      return content ? `"${content}" 화면에 출력` : "빈 줄 출력";
+    }
+    // 슬롯이 있는 printf: 고정 텍스트만 추출
+    const inner = text.match(/printf\((.+)\)/)?.[1] || '';
+    const fixed = inner.replace(/빈칸/g, '').replace(/[;)]/g, '').trim();
+    return fixed ? `"${fixed}" 화면에 출력 (빈칸 채워야 완성)` : "화면에 텍스트 출력";
   }
   if (text.startsWith("scanf")) return "사용자로부터 입력받기";
   if (text.startsWith("struct")) return "새로운 데이터 꾸러미(구조체) 정의하기";
@@ -26,13 +38,14 @@ function translateLine(raw) {
   if (text.includes("fprintf")) return "파일에 내용 쓰기";
   if (text.includes("fclose")) return "파일 닫기";
   if (text.includes("strcpy")) return "글자(문자열) 복사해서 넣기";
+  if (text.startsWith("else if")) return "아니면 만약 조건이 맞다면";
+  if (text.startsWith("else")) return "그 외의 경우라면";
   if (text.startsWith("for")) return "~로 시작해서 ~일때까지 반복하기, ~씩 증가";
   if (text.startsWith("while")) return "조건이 참인 동안 계속 반복하기";
   if (text.startsWith("if")) return "만약 조건이 맞다면";
-  if (text.startsWith("else if")) return "아니면 만약 조건이 맞다면";
-  if (text.startsWith("else")) return "그 외의 경우라면";
   if (text.includes("=")) return "변수에 새로운 값 저장하기";
   if (text === "}" || text === "};") return "블록 닫기";
+  if (text === "{") return "블록 시작";
   return "코드 실행";
 }
 
@@ -110,16 +123,55 @@ function InlineSlot({ options, selected, onSelect, color }) {
   );
 }
 
+/* ── Placeholder-based slot rendering (for useSlotPlaceholders cards) ── */
+function LineWithSlotsPlaceholder({ raw, nonFixed, sel, onSel, groupColorMap }) {
+  const parts = raw.split(/(__SLOT_\d+__)/g);
+  return (
+    <>
+      {parts.map((part, i) => {
+        const match = part.match(/__SLOT_(\d+)__/);
+        if (match) {
+          const slotId = parseInt(match[1]);
+          const slotIdx = nonFixed.findIndex(s => s.id === slotId);
+          if (slotIdx === -1) return <span key={i} />;
+          const slot = nonFixed[slotIdx];
+          const sc = slot.groupId ? groupColorMap[slot.groupId] : groupColorMap[`__idx_${slotIdx}`];
+          return (
+            <InlineSlot
+              key={`slot-${slotId}`}
+              options={slot.options}
+              selected={sel[slotIdx] ?? 0}
+              onSelect={v => onSel(slotIdx, v)}
+              color={sc}
+            />
+          );
+        }
+        return part ? <SyntaxLine key={`text-${i}`} raw={part} /> : null;
+      })}
+    </>
+  );
+}
+
 /* ── Build code lines with inline slots ── */
-function CodeWithSlots({ card, color, sel, onSel, showKorean }) {
+function CodeWithSlots({ card, color, sel, onSel, showKorean, nonFixed }) {
   const slotColors = ["#007aff", "#af52de", "#ff9500", "#34c759", "#30b0c7"];
+  // groupId 있으면 같은 groupId끼리 같은 색, 없으면 슬롯 인덱스 기반
+  const groupColorMap = {};
+  let colorIdx = 0;
+  nonFixed.forEach((s, i) => {
+    const key = s.groupId ?? `__idx_${i}`;
+    if (groupColorMap[key] === undefined) {
+      groupColorMap[key] = slotColors[colorIdx % slotColors.length];
+      colorIdx++;
+    }
+  });
   const fullLines = card.fullCode.split("\n");
 
   return (
     <div className="cf-code"
-      onMouseDown={e => { 
+      onMouseDown={e => {
         if (e.clientY - e.currentTarget.getBoundingClientRect().top >= e.currentTarget.clientHeight) return;
-        e.currentTarget._isDown = true; e.currentTarget._startX = e.pageX - e.currentTarget.offsetLeft; e.currentTarget._scrollLeft = e.currentTarget.scrollLeft; e.currentTarget.style.cursor = 'grabbing'; 
+        e.currentTarget._isDown = true; e.currentTarget._startX = e.pageX - e.currentTarget.offsetLeft; e.currentTarget._scrollLeft = e.currentTarget.scrollLeft; e.currentTarget.style.cursor = 'grabbing';
       }}
       onMouseLeave={e => { e.currentTarget._isDown = false; e.currentTarget.style.cursor = 'grab'; }}
       onMouseUp={e => { e.currentTarget._isDown = false; e.currentTarget.style.cursor = 'grab'; }}
@@ -135,7 +187,10 @@ function CodeWithSlots({ card, color, sel, onSel, showKorean }) {
           <div key={li} style={{ display: "flex", flexDirection: "column", width: "max-content", minWidth: "100%", marginBottom: showKorean ? 8 : 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 0, whiteSpace: "pre" }}>
               <span style={{ color: "#c7c7cc", minWidth: 22, textAlign: "right", marginRight: 14, fontSize: 11, userSelect: "none", flexShrink: 0 }}>{li + 1}</span>
-              <LineWithSlots raw={line} card={card} sel={sel} onSel={onSel} color={color} slotColors={slotColors} />
+              {card.useSlotPlaceholders
+                ? <LineWithSlotsPlaceholder raw={line} nonFixed={nonFixed} sel={sel} onSel={onSel} groupColorMap={groupColorMap} />
+                : <LineWithSlots raw={line} card={card} sel={sel} onSel={onSel} color={color} slotColors={slotColors} />
+              }
             </div>
             {showKorean && line.trim() !== "" && (
               <div style={{ paddingLeft: 36, marginTop: 2, fontSize: 12, color: "var(--blue)", fontWeight: 600, opacity: 0.8, animation: "iosFadeIn 0.3s ease" }}>
@@ -219,13 +274,22 @@ function SyntaxLine({ raw }) {
 }
 
 /* ── Explanation bullets ── */
-const EXPLAIN_ICONS = ["❓", "🔁", "💡", "⚠️"];
-function Explanations({ card, stage }) {
-  const otherBullets = [
-    `${card.title}`,
-    `이 코드는 ${stage.subtitle} 개념을 사용해.`,
-    card.hint,
-  ].filter(Boolean);
+function OutputBlock({ label, text, color }) {
+  const isFail = text?.startsWith('⚠️');
+  const c = isFail ? "var(--red)" : color;
+  return (
+    <div style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ fontSize: 10, fontWeight: 800, color: c, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 4 }}>{label}</div>
+      <div style={{ background: isFail ? "rgba(255,59,48,0.06)" : "rgba(0,0,0,0.03)", borderRadius: 8, padding: "8px 10px", fontFamily: "monospace", fontSize: 13, color: isFail ? "var(--red)" : "#1d1d1f", whiteSpace: "pre-wrap", lineHeight: 1.6, minHeight: 36 }}>
+        {text || <span style={{ color: "#c7c7cc" }}>—</span>}
+      </div>
+    </div>
+  );
+}
+
+function Explanations({ card, stage, computedOutput }) {
+  const hintText = card.hint ?? card.hints?.[0];
+  const hasComparison = card.dynamicOutput && card.expectedOutput;
 
   return (
     <div className="cf-explain">
@@ -235,23 +299,27 @@ function Explanations({ card, stage }) {
           <span style={{ whiteSpace: "pre-wrap", lineHeight: 1.6 }}>{card.description}</span>
         </div>
       )}
-      {card.expectedOutput && (
-        <div className="cf-explain-item" style={{ borderBottom: "1px solid rgba(0,0,0,0.07)", marginBottom: 6, paddingBottom: 10 }}>
-          <span style={{ fontSize: 11, fontWeight: 800, color: stage.color, flexShrink: 0, letterSpacing: 0.5, textTransform: "uppercase", marginTop: 2 }}>출력</span>
-          <span style={{ whiteSpace: "pre-wrap", fontFamily: "monospace", fontSize: 13, color: "#1d1d1f", lineHeight: 1.6 }}>{card.expectedOutput}</span>
+
+      {hasComparison ? (
+        <div style={{ borderBottom: hintText ? "1px solid rgba(0,0,0,0.07)" : "none", marginBottom: hintText ? 6 : 0, paddingBottom: hintText ? 10 : 0, display: "flex", gap: 10 }}>
+          <OutputBlock label="목표" text={card.expectedOutput} color={stage.color} />
+          <OutputBlock label="현재" text={computedOutput} color={stage.color} />
+        </div>
+      ) : (
+        (computedOutput ?? card.expectedOutput) && (
+          <div className="cf-explain-item" style={{ borderBottom: hintText ? "1px solid rgba(0,0,0,0.07)" : "none", marginBottom: hintText ? 6 : 0, paddingBottom: hintText ? 10 : 0 }}>
+            <span style={{ fontSize: 11, fontWeight: 800, color: stage.color, flexShrink: 0, letterSpacing: 0.5, textTransform: "uppercase", marginTop: 2 }}>출력</span>
+            <span style={{ whiteSpace: "pre-wrap", fontFamily: "monospace", fontSize: 13, color: "#1d1d1f", lineHeight: 1.6 }}>{computedOutput ?? card.expectedOutput}</span>
+          </div>
+        )
+      )}
+
+      {hintText && (
+        <div className="cf-explain-item">
+          <span style={{ fontSize: 16, flexShrink: 0 }}>💡</span>
+          <span style={{ whiteSpace: "pre-wrap" }}>{hintText}</span>
         </div>
       )}
-      {otherBullets.map((b, i) => (
-        <div key={i} className="cf-explain-item">
-          <span style={{ fontSize: 16, flexShrink: 0 }}>{EXPLAIN_ICONS[i] || "•"}</span>
-          <span style={{ whiteSpace: "pre-wrap" }}>{b}</span>
-        </div>
-      ))}
-      <div className="cf-tags">
-        <span className="cf-tag">#{stage.subtitle.replace(/\s/g, "")}</span>
-        <span className="cf-tag">#{stage.title}</span>
-        <span className="cf-tag">#C언어</span>
-      </div>
     </div>
   );
 }
@@ -262,7 +330,7 @@ function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate,
   const [showKorean, setShowKorean] = useState(false);
   const processedSlots = useMemo(() => {
     return card.slots.map(s => {
-      if (s.fixed || s.options.length <= 1) return s;
+      if (s.fixed || s.options.length <= 1 || s.skipSort) return s;
       const options = [...s.options].sort(); // Stable sort to avoid shuffle issues with persistence
       const correctVal = s.options[s.correct];
       const newCorrect = options.indexOf(correctVal);
@@ -272,10 +340,14 @@ function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate,
 
   const processedCard = { ...card, slots: processedSlots };
   const nonFixed = processedSlots.filter(s => !s.fixed);
-  const [sel,    setSel]    = useState(initialAnswer || nonFixed.map(() => 0));
+  const [sel, setSel] = useState(() => {
+    const defaults = nonFixed.map(() => 0);
+    if (initialAnswer) initialAnswer.forEach((v, i) => { if (i < defaults.length) defaults[i] = v; });
+    return defaults;
+  });
   const [status, setStatus] = useState(() => {
     if (!initialAnswer) return null;
-    const ok = nonFixed.every((s, i) => initialAnswer[i] === s.correct);
+    const ok = nonFixed.every((s, i) => (initialAnswer[i] ?? 0) === s.correct);
     return ok ? "ok" : null;
   });
   const [confetti, setConfetti] = useState([]);
@@ -288,10 +360,27 @@ function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate,
     setShowTutorial(false);
   };
 
+  // groupId: compute current selected text per group for dynamicOutput
+  const computedOutput = useMemo(() => {
+    if (!card.dynamicOutput) return null;
+    const groupValues = {};
+    nonFixed.forEach((s, i) => {
+      if (s.groupId && groupValues[s.groupId] === undefined) {
+        groupValues[s.groupId] = s.options[sel[i] ?? 0];
+      }
+    });
+    return card.dynamicOutput(groupValues);
+  }, [card.dynamicOutput, nonFixed, sel]);
+
   const pct = Math.round(((cardIdx + 1) / totalCards) * 100);
   const pick = (i, v) => {
     const n = [...sel];
-    n[i] = v;
+    const slot = nonFixed[i];
+    if (slot.groupId) {
+      nonFixed.forEach((s, j) => { if (s.groupId === slot.groupId) n[j] = v; });
+    } else {
+      n[i] = v;
+    }
     setSel(n);
     setStatus(null);
     // 토큰 선택 중에는 저장하지 않음 — 확인하기를 눌러야만 저장
@@ -355,12 +444,12 @@ function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate,
                 {showKorean ? "원본 코드" : "자연어 해석"}
               </button>
             </div>
-            <CodeWithSlots card={processedCard} color={stage.color} sel={sel} onSel={pick} showKorean={showKorean} />
+            <CodeWithSlots card={processedCard} color={stage.color} sel={sel} onSel={pick} showKorean={showKorean} nonFixed={nonFixed} />
           </div>
         </div>
 
         <div style={{ margin: "12px 20px 0" }}>
-          <div className="cf-card"><Explanations card={card} stage={stage} /></div>
+          <div className="cf-card"><Explanations card={card} stage={stage} computedOutput={computedOutput} /></div>
         </div>
 
         {isLast && status === "ok" && (
@@ -547,20 +636,99 @@ function CodeWithTypingSlots({ card, inputs, onInputChange, showKorean }) {
   );
 }
 
+/* ── Cells display for project cards with displayMode: "cells" ── */
+function CellsDisplay({ card, inputs, onInputChange, stageColor, onInputFocus, onInputBlur }) {
+  // flat index counter — 렌더 중 동기적으로 증가
+  let flatIdx = 0;
+  return (
+    <div style={{ padding: "12px 14px" }}>
+      {card.prefilledCode && (
+        <div style={{ fontFamily: "monospace", fontSize: 13, color: "#8e8e93", marginBottom: 12, paddingBottom: 10, borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
+          <SyntaxLine raw={card.prefilledCode} />
+        </div>
+      )}
+      {card.slots.map((slot, i) => (
+        <div key={i} style={{ marginBottom: 10 }}>
+          <div style={{ fontSize: 11, color: stageColor, fontWeight: 700, marginBottom: 5 }}>{slot.label}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
+            {slot.cells.map((cell, j) => {
+              if (cell.type === "fixed") {
+                return (
+                  <span key={j} style={{
+                    fontFamily: "monospace", fontSize: 13,
+                    background: "rgba(0,0,0,0.06)", borderRadius: 6,
+                    padding: "5px 8px", color: "#555", flexShrink: 0,
+                  }}>{cell.value}</span>
+                );
+              }
+              // type === "input": capture current flat index
+              const idx = flatIdx++;
+              const val = inputs[idx] || "";
+              const placeholderLen = (cell.placeholder || "").length;
+              const w = cell.free
+                ? Math.max(70, val.length * 9 + 20)
+                : cell.placeholder === "함수 이름"
+                  ? Math.max(58, val.length * 9 + 14)   // printf 칸: 더 넓게
+                  : placeholderLen === 0
+                    ? Math.max(26, val.length * 9 + 14)  // ", \n, ; 칸: 작게
+                    : Math.max(28, placeholderLen * 9 + 14);
+              return (
+                <input key={j}
+                  type="text"
+                  value={val}
+                  onChange={e => onInputChange(idx, e.target.value)}
+                  onFocus={onInputFocus}
+                  onBlur={onInputBlur}
+                  spellCheck="false"
+                  placeholder={cell.placeholder || ""}
+                  className="cf-input-slot"
+                  style={{ width: w, minWidth: 24, flexShrink: 0 }}
+                />
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /* ── Project card ── */
 function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge, onNavigate, isLast, onSolvedChange, onCorrect, onGoNext, initialAnswer, onUpdateAnswer, badges, scrollRef, onSave, savedItems, showBadgePage, onInputFocus, onInputBlur }) {
   const isClaimed = badges?.includes(card.badge);
   const isSaved = savedItems?.some(i => i.title === card.title);
   const [showKorean, setShowKorean] = useState(false);
   const [confetti, setConfetti] = useState([]);
-  const [inputs, setInputs] = useState(initialAnswer || Array(card.slots.length).fill(""));
+  const totalInputCells = card.slots.reduce((acc, slot) => {
+    if (!slot.cells) return acc + 1;
+    return acc + slot.cells.filter(c => c.type === "input").length;
+  }, 0);
+  const checkAllCells = (arr) => {
+    const normalize = s => (s || "").trim().replace(/\s+/g, " ");
+    let idx = 0;
+    return card.slots.every(slot => {
+      if (!slot.cells) {
+        const v = arr[idx++] || "";
+        return slot.free ? normalize(v).length > 0 : normalize(v) === normalize(slot.answer);
+      }
+      return slot.cells.every(cell => {
+        if (cell.type !== "input") return true;
+        const v = arr[idx++] || "";
+        return cell.free ? normalize(v).length > 0 : normalize(v) === normalize(cell.answer);
+      });
+    });
+  };
+  const [inputs, setInputs] = useState(initialAnswer || Array(totalInputCells).fill(""));
   const [status, setStatus] = useState(() => {
     if (!initialAnswer) return null;
-    const normalize = s => (s || "").trim().replace(/\s+/g, " ");
-    const isCorrect = card.slots.every((slot, i) => normalize(initialAnswer[i] || "") === normalize(slot.answer));
-    return isCorrect ? "ok" : null;
+    return checkAllCells(initialAnswer) ? "ok" : null;
   });
   const pct = Math.round(((cardIdx + 1) / totalCards) * 100);
+
+  const computedOutput = useMemo(() => {
+    if (!card.dynamicOutput) return null;
+    return card.dynamicOutput(inputs);
+  }, [card.dynamicOutput, inputs]);
 
   const handleInputChange = (index, value) => {
     const newInputs = [...inputs];
@@ -571,8 +739,7 @@ function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge,
   };
 
   const check = () => {
-    const normalize = s => (s || "").trim().replace(/\s+/g, " ");
-    const isCorrect = card.slots.every((slot, i) => normalize(inputs[i]) === normalize(slot.answer));
+    const isCorrect = checkAllCells(inputs);
     setStatus(isCorrect ? "ok" : "err");
     if (isCorrect) {
       onSolvedChange?.(true);
@@ -653,24 +820,29 @@ function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge,
           </div>
         </div>
 
-        <div className="cf-card" style={{ marginBottom: 16 }} onFocus={onInputFocus} onBlur={onInputBlur}>
+        <div className="cf-card" style={{ marginBottom: 16 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px 8px" }}>
             <div style={{ display: "flex", gap: 6 }}>
               <div className="cf-dot red" /><div className="cf-dot yellow" /><div className="cf-dot green" />
             </div>
-            <button onClick={() => setShowKorean(!showKorean)} style={{ background: showKorean ? stage.color : "rgba(0,0,0,0.07)", color: showKorean ? "#fff" : "#555", padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700, border: "none", cursor: "pointer", transition: "all 0.2s" }}>
-              {showKorean ? "원본 코드" : "자연어 해석"}
-            </button>
+            {card.displayMode !== "cells" && (
+              <button onClick={() => setShowKorean(!showKorean)} style={{ background: showKorean ? stage.color : "rgba(0,0,0,0.07)", color: showKorean ? "#fff" : "#555", padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700, border: "none", cursor: "pointer", transition: "all 0.2s" }}>
+                {showKorean ? "원본 코드" : "자연어 해석"}
+              </button>
+            )}
           </div>
-          <CodeWithTypingSlots card={card} inputs={inputs} onInputChange={handleInputChange} showKorean={showKorean} />
+          {card.displayMode === "cells"
+            ? <CellsDisplay card={card} inputs={inputs} onInputChange={handleInputChange} stageColor={stage.color} onInputFocus={onInputFocus} onInputBlur={onInputBlur} />
+            : <CodeWithTypingSlots card={card} inputs={inputs} onInputChange={handleInputChange} showKorean={showKorean} />
+          }
         </div>
 
         <div className="cf-card" style={{ marginBottom: 16 }}>
-          <Explanations card={card} stage={stage} />
+          <Explanations card={card} stage={stage} computedOutput={computedOutput} />
         </div>
 
         <button className={`cf-cta ${status === "ok" ? "success" : status === "err" ? "error" : ""}`} onClick={check} style={{ width: '100%', borderRadius: 16, padding: "16px", fontSize: 17, fontWeight: 800, margin: "0 0 16px 0" }}>
-          {status === "ok" ? "정답이야! 완벽해!" : status === "err" ? "틀렸어! 다시 생각해봐!" : "정답 확인"}
+          {status === "ok" ? "다 채웠어! 잘했어!" : status === "err" ? "빈 칸이 있어. 다시 확인해봐!" : "정답 확인"}
         </button>
       </div>
     </div>
@@ -685,6 +857,9 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
   const [cardIdx,  setCardIdx]  = useState(initialCard);
   const [key,      setKey]      = useState(0);
   const [solved,   setSolved]   = useState(false);
+  const solvedRef = useRef(false);
+  // setSolved와 동시에 ref를 동기 갱신 — 스크롤 이벤트가 re-render 전에 오는 경우 대비
+  const setSolvedSync = (v) => { solvedRef.current = v; setSolved(v); };
   const [showBadgePage, setShowBadgePage] = useState(false);
   const [inputFocused, setInputFocused] = useState(false);
   const inputFocusTimer = useRef(null);
@@ -718,13 +893,12 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
 
   useEffect(() => {
     if (card.type === "concept") {
-      setSolved(true);
+      setSolvedSync(true);
     } else if (card.type === "code") {
       const saved = progress.cardAnswers[`${stage.id}-${cardIdx}`];
       if (saved) {
-        // We need to check if the saved indices are correct against the STABLE sorted options
         const processedSlots = card.slots.map(s => {
-          if (s.fixed || s.options.length <= 1) return s;
+          if (s.fixed || s.options.length <= 1 || s.skipSort) return s;
           const options = [...s.options].sort();
           const correctVal = s.options[s.correct];
           const newCorrect = options.indexOf(correctVal);
@@ -732,13 +906,12 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
         });
         const nonFixed = processedSlots.filter(s => !s.fixed);
         const ok = nonFixed.every((s, i) => saved[i] === s.correct);
-        setSolved(ok);
+        setSolvedSync(ok);
       } else {
-        setSolved(false);
+        setSolvedSync(false);
       }
     } else if (card.type === "project") {
-      // 뱃지를 획득한 경우에만 solved — 버튼을 눌러야만 진행 가능
-      setSolved(badges.includes(card.badge));
+      setSolvedSync(badges.includes(card.badge));
     }
   }, [stageIdx, cardIdx, card.type, progress.cardAnswers, badges, stage.id]);
 
@@ -754,12 +927,16 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
   }, [stageIdx, cardIdx]);
 
   const go = (d) => {
+    const isSolved = solvedRef.current;
     const scrollableContent = scrollRef.current;
     if (d > 0 && scrollableContent) {
-      const isAtBottom = scrollableContent.scrollHeight - scrollableContent.scrollTop <= scrollableContent.clientHeight + 5; // 5px tolerance for fractional scaling
-      if (!isAtBottom) {
-        scrollableContent.scrollBy({ top: 200, behavior: 'smooth' });
-        return;
+      const skipScrollCheck = card.type === "code" && isSolved;
+      if (!skipScrollCheck) {
+        const isAtBottom = scrollableContent.scrollHeight - scrollableContent.scrollTop <= scrollableContent.clientHeight + 5;
+        if (!isAtBottom) {
+          scrollableContent.scrollBy({ top: 200, behavior: 'smooth' });
+          return;
+        }
       }
     }
 
@@ -769,7 +946,7 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
         alert("핵심 팁을 꼭 확인해!");
         return;
       }
-      if (card.type === "code" && !solved) {
+      if (card.type === "code" && !isSolved) {
         alert("문제를 맞혀야 다음으로 넘어갈 수 있어!");
         return;
       }
@@ -815,9 +992,10 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
     if (!touchY.current) return;
     const dy = touchY.current - e.changedTouches[0].clientY;
     const scrollableContent = scrollRef.current;
-    
+    const skipBottomCheck = card.type === "code" && solvedRef.current;
+
     if (scrollableContent) {
-      const isAtBottom = scrollableContent.scrollHeight - scrollableContent.scrollTop <= scrollableContent.clientHeight + 5;
+      const isAtBottom = skipBottomCheck || scrollableContent.scrollHeight - scrollableContent.scrollTop <= scrollableContent.clientHeight + 5;
       const isAtTop = scrollableContent.scrollTop <= 5;
       if (dy > 45 && isAtBottom) {
         go(1);
@@ -833,18 +1011,15 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
   const onWheel = e => {
     if (isScrolling.current) return;
     if (Math.abs(e.deltaY) < 30) return;
-    
+    const skipBottomCheck = card.type === "code" && solvedRef.current;
+
     const scrollableContent = scrollRef.current;
-    if (scrollableContent) {
+    if (scrollableContent && !skipBottomCheck) {
       const isAtBottom = scrollableContent.scrollHeight - scrollableContent.scrollTop <= scrollableContent.clientHeight + 5;
       const isAtTop = scrollableContent.scrollTop <= 5;
 
-      if (e.deltaY > 0 && !isAtBottom) { // Scrolling down, but not at bottom
-        return; // Allow native scroll
-      }
-      if (e.deltaY < 0 && !isAtTop) { // Scrolling up, but not at top
-        return; // Allow native scroll
-      }
+      if (e.deltaY > 0 && !isAtBottom) return;
+      if (e.deltaY < 0 && !isAtTop) return;
     }
 
     isScrolling.current = true;
@@ -862,7 +1037,7 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
   return (
     <div className="learn-page-container" onTouchStart={onTS} onTouchEnd={onTE} onWheel={onWheel}>
       {/* Unified Nav */}
-      <div className="ios-nav" style={{ display: inputFocused ? "none" : undefined }}>
+      <div className="ios-nav" style={{ overflow: "hidden", maxHeight: inputFocused ? 0 : 200, transition: "max-height 0.28s ease", padding: inputFocused ? 0 : undefined }}>
         <div className="ios-nav-row">
           <div className="ios-nav-title-group" style={{ gap: 16 }}>
             <span className="cf-logo" onClick={() => onNavigate("home")} style={{ cursor: "pointer" }}>easy<b>C</b></span>
@@ -877,7 +1052,7 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
         </div>
       </div>
 
-      <div style={{ background: "#fff", borderBottom: "1px solid rgba(0,0,0,0.08)", padding: "8px 20px", flexShrink: 0, display: inputFocused ? "none" : undefined }}>
+      <div style={{ background: "#fff", borderBottom: "1px solid rgba(0,0,0,0.08)", overflow: "hidden", maxHeight: inputFocused ? 0 : 200, transition: "max-height 0.28s ease", flexShrink: 0 }}>
         <div className="ios-hscroll"
           onMouseDown={e => { e.currentTarget._isDown = true; e.currentTarget._startX = e.pageX - e.currentTarget.offsetLeft; e.currentTarget._scrollLeft = e.currentTarget.scrollLeft; e.currentTarget.style.cursor = 'grabbing'; }}
           onMouseLeave={e => { e.currentTarget._isDown = false; e.currentTarget.style.cursor = 'grab'; }}
@@ -907,8 +1082,8 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
 
       <div key={key} style={{ flex: 1, overflow: "hidden", animation: "iosFadeScale 0.24s ease" }}>
         {card.type === "concept" && <ConceptLearnCard scrollRef={scrollRef} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={displayTotal} onNavigate={onNavigate} isLast={isLast} onSave={onSave} savedItems={savedItems} onTipViewed={() => onTipViewed?.(stageIdx, cardIdx)} />}
-        {card.type === "code"    && <CodeLearnCard scrollRef={scrollRef} key={`code-${stageIdx}-${cardIdx}`} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={displayTotal} onNavigate={onNavigate} isLast={isLast} onSave={onSave} savedItems={savedItems} onSolvedChange={setSolved} onCorrect={onCorrect} onGoNext={() => go(1)} initialAnswer={progress.cardAnswers[`${stage.id}-${cardIdx}`]} onUpdateAnswer={onUpdateAnswer} />}
-        {card.type === "project" && <ProjectLearnCard scrollRef={scrollRef} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={displayTotal} onBadge={onBadge} onNavigate={onNavigate} isLast={isLast} onSolvedChange={setSolved} onCorrect={onCorrect} onGoNext={() => go(1)} initialAnswer={progress.cardAnswers[`${stage.id}-${cardIdx}`]} onUpdateAnswer={onUpdateAnswer} badges={badges} onSave={onSave} savedItems={savedItems} showBadgePage={showBadgePage} onInputFocus={handleInputFocus} onInputBlur={handleInputBlur} />}
+        {card.type === "code"    && <CodeLearnCard scrollRef={scrollRef} key={`code-${stageIdx}-${cardIdx}`} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={displayTotal} onNavigate={onNavigate} isLast={isLast} onSave={onSave} savedItems={savedItems} onSolvedChange={setSolvedSync} onCorrect={onCorrect} onGoNext={() => go(1)} initialAnswer={progress.cardAnswers[`${stage.id}-${cardIdx}`]} onUpdateAnswer={onUpdateAnswer} />}
+        {card.type === "project" && <ProjectLearnCard scrollRef={scrollRef} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={displayTotal} onBadge={onBadge} onNavigate={onNavigate} isLast={isLast} onSolvedChange={setSolvedSync} onCorrect={onCorrect} onGoNext={() => go(1)} initialAnswer={progress.cardAnswers[`${stage.id}-${cardIdx}`]} onUpdateAnswer={onUpdateAnswer} badges={badges} onSave={onSave} savedItems={savedItems} showBadgePage={showBadgePage} onInputFocus={handleInputFocus} onInputBlur={handleInputBlur} />}
       </div>
 
       <div style={{ position: "fixed", right: 8, top: "50%", transform: "translateY(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, zIndex: 50 }}>
