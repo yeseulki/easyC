@@ -248,7 +248,7 @@ html, body, #root { height: 100%; font-family: -apple-system, BlinkMacSystemFont
 /* Standard iOS Header Style (Mobile) */
 .ios-nav {
   background: #fff; border-bottom: 0.5px solid var(--sep);
-  padding: 5px 20px; position: sticky; top: 0; z-index: 50;
+  padding: 8px 20px; position: sticky; top: 0; z-index: 50;
   display: flex; flex-direction: column;
 }
 .ios-nav-row { display: flex; align-items: center; justify-content: space-between; width: 100%; }
@@ -360,7 +360,8 @@ html, body, #root { height: 100%; font-family: -apple-system, BlinkMacSystemFont
 @keyframes iosPop { 0% { transform: scale(0.95); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 @keyframes iosArrow { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(6px); } }
 @keyframes iosMemBlock { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-@keyframes iosToastIn { from { opacity: 0; transform: translateY(-20px) scale(0.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes iosToastIn  { from { opacity: 0; transform: translateY(-20px) scale(0.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes iosToastOut { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(-12px) scale(0.92); } }
 
 .ios-toast-container { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999; pointer-events: none; }
 .ios-toast {
@@ -368,6 +369,7 @@ html, body, #root { height: 100%; font-family: -apple-system, BlinkMacSystemFont
   box-shadow: 0 8px 32px rgba(0,0,0,0.12); display: flex; flex-direction: column; align-items: center;
   border: 0.5px solid rgba(0,0,0,0.05); animation: iosToastIn 0.5s cubic-bezier(0.2, 1, 0.2, 1);
 }
+.ios-toast.fading { animation: iosToastOut 0.18s ease forwards; }
 .ios-toast.success { background: rgba(52,199,89,0.95); color: #fff; }
 
 /* Bottom Sheet */

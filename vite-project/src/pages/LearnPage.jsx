@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { stages } from "../data/curriculum";
 import DrumTutorialOverlay from "../components/DrumTutorialOverlay";
+import ConceptTutorialOverlay from "../components/ConceptTutorialOverlay";
+import ProjectTutorialOverlay from "../components/ProjectTutorialOverlay";
 
 function translateLine(raw) {
   let text = raw.trim();
@@ -387,7 +389,7 @@ function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate,
   };
 
   const check = () => {
-    if (status === "ok") { onGoNext?.(); return; }
+    if (status === "ok") return;
     const ok = nonFixed.every((s, i) => sel[i] === s.correct);
     setStatus(ok ? "ok" : "err");
     if (ok) {
@@ -475,6 +477,13 @@ function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate,
 function ConceptLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate, isLast, onSave, savedItems, onTipViewed, scrollRef }) {
   const [flipped, setFlipped] = useState(false);
   const isSaved = savedItems?.some(i => i.title === card.title);
+  const [showConceptTutorial, setShowConceptTutorial] = useState(
+    () => !localStorage.getItem("easycTutorialConcept")
+  );
+  const dismissConceptTutorial = () => {
+    localStorage.setItem("easycTutorialConcept", "true");
+    setShowConceptTutorial(false);
+  };
   const pct = Math.round(((cardIdx + 1) / totalCards) * 100);
 
   const handleFlip = () => {
@@ -504,6 +513,7 @@ function ConceptLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNaviga
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", background: "#f2f2f7" }}>
+      {showConceptTutorial && <ConceptTutorialOverlay color={stage.color} onDismiss={dismissConceptTutorial} />}
       <div style={{ height: 3, background: "rgba(0,0,0,0.06)" }}>
         <div style={{ height: "100%", width: `${pct}%`, background: stage.color, transition: "width 0.4s" }} />
       </div>
@@ -637,7 +647,7 @@ function CodeWithTypingSlots({ card, inputs, onInputChange, showKorean }) {
 }
 
 /* ── Cells display for project cards with displayMode: "cells" ── */
-function CellsDisplay({ card, inputs, onInputChange, stageColor, onInputFocus, onInputBlur }) {
+function CellsDisplay({ card, inputs, onInputChange, stageColor, onInputFocus, onInputBlur, cellStatuses = [] }) {
   // flat index counter — 렌더 중 동기적으로 증가
   let flatIdx = 0;
   return (
@@ -664,6 +674,7 @@ function CellsDisplay({ card, inputs, onInputChange, stageColor, onInputFocus, o
               // type === "input": capture current flat index
               const idx = flatIdx++;
               const val = inputs[idx] || "";
+              const cs = cellStatuses[idx];
               const placeholderLen = (cell.placeholder || "").length;
               const w = cell.free
                 ? Math.max(70, val.length * 9 + 20)
@@ -682,7 +693,11 @@ function CellsDisplay({ card, inputs, onInputChange, stageColor, onInputFocus, o
                   spellCheck="false"
                   placeholder={cell.placeholder || ""}
                   className="cf-input-slot"
-                  style={{ width: w, minWidth: 24, flexShrink: 0 }}
+                  style={{
+                    width: w, minWidth: 24, flexShrink: 0,
+                    ...(cs === "ok"  ? { borderColor: "#34c759", background: "rgba(52,199,89,0.12)",  color: "#1a7a2e" } : {}),
+                    ...(cs === "err" ? { borderColor: "#ff3b30", background: "rgba(255,59,48,0.10)", color: "#c0392b" } : {}),
+                  }}
                 />
               );
             })}
@@ -698,6 +713,13 @@ function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge,
   const isClaimed = badges?.includes(card.badge);
   const isSaved = savedItems?.some(i => i.title === card.title);
   const [showKorean, setShowKorean] = useState(false);
+  const [showProjectTutorial, setShowProjectTutorial] = useState(
+    () => !localStorage.getItem("easycTutorialProject")
+  );
+  const dismissProjectTutorial = () => {
+    localStorage.setItem("easycTutorialProject", "true");
+    setShowProjectTutorial(false);
+  };
   const [confetti, setConfetti] = useState([]);
   const totalInputCells = card.slots.reduce((acc, slot) => {
     if (!slot.cells) return acc + 1;
@@ -718,7 +740,26 @@ function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge,
       });
     });
   };
+  const getCellStatuses = (arr) => {
+    const normalize = s => (s || "").trim().replace(/\s+/g, " ");
+    const statuses = [];
+    let idx = 0;
+    card.slots.forEach(slot => {
+      if (!slot.cells) {
+        const v = arr[idx++] || "";
+        statuses.push((slot.free ? normalize(v).length > 0 : normalize(v) === normalize(slot.answer)) ? "ok" : "err");
+      } else {
+        slot.cells.forEach(cell => {
+          if (cell.type !== "input") return;
+          const v = arr[idx++] || "";
+          statuses.push((cell.free ? normalize(v).length > 0 : normalize(v) === normalize(cell.answer)) ? "ok" : "err");
+        });
+      }
+    });
+    return statuses;
+  };
   const [inputs, setInputs] = useState(initialAnswer || Array(totalInputCells).fill(""));
+  const [cellStatuses, setCellStatuses] = useState([]);
   const [status, setStatus] = useState(() => {
     if (!initialAnswer) return null;
     return checkAllCells(initialAnswer) ? "ok" : null;
@@ -735,11 +776,14 @@ function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge,
     newInputs[index] = value;
     setInputs(newInputs);
     setStatus(null);
+    setCellStatuses([]);
     onUpdateAnswer(stage.id, cardIdx, newInputs);
   };
 
   const check = () => {
+    if (status === "ok") return;
     const isCorrect = checkAllCells(inputs);
+    setCellStatuses(getCellStatuses(inputs));
     setStatus(isCorrect ? "ok" : "err");
     if (isCorrect) {
       onSolvedChange?.(true);
@@ -799,6 +843,7 @@ function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge,
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", background: "#f2f2f7", position: "relative" }}>
+      {showProjectTutorial && <ProjectTutorialOverlay color={stage.color} onDismiss={dismissProjectTutorial} />}
       <div style={{ height: 3, background: "rgba(0,0,0,0.06)" }}>
         <div style={{ height: "100%", width: `${pct}%`, background: stage.color, transition: "width 0.4s" }} />
       </div>
@@ -832,7 +877,7 @@ function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge,
             )}
           </div>
           {card.displayMode === "cells"
-            ? <CellsDisplay card={card} inputs={inputs} onInputChange={handleInputChange} stageColor={stage.color} onInputFocus={onInputFocus} onInputBlur={onInputBlur} />
+            ? <CellsDisplay card={card} inputs={inputs} onInputChange={handleInputChange} stageColor={stage.color} onInputFocus={onInputFocus} onInputBlur={onInputBlur} cellStatuses={cellStatuses} />
             : <CodeWithTypingSlots card={card} inputs={inputs} onInputChange={handleInputChange} showKorean={showKorean} />
           }
         </div>
@@ -842,7 +887,7 @@ function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge,
         </div>
 
         <button className={`cf-cta ${status === "ok" ? "success" : status === "err" ? "error" : ""}`} onClick={check} style={{ width: '100%', borderRadius: 16, padding: "16px", fontSize: 17, fontWeight: 800, margin: "0 0 16px 0" }}>
-          {status === "ok" ? "다 채웠어! 잘했어!" : status === "err" ? "빈 칸이 있어. 다시 확인해봐!" : "정답 확인"}
+          {status === "ok" ? "다 채웠어! 잘했어!" : status === "err" ? (inputs.some(v => !(v || "").trim()) ? "빈 칸이 있어. 다시 확인해봐!" : "틀린 칸이 있어. 다시 확인해봐!") : "정답 확인"}
         </button>
       </div>
     </div>
@@ -951,6 +996,7 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
         return;
       }
       if (card.type === "project" && solved && !showBadgePage) {
+        onCardChange?.();
         setShowBadgePage(true);
         setKey(k => k + 1);
         return;
@@ -1080,10 +1126,12 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
         </div>
       </div>
 
-      <div key={key} style={{ flex: 1, overflow: "hidden", animation: "iosFadeScale 0.24s ease" }}>
-        {card.type === "concept" && <ConceptLearnCard scrollRef={scrollRef} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={displayTotal} onNavigate={onNavigate} isLast={isLast} onSave={onSave} savedItems={savedItems} onTipViewed={() => onTipViewed?.(stageIdx, cardIdx)} />}
-        {card.type === "code"    && <CodeLearnCard scrollRef={scrollRef} key={`code-${stageIdx}-${cardIdx}`} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={displayTotal} onNavigate={onNavigate} isLast={isLast} onSave={onSave} savedItems={savedItems} onSolvedChange={setSolvedSync} onCorrect={onCorrect} onGoNext={() => go(1)} initialAnswer={progress.cardAnswers[`${stage.id}-${cardIdx}`]} onUpdateAnswer={onUpdateAnswer} />}
-        {card.type === "project" && <ProjectLearnCard scrollRef={scrollRef} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={displayTotal} onBadge={onBadge} onNavigate={onNavigate} isLast={isLast} onSolvedChange={setSolvedSync} onCorrect={onCorrect} onGoNext={() => go(1)} initialAnswer={progress.cardAnswers[`${stage.id}-${cardIdx}`]} onUpdateAnswer={onUpdateAnswer} badges={badges} onSave={onSave} savedItems={savedItems} showBadgePage={showBadgePage} onInputFocus={handleInputFocus} onInputBlur={handleInputBlur} />}
+      <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        <div key={key} style={{ flex: 1, overflow: "hidden", animation: `${navDirection.current >= 0 ? "cardSlideInUp" : "cardSlideInDown"} 0.3s cubic-bezier(0.25,0.46,0.45,0.94)` }}>
+          {card.type === "concept" && <ConceptLearnCard scrollRef={scrollRef} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={displayTotal} onNavigate={onNavigate} isLast={isLast} onSave={onSave} savedItems={savedItems} onTipViewed={() => onTipViewed?.(stageIdx, cardIdx)} />}
+          {card.type === "code"    && <CodeLearnCard scrollRef={scrollRef} key={`code-${stageIdx}-${cardIdx}`} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={displayTotal} onNavigate={onNavigate} isLast={isLast} onSave={onSave} savedItems={savedItems} onSolvedChange={setSolvedSync} onCorrect={onCorrect} onGoNext={() => go(1)} initialAnswer={progress.cardAnswers[`${stage.id}-${cardIdx}`]} onUpdateAnswer={onUpdateAnswer} />}
+          {card.type === "project" && <ProjectLearnCard scrollRef={scrollRef} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={displayTotal} onBadge={onBadge} onNavigate={onNavigate} isLast={isLast} onSolvedChange={setSolvedSync} onCorrect={onCorrect} onGoNext={() => go(1)} initialAnswer={progress.cardAnswers[`${stage.id}-${cardIdx}`]} onUpdateAnswer={onUpdateAnswer} badges={badges} onSave={onSave} savedItems={savedItems} showBadgePage={showBadgePage} onInputFocus={handleInputFocus} onInputBlur={handleInputBlur} />}
+        </div>
       </div>
 
       <div style={{ position: "fixed", right: 8, top: "50%", transform: "translateY(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, zIndex: 50 }}>

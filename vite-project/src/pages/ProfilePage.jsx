@@ -176,6 +176,35 @@ export default function ProfilePage({ badges, progress, savedItems = [], onNavig
               </div>
             </div>
           </div>
+
+          {/* Tutorial Reset */}
+          <div className="ios-section" style={{ marginBottom: 8 }}>
+            <div className="ios-section-title">도움말</div>
+            <div style={{ background: "#fff", borderRadius: 14, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
+              <button
+                onClick={() => {
+                  localStorage.removeItem("easycTutorialConcept");
+                  localStorage.removeItem("easycDrumTutorialSeen");
+                  localStorage.removeItem("easycTutorialProject");
+                  alert("튜토리얼이 초기화됐어! 다음에 각 카드를 열면 다시 볼 수 있어.");
+                }}
+                style={{
+                  width: "100%", background: "none", border: "none",
+                  padding: "16px", display: "flex", alignItems: "center", gap: 12,
+                  cursor: "pointer", textAlign: "left",
+                }}
+              >
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(0,122,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>
+                  🔄
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: "var(--label)" }}>튜토리얼 다시 보기</div>
+                  <div style={{ fontSize: 12, color: "var(--label2)", marginTop: 2 }}>각 카드에서 처음 안내를 다시 볼 수 있어</div>
+                </div>
+                <span style={{ color: "var(--blue)", fontSize: 18 }}>›</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

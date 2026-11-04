@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Analytics } from "@vercel/analytics/react";
 import "./App.css";
 import HomePage          from "./pages/HomePage";
@@ -41,6 +41,9 @@ export default function App() {
   const [savedItems, setSavedItems] = useState([]);
   const [toast, setToast] = useState(null);
   const [isCorrectToast, setIsCorrectToast] = useState(false);
+  const [toastFading, setToastFading] = useState(false);
+  const toastTimer = useRef(null);
+  const toastFadeTimer = useRef(null);
 
   /* 온보딩 완료 처리 */
   const handleOnboardingComplete = (nick) => {
@@ -51,9 +54,22 @@ export default function App() {
   };
 
   const showToast = (msg, correct = false) => {
+    clearTimeout(toastTimer.current);
+    clearTimeout(toastFadeTimer.current);
+    setToastFading(false);
     setToast(msg);
     setIsCorrectToast(correct);
-    setTimeout(() => setToast(null), 2500);
+    toastTimer.current = setTimeout(() => {
+      setToastFading(true);
+      toastFadeTimer.current = setTimeout(() => { setToast(null); setToastFading(false); }, 450);
+    }, 2000);
+  };
+
+  const dismissToast = () => {
+    clearTimeout(toastTimer.current);
+    clearTimeout(toastFadeTimer.current);
+    setToastFading(true);
+    toastFadeTimer.current = setTimeout(() => { setToast(null); setToastFading(false); }, 180);
   };
 
   const handleNavigate = (target, data = {}) => {
@@ -156,7 +172,7 @@ export default function App() {
               onTipViewed={handleTipViewed}
               progress={progress}
               badges={badges}
-              onCardChange={() => setToast(null)}
+              onCardChange={dismissToast}
             />
           )}
           {tab === "code"    && <CodePage onCorrect={() => showToast("코드가 실행되었습니다!", true)} onNavigate={handleNavigate} />}
@@ -165,7 +181,7 @@ export default function App() {
           {/* Global Toast */}
           {toast && (
             <div className="ios-toast-container">
-              <div className={`ios-toast ${isCorrectToast ? "success" : ""}`}>
+              <div className={`ios-toast ${isCorrectToast ? "success" : ""} ${toastFading ? "fading" : ""}`}>
                 <div style={{ fontSize: 16 }}>{isCorrectToast ? "✨" : "🔖"}</div>
                 <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 2 }}>{isCorrectToast ? "성공!" : "뱃지 획득!"}</div>
                 <div style={{ fontSize: 14, color: isCorrectToast ? "rgba(255,255,255,0.8)" : "#8e8e93", fontWeight: 500 }}>{toast}</div>
