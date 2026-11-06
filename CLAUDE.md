@@ -65,9 +65,20 @@ Single source of truth: an array of 8 `stages`, each with `cards`. Three card ty
 - **`ConceptTutorialOverlay`** — concept 카드 첫 진입 튜토리얼 (1슬라이드: 팁 탭 체험). localStorage: `easycTutorialConcept`
 - **`ProjectTutorialOverlay`** — project 카드 첫 진입 튜토리얼 (1슬라이드: 타이핑 안내). localStorage: `easycTutorialProject`
 
-### 카드 전환 애니메이션 (2026-11-05 추가)
+### 카드 전환 애니메이션 (2026-11-05 추가 / 2026-11-07 개선)
 
-`LearnPage`의 카드 전환은 `navDirection.current`(1=앞/−1=뒤)에 따라 `cardSlideInUp` / `cardSlideInDown` 키프레임으로 방향감 있게 슬라이드된다. 키프레임은 `index.css`에 정의. 클리핑 컨테이너(`overflow:hidden`)로 감싸서 배너 위로 잔상이 넘치지 않도록 처리.
+LearnPage와 CodePage 모두 동일한 방식으로 동작. `index.css`에 4개 키프레임 정의:
+- `cardSlideInUp` / `cardSlideInDown` — 진입 (48px 이동, 0.22s, cubic-bezier(0.2,0,0,1))
+- `cardSlideOutUp` / `cardSlideOutDown` — 퇴장 (48px 이동, 0.12s)
+
+**LearnPage**: `exiting` state + `exitDir` ref로 120ms exit 후 카드 교체. `navDirection.current`(1=앞/−1=뒤)로 방향 결정.
+**CodePage**: `QuizView`의 content div에 exit 애니메이션, 외부 컨테이너에 enter 애니메이션. 정답 후 위로 스와이프/스크롤로 다음 문제 이동 (버튼 없음).
+
+### codeExample 필드 (concept 카드, 2026-11-07 추가)
+
+`curriculum.js`의 concept 카드에 선택적으로 추가. `LearnPage`의 `ConceptLearnCard`에서 `←` 기준으로 코드/주석 분리해 렌더링:
+- 흰 배경 박스, 빨/노/초 점(8px), "코드 예시" 레이블
+- 코드: `SyntaxLine`으로 구문 색상, `← ✏️ 내가 쓰는 줄`은 챕터 색+굵게, `← 틀`은 검정
 
 ### 토스트 (App.jsx)
 
