@@ -20,15 +20,33 @@ export const stages = [
         title: "Hello, World! 출력하기",
         description: "printf는 화면에 글자를 출력하는 함수야.\n문장 끝에는 세미콜론(;)을 꼭 붙여야 해. 빈칸을 채워봐.",
         slots: [
-          { id: 0, options: ["printf", "print", "scanf", "write"], correct: 0, fixed: false },
+          { id: 0, options: ["printf", "print", "scanf", "write"], correct: 0, fixed: false, groupId: "func" },
           { id: 1, options: ['("Hello, World!")'], correct: 0, fixed: true },
-          { id: 2, options: [";", ",", ".", "!"], correct: 0, fixed: false },
+          { id: 2, options: [";", ",", ".", "!"], correct: 0, fixed: false, groupId: "semi" },
         ],
         fullCode: '#include <stdio.h>\nint main() {\n  printf("Hello, World!");\n  return 0;\n}',
         expectedOutput: "Hello, World!",
+        dynamicOutput: (groupValues) => {
+          const func = groupValues.func;
+          const semi = groupValues.semi;
+          const errors = [];
+          if (func !== 'printf') {
+            const notes = {
+              print:  `'print'는 Python 방식이야. C에서 출력은 printf를 써야 해.`,
+              scanf:  `'scanf'는 키보드 입력을 받는 함수야. 화면 출력은 printf야.`,
+              write:  `'write'는 여기서 쓸 수 없어. 화면 출력 함수는 printf야.`,
+            };
+            errors.push({ output: null, note: notes[func] || `'${func}'는 출력 함수가 아니야. printf를 써야 해.` });
+          }
+          if (semi !== ';') {
+            errors.push({ output: null, note: `'${semi}'로는 문장이 끝나지 않아. C에서 문장 끝엔 반드시 ;를 붙여야 해.` });
+          }
+          if (errors.length === 0) return `Hello, World!`;
+          return errors;
+        },
         hints: [
-          "화면에 출력하는 함수 이름이 뭔지 생각해봐.",
-          "C언어에서 출력 함수는 printf야. print는 Python에서 쓰는 거야.",
+          "화면에 출력하는 함수는 C언어에서만 쓰는 이름이야.",
+          "Python의 print와 비슷하지만, C 버전은 이름이 살짝 달라.",
         ],
       },
       {
@@ -49,13 +67,96 @@ export const stages = [
         dynamicOutput: (groupValues) => {
           const q = groupValues.quote;
           const nl = groupValues.newline;
-          if (q !== '"') return `⚠️ 출력 실패\n'${q}'는 글자를 묶는 기호가 아니야.`;
-          const actualNl = nl === '\\n' ? '\n' : (nl || '');
-          return `Line 1${actualNl}Line 2`;
+          const errors = [];
+          if (q !== '"') {
+            errors.push({
+              output: null,
+              note: `'${q}'는 글자를 묶는 기호가 아니야. 큰따옴표(")를 써야 해.`,
+            });
+          }
+          if (nl !== '\\n') {
+            const actualOutput = nl === '\\t' ? `Line 1\tLine 2` : `Line 1${nl}Line 2`;
+            errors.push({
+              output: actualOutput,
+              note: nl === '\\t'
+                ? `'\\t'는 탭 기호야. 줄바꿈 기호는 \\n이야.`
+                : `'${nl}'은 줄바꿈 기호가 아니야. 줄바꿈은 \\n으로 써야 해.`,
+            });
+          }
+          if (errors.length === 0) return `Line 1\nLine 2`;
+          return errors;
         },
         hints: [
-          "빈칸이 두 종류야. 글자를 묶는 기호 하나, 줄을 나누는 기호 하나.",
-          "C언어에서 텍스트는 큰따옴표로 묶어. 줄바꿈 기호는 백슬래시로 시작해.",
+          "빈칸이 두 종류야. 하나는 글자를 묶는 기호, 하나는 줄을 나누는 기호야.",
+          "글자를 묶을 때 쓰는 따옴표 종류가 두 가지 있어. 줄바꿈 기호는 일반 글자가 아니라 특수 기호야.",
+        ],
+      },
+      {
+        type: "code",
+        title: "출력 함수 고르기",
+        description: "화면에 글자를 출력하는 함수는 뭘까? 빈칸을 채워봐.",
+        tokenOnly: true,
+        slots: [
+          { id: 0, options: ["printf", "print", "scanf", "write"], correct: 0, fixed: false },
+          { id: 1, options: ['("easyC!")'], correct: 0, fixed: true },
+          { id: 2, options: [";"], correct: 0, fixed: true },
+        ],
+        fullCode: '#include <stdio.h>\nint main() {\n  printf("easyC!");\n  return 0;\n}',
+        expectedOutput: "easyC!",
+        hints: [
+          "화면에 뭔가 보여주는 역할을 하는 함수야.",
+          "Python의 print랑 비슷한데, C는 조금 달라.",
+        ],
+      },
+      {
+        type: "code",
+        title: "세미콜론 붙이기",
+        description: "C언어에서 문장 끝에는 꼭 붙여야 하는 기호가 있어. 빈칸을 채워봐.",
+        tokenOnly: true,
+        slots: [
+          { id: 0, options: ['printf("C!")'], correct: 0, fixed: true },
+          { id: 1, options: [";", ",", ".", "!"], correct: 0, fixed: false },
+        ],
+        fullCode: '#include <stdio.h>\nint main() {\n  printf("C!");\n  return 0;\n}',
+        expectedOutput: "C!",
+        hints: [
+          "문장이 끝났다는 걸 컴퓨터에게 알려주는 기호야.",
+          "점(.)이나 쉼표(,) 말고, 문장 끝을 알리는 전용 기호가 따로 있어.",
+        ],
+      },
+      {
+        type: "code",
+        title: "큰따옴표 넣기",
+        description: "printf 안에서 글자를 묶을 때 쓰는 기호는? 빈칸을 채워봐.",
+        tokenOnly: true,
+        slots: [
+          { id: 0, options: ['"', "'", '`', '/'], correct: 0, fixed: false },
+          { id: 1, options: ["Hello!"], correct: 0, fixed: true },
+          { id: 2, options: ['"', "'", '`', '/'], correct: 0, fixed: false },
+        ],
+        fullCode: '#include <stdio.h>\nint main() {\n  printf("Hello!");\n  return 0;\n}',
+        expectedOutput: "Hello!",
+        hints: [
+          "따옴표 종류가 여러 가지 있어. 그 중 하나는 문자 1개를 묶을 때, 하나는 여러 글자를 묶을 때 써.",
+          "C언어에서 문자열(여러 글자)을 묶는 기호와 문자 1개를 묶는 기호는 달라.",
+        ],
+      },
+      {
+        type: "code",
+        title: "줄바꿈 기호 고르기",
+        description: "printf 안에서 줄을 바꾸는 기호는 뭘까? 빈칸을 채워봐.",
+        tokenOnly: true,
+        slots: [
+          { id: 0, options: ['"Hello'], correct: 0, fixed: true },
+          { id: 1, options: ['\\n', '/n', 'n\\', 'N'], correct: 0, fixed: false, skipSort: true },
+          { id: 2, options: ['World"'], correct: 0, fixed: true },
+          { id: 3, options: [";"], correct: 0, fixed: true },
+        ],
+        fullCode: '#include <stdio.h>\nint main() {\n  printf("Hello\\nWorld");\n  return 0;\n}',
+        expectedOutput: "Hello\nWorld",
+        hints: [
+          "일반 글자가 아니라 특수 기호야. 백슬래시(\\)로 시작하는 기호들을 이스케이프 시퀀스라고 해.",
+          "탭(\\t)이랑 줄바꿈이랑 다른 기호야. 선택지를 하나씩 눌러서 출력 비교해봐.",
         ],
       },
       {
@@ -106,7 +207,25 @@ export const stages = [
           const school = inputs[8] || "___";
           return `=== 나의 명함 ===\n${name}\n${school}`;
         },
-        hints: ["각 칸에 맞는 걸 직접 입력해봐. 괄호는 미리 채워져 있어."],
+        dynamicHints: (cellStatuses) => {
+          // flat index: 0,6=printf  1,4,7,10="  2,8=free  3,9=\n  5,11=;
+          const wrong = new Set();
+          cellStatuses.forEach((s, idx) => {
+            if (s !== "err") return;
+            if (idx === 0 || idx === 6)                        wrong.add("func");
+            else if (idx === 1 || idx === 4 || idx === 7 || idx === 10) wrong.add("quote");
+            else if (idx === 2 || idx === 8)                   wrong.add("free");
+            else if (idx === 3 || idx === 9)                   wrong.add("newline");
+            else if (idx === 5 || idx === 11)                  wrong.add("semi");
+          });
+          const hints = [];
+          if (wrong.has("func"))    hints.push("함수 이름 칸: 화면에 출력할 때 쓰는 함수를 써봐.");
+          if (wrong.has("quote"))   hints.push("따옴표 칸: 글자를 묶을 때 쓰는 기호야.");
+          if (wrong.has("free"))    hints.push("이름/학교 칸: 아무 내용이나 직접 입력해봐.");
+          if (wrong.has("newline")) hints.push("줄바꿈 칸: 역슬래시로 시작하는 특수 기호야.");
+          if (wrong.has("semi"))    hints.push("마지막 칸: 문장 끝에 꼭 붙이는 기호야.");
+          return hints;
+        },
       },
     ],
   },

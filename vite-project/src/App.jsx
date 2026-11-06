@@ -69,7 +69,7 @@ export default function App() {
     clearTimeout(toastTimer.current);
     clearTimeout(toastFadeTimer.current);
     setToastFading(true);
-    toastFadeTimer.current = setTimeout(() => { setToast(null); setToastFading(false); }, 180);
+    toastFadeTimer.current = setTimeout(() => { setToast(null); setToastFading(false); }, 100);
   };
 
   const handleNavigate = (target, data = {}) => {
@@ -140,14 +140,14 @@ export default function App() {
         {/* Sidebar / Tab Bar */}
         <nav className="tab-bar">
           <div className="sidebar-logo-group">
-            <div className="sidebar-logo" onClick={() => setTab("home")}>
+            <div className="sidebar-logo" onClick={() => { dismissToast(); setTab("home"); }}>
               <span className="cf-logo">easy<b>C</b></span>
             </div>
             <div className="desktop-page-title">{getPageTitle()}</div>
           </div>
           <div className="tab-items-wrapper">
             {TABS.map(t => (
-              <button key={t.id} className={`tab-item ${tab === t.id ? "active" : ""}`} onClick={() => setTab(t.id)}>
+              <button key={t.id} className={`tab-item ${tab === t.id ? "active" : ""}`} onClick={() => { dismissToast(); setTab(t.id); }}>
                 <span className="tab-icon">{t.icon}</span>
                 <span className="tab-label">{t.label}</span>
               </button>
@@ -175,7 +175,7 @@ export default function App() {
               onCardChange={dismissToast}
             />
           )}
-          {tab === "code"    && <CodePage onCorrect={() => showToast("코드가 실행되었습니다!", true)} onNavigate={handleNavigate} />}
+          {tab === "code"    && <CodePage onCorrect={() => showToast("코드가 실행되었습니다!", true)} onNavigate={handleNavigate} progress={progress} onCardChange={dismissToast} />}
           {tab === "profile" && <ProfilePage badges={badges} progress={progress} savedItems={savedItems} onNavigate={handleNavigate} />}
 
           {/* Global Toast */}

@@ -141,6 +141,10 @@ html, body, #root { height: 100%; font-family: -apple-system, BlinkMacSystemFont
 }
 .cf-slot:active { transform: scale(0.92); }
 
+/* Drum token button in SlotCodePicker */
+.drum-btn { transition: transform 0.08s ease; }
+.drum-btn:active { transform: scale(0.88) !important; }
+
 /* Input slot */
 .cf-input-slot {
   background: #e8ecff;
@@ -369,7 +373,7 @@ html, body, #root { height: 100%; font-family: -apple-system, BlinkMacSystemFont
   box-shadow: 0 8px 32px rgba(0,0,0,0.12); display: flex; flex-direction: column; align-items: center;
   border: 0.5px solid rgba(0,0,0,0.05); animation: iosToastIn 0.5s cubic-bezier(0.2, 1, 0.2, 1);
 }
-.ios-toast.fading { animation: iosToastOut 0.18s ease forwards; }
+.ios-toast.fading { animation: iosToastOut 0.1s ease forwards; }
 .ios-toast.success { background: rgba(52,199,89,0.95); color: #fff; }
 
 /* Bottom Sheet */

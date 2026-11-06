@@ -244,16 +244,6 @@ export default function HomePage({ onNavigate, progress, nickname }) {
           </div>
         </div>
 
-        {/* Stats row */}
-        <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
-          {[{ n: "0", l: "진입장벽", c: "#007aff" }, { n: "8", l: "스테이지", c: "#5856d6" }, { n: "40", l: "카드", c: "#34c759" }, { n: "100%", l: "자율학습", c: "#ff9500" }].map(st => (
-            <div key={st.l} style={{ flex: 1, background: "#fff", borderRadius: 14, padding: "14px 0", textAlign: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
-              <div style={{ fontSize: 20, fontWeight: 900, color: st.c, letterSpacing: -0.5 }}>{st.n}</div>
-              <div style={{ fontSize: 11, color: "#8e8e93", marginTop: 2, fontWeight: 500 }}>{st.l}</div>
-            </div>
-          ))}
-        </div>
-
         {/* Curriculum stage grid */}
         <div style={{ marginBottom: 24 }}>
           <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: -0.5, marginBottom: 12, color: "#000" }}>스테이지</div>

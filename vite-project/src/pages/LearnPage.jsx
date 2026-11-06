@@ -109,18 +109,21 @@ function MemoryMap({ color }) {
 
 /* ── CFeed-style inline slot inside code ── */
 function InlineSlot({ options, selected, onSelect, color }) {
-  const colors = {
-    bg:     color + "20",
-    border: color + "55",
-    text:   color,
+  const [tick, setTick] = useState(0);
+  const colors = { bg: color + "20", border: color + "55", text: color };
+  const handleClick = () => {
+    setTick(t => t + 1);
+    onSelect((selected + 1) % options.length);
   };
   return (
     <span
       className="cf-slot"
       style={{ background: colors.bg, border: `1.5px solid ${colors.border}`, color: colors.text }}
-      onClick={() => onSelect((selected + 1) % options.length)}
+      onClick={handleClick}
     >
-      {options[selected]}
+      <span key={tick} style={{ display: "inline-block", animation: tick > 0 ? "iosPop 0.18s ease" : "none" }}>
+        {options[selected]}
+      </span>
     </span>
   );
 }
@@ -289,31 +292,22 @@ function OutputBlock({ label, text, color }) {
   );
 }
 
-function Explanations({ card, stage, computedOutput }) {
+function Explanations({ card, stage }) {
   const hintText = card.hint ?? card.hints?.[0];
-  const hasComparison = card.dynamicOutput && card.expectedOutput;
 
   return (
     <div className="cf-explain">
       {card.description && (
-        <div className="cf-explain-item" style={{ borderBottom: "1px solid rgba(0,0,0,0.07)", marginBottom: 6, paddingBottom: 10 }}>
+        <div className="cf-explain-item" style={{ borderBottom: (card.expectedOutput || hintText) ? "1px solid rgba(0,0,0,0.07)" : "none", marginBottom: (card.expectedOutput || hintText) ? 6 : 0, paddingBottom: (card.expectedOutput || hintText) ? 10 : 0 }}>
           <span style={{ fontSize: 16, flexShrink: 0 }}>📋</span>
           <span style={{ whiteSpace: "pre-wrap", lineHeight: 1.6 }}>{card.description}</span>
         </div>
       )}
 
-      {hasComparison ? (
-        <div style={{ borderBottom: hintText ? "1px solid rgba(0,0,0,0.07)" : "none", marginBottom: hintText ? 6 : 0, paddingBottom: hintText ? 10 : 0, display: "flex", gap: 10 }}>
-          <OutputBlock label="목표" text={card.expectedOutput} color={stage.color} />
-          <OutputBlock label="현재" text={computedOutput} color={stage.color} />
+      {card.expectedOutput && (
+        <div style={{ borderBottom: hintText ? "1px solid rgba(0,0,0,0.07)" : "none", marginBottom: hintText ? 6 : 0, paddingBottom: hintText ? 10 : 0 }}>
+          <OutputBlock label="목표 출력" text={card.expectedOutput} color={stage.color} />
         </div>
-      ) : (
-        (computedOutput ?? card.expectedOutput) && (
-          <div className="cf-explain-item" style={{ borderBottom: hintText ? "1px solid rgba(0,0,0,0.07)" : "none", marginBottom: hintText ? 6 : 0, paddingBottom: hintText ? 10 : 0 }}>
-            <span style={{ fontSize: 11, fontWeight: 800, color: stage.color, flexShrink: 0, letterSpacing: 0.5, textTransform: "uppercase", marginTop: 2 }}>출력</span>
-            <span style={{ whiteSpace: "pre-wrap", fontFamily: "monospace", fontSize: 13, color: "#1d1d1f", lineHeight: 1.6 }}>{computedOutput ?? card.expectedOutput}</span>
-          </div>
-        )
       )}
 
       {hintText && (
@@ -353,6 +347,7 @@ function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate,
     return ok ? "ok" : null;
   });
   const [confetti, setConfetti] = useState([]);
+  const [checkedOutput, setCheckedOutput] = useState(null);
 
   const [showTutorial, setShowTutorial] = useState(
     () => !localStorage.getItem("easycDrumTutorialSeen")
@@ -385,7 +380,7 @@ function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate,
     }
     setSel(n);
     setStatus(null);
-    // 토큰 선택 중에는 저장하지 않음 — 확인하기를 눌러야만 저장
+    setCheckedOutput(null); // 슬롯 바꾸면 해설 초기화
   };
 
   const check = () => {
@@ -400,6 +395,8 @@ function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate,
       onSolvedChange?.(true);
       onCorrect?.();
     } else {
+      // 오답 시 현재 computedOutput 저장 → Explanations에서 비교 표시
+      if (computedOutput != null) setCheckedOutput(computedOutput);
       setTimeout(() => setStatus(null), 1500);
     }
   };
@@ -451,8 +448,36 @@ function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate,
         </div>
 
         <div style={{ margin: "12px 20px 0" }}>
-          <div className="cf-card"><Explanations card={card} stage={stage} computedOutput={computedOutput} /></div>
+          <div className="cf-card"><Explanations card={card} stage={stage} /></div>
         </div>
+
+        {/* 오답 비교 해설 — 힌트 아래 별도 카드 */}
+        {checkedOutput != null && card.dynamicOutput && (() => {
+          const isArr = Array.isArray(checkedOutput);
+          if (!isArr && checkedOutput === card.expectedOutput) return null;
+          if (isArr && checkedOutput.length === 0) return null;
+          const divKey = isArr ? checkedOutput.map(e => e.note).join('|') : checkedOutput;
+          return (
+            <div key={divKey} style={{ margin: "12px 20px 0", animation: "iosFadeScale 0.25s ease" }}>
+              <div className="cf-card">
+                <div style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: 12 }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: "var(--label3)", letterSpacing: 0.5, textTransform: "uppercase" }}>🔍 뭐가 틀렸나 봐봐</div>
+                  {isArr ? checkedOutput.map((err, i) => (
+                    <div key={i} style={{ display: "flex", flexDirection: "column", gap: 6, paddingTop: i > 0 ? 10 : 0, borderTop: i > 0 ? "1px solid rgba(0,0,0,0.07)" : "none" }}>
+                      {err.output != null && <OutputBlock label="내가 만든 출력" text={err.output} color={stage.color} />}
+                      <div style={{ fontSize: 13, color: "var(--label2)", fontWeight: 500, lineHeight: 1.5 }}>💬 {err.note}</div>
+                    </div>
+                  )) : (
+                    <>
+                      <OutputBlock label="목표 출력" text={card.expectedOutput} color={stage.color} />
+                      <OutputBlock label="내가 만든 출력" text={checkedOutput} color={stage.color} />
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         {isLast && status === "ok" && (
           <div style={{ margin: "24px 20px 0", paddingBottom: 20 }}>
@@ -886,6 +911,22 @@ function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge,
           <Explanations card={card} stage={stage} computedOutput={computedOutput} />
         </div>
 
+        {/* 동적 힌트 — 틀린 셀 유형에 해당하는 것만 표시 */}
+        {card.dynamicHints && cellStatuses.some(s => s === "err") && (() => {
+          const hints = card.dynamicHints(cellStatuses);
+          if (!hints.length) return null;
+          return (
+            <div key={cellStatuses.join(',')} className="cf-card" style={{ marginBottom: 16, animation: "iosFadeScale 0.25s ease" }}>
+              <div style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: "var(--label3)", letterSpacing: 0.5, textTransform: "uppercase" }}>💡 힌트</div>
+                {hints.map((h, i) => (
+                  <div key={i} style={{ fontSize: 13, color: "var(--indigo)", fontWeight: 500, lineHeight: 1.5 }}>• {h}</div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+
         <button className={`cf-cta ${status === "ok" ? "success" : status === "err" ? "error" : ""}`} onClick={check} style={{ width: '100%', borderRadius: 16, padding: "16px", fontSize: 17, fontWeight: 800, margin: "0 0 16px 0" }}>
           {status === "ok" ? "다 채웠어! 잘했어!" : status === "err" ? (inputs.some(v => !(v || "").trim()) ? "빈 칸이 있어. 다시 확인해봐!" : "틀린 칸이 있어. 다시 확인해봐!") : "정답 확인"}
         </button>
@@ -933,8 +974,9 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
   };
 
   const stage = stages[stageIdx];
-  const total = stage.cards.length;
-  const card  = stage.cards[cardIdx];
+  const visibleCards = stage.cards.filter(c => !c.tokenOnly);
+  const total = visibleCards.length;
+  const card  = visibleCards[cardIdx];
 
   useEffect(() => {
     if (card.type === "concept") {
@@ -1027,7 +1069,7 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
       else                                   { onComplete?.(stage.id); }
     } else {
       if (cardIdx > 0)                       { setCardIdx(c => c - 1); }
-      else if (stageIdx > 0)                 { setStageIdx(s => s - 1); setCardIdx(stages[stageIdx - 1].cards.length - 1); }
+      else if (stageIdx > 0)                 { setStageIdx(s => s - 1); setCardIdx(stages[stageIdx - 1].cards.filter(c => !c.tokenOnly).length - 1); }
     }
   };
 
@@ -1038,14 +1080,18 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
     if (!touchY.current) return;
     const dy = touchY.current - e.changedTouches[0].clientY;
     const scrollableContent = scrollRef.current;
-    const skipBottomCheck = card.type === "code" && solvedRef.current;
+    const skipBottomCheck = card.type === "code" && solvedRef.current && !card.dynamicOutput;
 
     if (scrollableContent) {
       const isAtBottom = skipBottomCheck || scrollableContent.scrollHeight - scrollableContent.scrollTop <= scrollableContent.clientHeight + 5;
-      const isAtTop = scrollableContent.scrollTop <= 5;
+      // dynamicOutput 카드는 위로 넘어가는 임계값을 높게 설정 (힌트 보고 돌아올 때 오작동 방지)
+      const upThreshold = card.dynamicOutput ? 110 : 45;
+      const isAtTop = card.dynamicOutput
+        ? scrollableContent.scrollTop === 0
+        : scrollableContent.scrollTop <= 5;
       if (dy > 45 && isAtBottom) {
         go(1);
-      } else if (dy < -45 && isAtTop) {
+      } else if (dy < -upThreshold && isAtTop) {
         go(-1);
       }
     } else {
@@ -1057,7 +1103,7 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
   const onWheel = e => {
     if (isScrolling.current) return;
     if (Math.abs(e.deltaY) < 30) return;
-    const skipBottomCheck = card.type === "code" && solvedRef.current;
+    const skipBottomCheck = card.type === "code" && solvedRef.current && !card.dynamicOutput;
 
     const scrollableContent = scrollRef.current;
     if (scrollableContent && !skipBottomCheck) {
@@ -1076,7 +1122,7 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
   const isFirst = stageIdx === 0 && cardIdx === 0;
   const isLast  = stageIdx === stages.length - 1 && cardIdx === total - 1;
   const scrollRef = useRef(null);
-  const hasBadgeStep  = stage.cards.some(c => c.type === "project");
+  const hasBadgeStep  = visibleCards.some(c => c.type === "project");
   const displayTotal   = hasBadgeStep ? total + 1 : total;
   const displayCurrent = showBadgePage ? total + 1 : cardIdx + 1;
 
@@ -1142,7 +1188,7 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
             <>
               <button style={{ ...btnBase, opacity: isFirst ? 0.25 : 0.9 }} onClick={() => go(-1)} disabled={isFirst}>↑</button>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                {stage.cards.map((_, i) => (
+                {visibleCards.map((_, i) => (
                   <div key={i} style={{ width: 4, height: (!showBadgePage && i === cardIdx) ? 16 : 4, borderRadius: 2, background: (!showBadgePage && i === cardIdx) ? stage.color : "rgba(0,0,0,0.15)", transition: "all 0.3s" }} />
                 ))}
                 {hasBadgeStep && (

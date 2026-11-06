@@ -33,42 +33,54 @@ function translateLine(raw) {
   return "👉 코드 실행";
 }
 
-function Drum({ options, selected, onSelect, fixed, color }) {
+function Drum({ options, selected, onSelect, fixed, color, status }) {
   const startY = useRef(null);
   const label  = options[selected];
+  const [tick, setTick] = useState(0);
+  // 같은 슬롯의 모든 선지 중 가장 긴 것으로 너비 고정
+  const fixedWidth = Math.max(52, ...options.map(o => o.length * 9 + 22));
 
-  const next = () => { if (!fixed) onSelect((selected + 1) % options.length); };
+  const next = () => { if (!fixed) { onSelect((selected + 1) % options.length); setTick(t => t + 1); } };
   const onTS = e => { if (!fixed) startY.current = e.touches[0].clientY; };
   const onTE = e => {
     if (fixed || startY.current == null) return;
     const dy = startY.current - e.changedTouches[0].clientY;
-    if (Math.abs(dy) > 12) onSelect((selected + (dy > 0 ? 1 : -1) + options.length) % options.length);
+    if (Math.abs(dy) > 12) { onSelect((selected + (dy > 0 ? 1 : -1) + options.length) % options.length); setTick(t => t + 1); }
     startY.current = null;
   };
 
+  const statusColor = status === "ok" ? "#34c759" : status === "err" ? "#ff3b30" : null;
+  const displayColor = fixed ? null : (statusColor ?? color);
+
   return (
     <div
+      key={`drum-${tick}`}
+      className={fixed ? undefined : "drum-btn"}
       style={{
         position: "relative",
         height: 44,
-        minWidth: Math.max(52, label.length * 9 + 22),
-        background: fixed ? "rgba(0,0,0,0.04)" : "#fff",
-        border: `0.5px solid ${fixed ? "rgba(0,0,0,0.08)" : color + "55"}`,
+        width: fixedWidth,
+        background: fixed ? "rgba(0,0,0,0.04)" : status === "ok" ? "rgba(52,199,89,0.08)" : status === "err" ? "rgba(255,59,48,0.06)" : "#fff",
+        border: `${status ? "1.5px" : "0.5px"} solid ${fixed ? "rgba(0,0,0,0.08)" : status === "ok" ? "rgba(52,199,89,0.6)" : status === "err" ? "rgba(255,59,48,0.5)" : color + "55"}`,
         borderRadius: 10,
         display: "flex", alignItems: "center", justifyContent: "center",
         overflow: "hidden",
         cursor: fixed ? "default" : "pointer",
-        boxShadow: fixed ? "none" : `0 2px 8px ${color}1a`,
+        boxShadow: fixed ? "none" : status ? "none" : `0 2px 8px ${color}1a`,
         flexShrink: 0,
+        userSelect: "none",
+        WebkitUserSelect: "none",
+        animation: tick > 0 ? "drumPop 0.22s cubic-bezier(0.2,1,0.2,1)" : "none",
+        transition: "border 0.2s, background 0.2s",
       }}
       onClick={next} onTouchStart={onTS} onTouchEnd={onTE}
     >
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 10, background: `linear-gradient(to bottom,${fixed ? "rgba(0,0,0,0.04)" : "#fff"},transparent)`, zIndex: 2, pointerEvents: "none" }} />
       <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 10, background: `linear-gradient(to top,${fixed ? "rgba(0,0,0,0.04)" : "#fff"},transparent)`, zIndex: 2, pointerEvents: "none" }} />
-      <span style={{ fontFamily: "monospace", fontSize: 14, fontWeight: 700, color: fixed ? "rgba(60,60,67,0.3)" : color, padding: "0 8px" }}>
+      <span style={{ fontFamily: "monospace", fontSize: 14, fontWeight: 700, color: fixed ? "rgba(60,60,67,0.3)" : (displayColor ?? color), padding: "0 8px", display: "inline-block" }}>
         {label}
       </span>
-      {!fixed && <div style={{ position: "absolute", bottom: 2, right: 5, fontSize: 8, color, opacity: 0.45 }}>↑↓</div>}
+      {!fixed && <div style={{ position: "absolute", bottom: 2, right: 5, fontSize: 8, color: displayColor ?? color, opacity: 0.45 }}>↑↓</div>}
     </div>
   );
 }
@@ -87,20 +99,24 @@ export default function SlotCodePicker({ slots, color = "var(--blue)", onResult,
     });
   }, [slots]);
 
-  const [sel,      setSel]      = useState(processedSlots.map(() => 0));
-  const [result,   setResult]   = useState(null);
-  const [showHint, setShowHint] = useState(false);
-  const [confetti, setConfetti] = useState([]);
+  const [sel,          setSel]          = useState(processedSlots.map(() => 0));
+  const [result,       setResult]       = useState(null);
+  const [slotStatuses, setSlotStatuses] = useState([]);
+  const [showHint,     setShowHint]     = useState(false);
+  const [confetti,     setConfetti]     = useState([]);
 
   // Reset selection when slots change
   useEffect(() => {
     setSel(processedSlots.map(() => 0));
     setResult(null);
+    setSlotStatuses([]);
   }, [processedSlots]);
 
-  const pick = (i, v) => { const n = [...sel]; n[i] = v; setSel(n); setResult(null); };
+  const pick = (i, v) => { const n = [...sel]; n[i] = v; setSel(n); setResult(null); setSlotStatuses([]); };
 
   const check = () => {
+    const statuses = processedSlots.map((s, i) => s.fixed ? null : (sel[i] === s.correct ? "ok" : "err"));
+    setSlotStatuses(statuses);
     const ok = processedSlots.every((s, i) => sel[i] === s.correct);
     setResult(ok ? "ok" : "err");
     if (ok) {
@@ -111,7 +127,13 @@ export default function SlotCodePicker({ slots, color = "var(--blue)", onResult,
     onResult?.(ok);
   };
 
-  const assembled = processedSlots.map((s, i) => s.options[sel[i]]).join(" ");
+  // 전체 조합 (translateLine용) — 비고정 슬롯 선택값만
+  const assembled = processedSlots.filter(s => !s.fixed).map((s, i) => {
+    const globalIdx = processedSlots.indexOf(s);
+    return s.options[sel[globalIdx]];
+  }).join(" ");
+  // 화면에 보여줄 조합 — 전체 슬롯
+  const assembledDisplay = processedSlots.map((s, i) => s.options[sel[i]]).join("");
 
   return (
     <div style={{ position: "relative" }}>
@@ -126,24 +148,8 @@ export default function SlotCodePicker({ slots, color = "var(--blue)", onResult,
       {/* Drums */}
       <div style={{ display: "flex", gap: 6, justifyContent: "center", flexWrap: "wrap", marginBottom: 14 }}>
         {processedSlots.map((s, i) => (
-          <Drum key={i} options={s.options} selected={sel[i]} onSelect={v => pick(i, v)} fixed={s.fixed} color={color} />
+          <Drum key={i} options={s.options} selected={sel[i]} onSelect={v => pick(i, v)} fixed={s.fixed} color={color} status={slotStatuses[i] ?? null} />
         ))}
-      </div>
-
-      {/* Assembled preview */}
-      <div style={{
-        background: result === "ok" ? "rgba(52,199,89,0.08)" : result === "err" ? "rgba(255,59,48,0.08)" : "rgba(0,0,0,0.03)",
-        border: `0.5px solid ${result === "ok" ? "rgba(52,199,89,0.35)" : result === "err" ? "rgba(255,59,48,0.3)" : "rgba(0,0,0,0.1)"}`,
-        borderRadius: 12, padding: "11px 14px", textAlign: "center", marginBottom: 12,
-        animation: result === "err" ? "iosShake 0.4s ease" : "none",
-        transition: "all 0.25s",
-      }}>
-        <div style={{ fontFamily: "monospace", fontSize: 13, fontWeight: 600, color: result === "ok" ? "var(--green)" : result === "err" ? "var(--red)" : "var(--label2)", marginBottom: 4 }}>
-          {assembled}
-        </div>
-        <div style={{ fontSize: 12, color: color, fontWeight: 600, opacity: 0.85 }}>
-          {translateLine(assembled)}
-        </div>
       </div>
 
       {result === "ok" && (
@@ -152,8 +158,10 @@ export default function SlotCodePicker({ slots, color = "var(--blue)", onResult,
         </div>
       )}
       {result === "err" && (
-        <div style={{ padding: "10px 14px", background: "rgba(255,59,48,0.06)", border: "0.5px solid rgba(255,59,48,0.2)", borderRadius: 12, fontSize: 14, color: "var(--red)", textAlign: "center", marginBottom: 12 }}>
-          🤔 다시 생각해봐!
+        <div style={{ padding: "10px 14px", background: "rgba(255,59,48,0.06)", border: "0.5px solid rgba(255,59,48,0.2)", borderRadius: 12, fontSize: 14, color: "var(--red)", textAlign: "center", marginBottom: 12, animation: "iosShake 0.4s ease" }}>
+          <div style={{ fontWeight: 700 }}>🤔 틀렸어!</div>
+          <div style={{ fontSize: 13, fontWeight: 800, marginTop: 4, color: "var(--red)" }}>{translateLine(assembled)}</div>
+          <div style={{ fontSize: 12, opacity: 0.7, marginTop: 3 }}>다시 생각해봐.</div>
         </div>
       )}
       {showHint && (
@@ -166,7 +174,7 @@ export default function SlotCodePicker({ slots, color = "var(--blue)", onResult,
         <button className="ios-btn ios-btn-gray ios-btn-sm" style={{ flex: 1 }} onClick={() => setShowHint(h => !h)}>
           {showHint ? "힌트 숨기기" : "💡 힌트"}
         </button>
-        <button className="ios-btn ios-btn-gray ios-btn-sm" onClick={() => { setSel(processedSlots.map(() => 0)); setResult(null); setShowHint(false); }}>
+        <button className="ios-btn ios-btn-gray ios-btn-sm" onClick={() => { setSel(processedSlots.map(() => 0)); setResult(null); setSlotStatuses([]); setShowHint(false); }}>
           ↩
         </button>
         <button className="ios-btn ios-btn-sm" style={{ flex: 1, background: color, color: "#fff" }} onClick={check}>

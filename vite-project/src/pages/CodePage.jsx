@@ -1,13 +1,15 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { stages } from "../data/curriculum";
+import SlotCodePicker from "../components/SlotCodePicker";
 
-const CHALLENGES = stages.flatMap(st =>
-  st.cards.filter(c => c.type === "code").map(c => ({
-    ...c, stageTitle: st.title, stageEmoji: st.emoji, color: st.color, stageId: st.id,
-  }))
+// useSlotPlaceholders 카드는 제외 (fullCode가 __SLOT__ 형식이라 타이핑/토큰 모두 불가)
+const ALL_CODE_CARDS = stages.flatMap(st =>
+  st.cards
+    .filter(c => c.type === "code" && !c.useSlotPlaceholders)
+    .map(c => ({ card: c, stage: st }))
 );
 
-/* ── 코드 라인을 구문 강조 ── */
+/* ── 구문 강조 ── */
 function SyntaxSpan({ text }) {
   const html = text
     .replace(/\b(int|float|char|void|return|if|else|for|while|include|stdio\.h|stdlib\.h)\b/g, "<span style='color:#569cd6'>$1</span>")
@@ -18,16 +20,12 @@ function SyntaxSpan({ text }) {
   return <span dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
-/* ── fullCode를 파싱해서 슬롯 위치에 Input 렌더링 ── */
+/* ── fullCode에서 슬롯 위치에 Input 렌더링 ── */
 function buildLineParts(line, slots) {
-  // fixed 슬롯은 이미 코드에 표시되어 있으므로, non-fixed 슬롯만 입력 대상으로 처리
   const inputSlots = slots
     .map((s, origIdx) => ({ s, origIdx }))
     .filter(({ s }) => !s.fixed)
-    .map((t, inputIdx) => ({
-      inputIdx,
-      val: t.s.options[t.s.correct],
-    }));
+    .map((t, inputIdx) => ({ inputIdx, val: t.s.options[t.s.correct] }));
 
   const positions = [];
   inputSlots.forEach(t => {
@@ -50,7 +48,6 @@ function buildLineParts(line, slots) {
   });
 
   positions.sort((a, b) => a.pos - b.pos);
-
   const parts = [];
   let cur = 0;
   for (const p of positions) {
@@ -60,155 +57,6 @@ function buildLineParts(line, slots) {
   }
   if (cur < line.length) parts.push({ type: "text", content: line.slice(cur) });
   return parts;
-}
-
-function CodeTypingChallenge({ ch, onNext, onCorrect, onBecameSolved, onSave }) {
-  const slots = ch.slots;
-  const nonFixedSlots = slots.filter(s => !s.fixed);
-  const answers = nonFixedSlots.map(s => s.options[s.correct]);
-  const normalize = s => (s || "").trim().replace(/\s+/g, " ");
-
-  // 항상 빈칸으로 시작 (이전 정답 자동입력 없음)
-  const [inputs, setInputs] = useState(answers.map(() => ""));
-  const [status, setStatus] = useState(null);
-  const [showHint, setShowHint] = useState(false);
-  const [confetti, setConfetti] = useState([]);
-  const refs = useRef([]);
-
-  const lines = ch.fullCode.split("\n");
-
-  const handleInput = (inputIdx, val) => {
-    const n = [...inputs];
-    n[inputIdx] = val;
-    setInputs(n);
-    setStatus(null);
-    onSave?.(n);
-  };
-
-  const check = () => {
-    if (status === "ok") { onNext?.(); return; }
-    const ok = answers.every((ans, i) => normalize(inputs[i]) === normalize(ans));
-    setStatus(ok ? "ok" : "err");
-    if (ok) {
-      onSave?.(inputs);
-      onBecameSolved?.();
-      const items = Array.from({ length: 18 }, (_, i) => ({
-        id: i, x: Math.random() * 100,
-        c: ["#007aff","#af52de","#ff9500","#34c759","#ff2d55"][i % 5],
-        d: Math.random() * 0.3,
-      }));
-      setConfetti(items);
-      setTimeout(() => setConfetti([]), 1100);
-      onCorrect?.();
-    } else {
-      setTimeout(() => setStatus(null), 1500);
-    }
-  };
-
-  return (
-    <div style={{ position: "relative" }}>
-      {confetti.map(c => (
-        <div key={c.id} style={{ position: "absolute", left: `${c.x}%`, top: "20%", width: 8, height: 8, borderRadius: 2, background: c.c, animation: `iosConfetti 0.8s ease ${c.d}s forwards`, pointerEvents: "none", zIndex: 100 }} />
-      ))}
-
-      {/* 코드 에디터 */}
-      <div style={{ background: "#1c1c1e", borderRadius: 14, overflow: "hidden", marginBottom: 14 }}>
-        <div style={{ padding: "8px 14px", background: "#2c2c2e", display: "flex", alignItems: "center", gap: 6 }}>
-          <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#ff5f57" }} />
-          <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#febc2e" }} />
-          <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#28c840" }} />
-          <span style={{ marginLeft: 8, fontSize: 11, color: "#8e8e93", fontFamily: "monospace" }}>challenge.c</span>
-        </div>
-        <div style={{ overflowX: "auto", padding: "14px 0 14px" }}>
-          {lines.map((line, li) => {
-            const parts = buildLineParts(line, slots);
-            const lineNum = String(li + 1).padStart(2, " ");
-            return (
-              <div key={li} style={{ display: "flex", alignItems: "center", whiteSpace: "pre", minWidth: "max-content", padding: "0 14px", lineHeight: "2" }}>
-                <span style={{ color: "#4a4a50", fontFamily: "monospace", fontSize: 11, minWidth: 24, marginRight: 14, userSelect: "none", flexShrink: 0 }}>{lineNum}</span>
-                <span style={{ fontFamily: "monospace", fontSize: 14, display: "flex", alignItems: "center", gap: 0 }}>
-                  {parts.map((p, pi) =>
-                    p.type === "text"
-                      ? <SyntaxSpan key={pi} text={p.content} />
-                      : (
-                        <input
-                          key={pi}
-                          ref={el => refs.current[p.inputIdx] = el}
-                          value={inputs[p.inputIdx]}
-                          onChange={e => handleInput(p.inputIdx, e.target.value)}
-                          onKeyDown={e => {
-                            if (e.key === "Enter") {
-                              const next = refs.current.findIndex((r, i) => i > p.inputIdx && r);
-                              if (next !== -1) refs.current[next]?.focus();
-                              else check();
-                            }
-                          }}
-                          spellCheck={false}
-                          placeholder={`빈칸 ${p.inputIdx + 1}`}
-                          style={{
-                            background: status === "ok" ? "rgba(52,199,89,0.18)" : status === "err" ? "rgba(255,59,48,0.18)" : "rgba(0,122,255,0.2)",
-                            border: `1.5px solid ${status === "ok" ? "rgba(52,199,89,0.6)" : status === "err" ? "rgba(255,59,48,0.6)" : "rgba(0,122,255,0.5)"}`,
-                            borderRadius: 6,
-                            color: status === "ok" ? "#30d158" : status === "err" ? "#ff453a" : "#60a5fa",
-                            fontFamily: "monospace",
-                            fontSize: 13,
-                            fontWeight: 700,
-                            padding: "1px 8px",
-                            outline: "none",
-                            width: Math.max(60, (inputs[p.inputIdx].length || p.answer.length) * 9 + 20),
-                            caretColor: "#60a5fa",
-                            transition: "all 0.2s",
-                          }}
-                        />
-                      )
-                  )}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 피드백 */}
-      {status === "ok" && (
-        <div style={{ padding: "10px 14px", background: "rgba(52,199,89,0.1)", border: "0.5px solid rgba(52,199,89,0.3)", borderRadius: 12, fontSize: 14, color: "#30d158", textAlign: "center", marginBottom: 12, fontWeight: 700, animation: "iosPop 0.35s ease" }}>
-          🎉 완벽해! 정답이야!
-        </div>
-      )}
-      {status === "err" && (
-        <div style={{ padding: "10px 14px", background: "rgba(255,59,48,0.06)", border: "0.5px solid rgba(255,59,48,0.2)", borderRadius: 12, fontSize: 14, color: "#ff453a", textAlign: "center", marginBottom: 12, animation: "iosShake 0.4s ease" }}>
-          🤔 틀렸어! 다시 확인해봐.
-        </div>
-      )}
-      {showHint && (
-        <div style={{ padding: "10px 14px", background: "rgba(88,86,214,0.08)", border: "0.5px solid rgba(88,86,214,0.2)", borderRadius: 12, fontSize: 13, color: "#7c7cff", marginBottom: 12, lineHeight: 1.6, whiteSpace: "pre-line" }}>
-          💡 {ch.hint}
-        </div>
-      )}
-
-      {/* 버튼 */}
-      <div style={{ display: "flex", gap: 8 }}>
-        <button
-          style={{ flex: 1, padding: "12px 0", background: "rgba(0,0,0,0.06)", color: "#555", borderRadius: 12, fontWeight: 600, fontSize: 14, border: "none", cursor: "pointer" }}
-          onClick={() => setShowHint(h => !h)}
-        >
-          {showHint ? "힌트 숨기기" : "💡 힌트"}
-        </button>
-        <button
-          style={{ flex: 1, padding: "12px 0", background: "rgba(0,0,0,0.06)", color: "#555", borderRadius: 12, fontWeight: 600, fontSize: 14, border: "none", cursor: "pointer" }}
-          onClick={() => { setInputs(slots.map(() => "")); setStatus(null); setShowHint(false); }}
-        >
-          ↩ 초기화
-        </button>
-        <button
-          style={{ flex: 2, padding: "12px 0", background: status === "ok" ? "#34c759" : ch.color, color: "#fff", borderRadius: 12, fontWeight: 700, fontSize: 15, border: "none", cursor: "pointer", boxShadow: `0 4px 14px ${(status === "ok" ? "#34c759" : ch.color)}44` }}
-          onClick={check}
-        >
-          {status === "ok" ? "다음으로 →" : "확인하기 ✓"}
-        </button>
-      </div>
-    </div>
-  );
 }
 
 function Terminal({ expectedOutput }) {
@@ -230,95 +78,327 @@ function Terminal({ expectedOutput }) {
   );
 }
 
-function SolveSheet({ ch, onClose, onMarkSolved, onNext, onCorrect, onSaveInputs, alreadySolved }) {
-  const solvedNowRef = useRef(false);
-  const [sheetHeight] = useState(() => `${Math.floor(window.innerHeight * 0.96)}px`);
+function CodeTypingChallenge({ ch, onSolved, onWrong }) {
+  const slots = ch.slots;
+  const nonFixedSlots = slots.filter(s => !s.fixed);
+  const answers = nonFixedSlots.map(s => s.options[s.correct]);
+  const normalize = s => (s || "").trim().replace(/\s+/g, " ");
 
-  const closeSheet = () => onClose();
+  const [inputs, setInputs] = useState(answers.map(() => ""));
+  const [status, setStatus] = useState(null);
+  const [inputStatuses, setInputStatuses] = useState([]); // 칸별 "ok"/"err"
+  const [showHint, setShowHint] = useState(false);
+  const [confetti, setConfetti] = useState([]);
+  const refs = useRef([]);
 
-  const goNext = (e) => {
-    e?.stopPropagation();
-    onNext();
+  const lines = ch.fullCode.split("\n");
+
+  const handleInput = (inputIdx, val) => {
+    const n = [...inputs]; n[inputIdx] = val;
+    setInputs(n); setStatus(null); setInputStatuses([]);
+  };
+
+  const check = () => {
+    if (status === "ok") return;
+    const statuses = answers.map((ans, i) => normalize(inputs[i]) === normalize(ans) ? "ok" : "err");
+    setInputStatuses(statuses);
+    const ok = statuses.every(s => s === "ok");
+    setStatus(ok ? "ok" : "err");
+    if (ok) {
+      const items = Array.from({ length: 18 }, (_, i) => ({
+        id: i, x: Math.random() * 100,
+        c: ["#007aff","#af52de","#ff9500","#34c759","#ff2d55"][i % 5],
+        d: Math.random() * 0.3,
+      }));
+      setConfetti(items);
+      setTimeout(() => setConfetti([]), 1100);
+      onSolved?.();
+    } else {
+      onWrong?.();
+      setTimeout(() => setStatus(null), 1500);
+    }
   };
 
   return (
-    <div className="ios-sheet-bg" onClick={closeSheet}>
-      <div className="ios-sheet" style={{ height: sheetHeight }} onClick={e => e.stopPropagation()}>
-        <div className="ios-sheet-handle" />
+    <div style={{ position: "relative" }}>
+      {confetti.map(c => (
+        <div key={c.id} style={{ position: "absolute", left: `${c.x}%`, top: "20%", width: 8, height: 8, borderRadius: 2, background: c.c, animation: `iosConfetti 0.8s ease ${c.d}s forwards`, pointerEvents: "none", zIndex: 100 }} />
+      ))}
 
-        {/* 헤더 */}
-        <div style={{ padding: "4px 20px 16px", borderBottom: "0.5px solid var(--sep2)" }}>
-          <span className="ios-badge" style={{ background: ch.color + "15", color: ch.color, display: "inline-flex", marginBottom: 10 }}>
-            {ch.stageEmoji} {ch.stageTitle}
+      <div style={{ background: "#1c1c1e", borderRadius: 14, overflow: "hidden", marginBottom: 14 }}>
+        <div style={{ padding: "8px 14px", background: "#2c2c2e", display: "flex", alignItems: "center", gap: 6 }}>
+          <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#ff5f57" }} />
+          <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#febc2e" }} />
+          <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#28c840" }} />
+          <span style={{ marginLeft: 8, fontSize: 11, color: "#8e8e93", fontFamily: "monospace" }}>challenge.c</span>
+        </div>
+        <div style={{ overflowX: "auto", padding: "14px 0 14px" }}>
+          {lines.map((line, li) => {
+            const parts = buildLineParts(line, slots);
+            const lineNum = String(li + 1).padStart(2, " ");
+            return (
+              <div key={li} style={{ display: "flex", alignItems: "center", whiteSpace: "pre", minWidth: "max-content", padding: "0 14px", lineHeight: "2" }}>
+                <span style={{ color: "#4a4a50", fontFamily: "monospace", fontSize: 11, minWidth: 24, marginRight: 14, userSelect: "none", flexShrink: 0 }}>{lineNum}</span>
+                <span style={{ fontFamily: "monospace", fontSize: 14, color: "#d4d4d4", display: "flex", alignItems: "center", gap: 0 }}>
+                  {parts.map((p, pi) => {
+                    if (p.type === "text") return <SyntaxSpan key={pi} text={p.content} />;
+                    const is = inputStatuses[p.inputIdx] ?? null;
+                    return (
+                      <input
+                        key={pi}
+                        ref={el => refs.current[p.inputIdx] = el}
+                        value={inputs[p.inputIdx]}
+                        onChange={e => handleInput(p.inputIdx, e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === "Enter") {
+                            const next = refs.current.findIndex((r, i) => i > p.inputIdx && r);
+                            if (next !== -1) refs.current[next]?.focus();
+                            else check();
+                          }
+                        }}
+                        spellCheck={false}
+                        placeholder={`빈칸 ${p.inputIdx + 1}`}
+                        style={{
+                          background: is === "ok" ? "rgba(52,199,89,0.18)" : is === "err" ? "rgba(255,59,48,0.18)" : "rgba(0,122,255,0.2)",
+                          border: `1.5px solid ${is === "ok" ? "rgba(52,199,89,0.6)" : is === "err" ? "rgba(255,59,48,0.6)" : "rgba(0,122,255,0.5)"}`,
+                          borderRadius: 6, color: is === "ok" ? "#30d158" : is === "err" ? "#ff453a" : "#60a5fa",
+                          fontFamily: "monospace", fontSize: 13, fontWeight: 700,
+                          padding: "1px 8px", outline: "none",
+                          width: Math.max(60, (inputs[p.inputIdx].length || p.answer.length) * 9 + 20),
+                          caretColor: "#60a5fa", transition: "all 0.2s",
+                        }}
+                      />
+                    );
+                  })}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {status === "ok" && (
+        <div style={{ padding: "10px 14px", background: "rgba(52,199,89,0.1)", border: "0.5px solid rgba(52,199,89,0.3)", borderRadius: 12, fontSize: 14, color: "#30d158", textAlign: "center", marginBottom: 12, fontWeight: 700, animation: "iosPop 0.35s ease" }}>
+          🎉 완벽해! 정답이야!
+        </div>
+      )}
+      {status === "err" && (
+        <div style={{ padding: "10px 14px", background: "rgba(255,59,48,0.06)", border: "0.5px solid rgba(255,59,48,0.2)", borderRadius: 12, fontSize: 14, color: "#ff453a", textAlign: "center", marginBottom: 12, animation: "iosShake 0.4s ease" }}>
+          🤔 틀렸어! 다시 확인해봐.
+        </div>
+      )}
+      {showHint && (
+        <div style={{ padding: "10px 14px", background: "rgba(88,86,214,0.08)", border: "0.5px solid rgba(88,86,214,0.2)", borderRadius: 12, fontSize: 13, color: "#7c7cff", marginBottom: 12, lineHeight: 1.6, whiteSpace: "pre-line" }}>
+          💡 {ch.hints?.[0] || ch.hint || "고정된 슬롯은 이미 맞아. 나머지를 바꿔봐!"}
+        </div>
+      )}
+
+      <div style={{ display: "flex", gap: 8 }}>
+        <button style={{ flex: 1, padding: "12px 0", background: "rgba(0,0,0,0.06)", color: "#555", borderRadius: 12, fontWeight: 600, fontSize: 14, border: "none", cursor: "pointer" }}
+          onClick={() => setShowHint(h => !h)}>
+          {showHint ? "힌트 숨기기" : "💡 힌트"}
+        </button>
+        <button style={{ flex: 1, padding: "12px 0", background: "rgba(0,0,0,0.06)", color: "#555", borderRadius: 12, fontWeight: 600, fontSize: 14, border: "none", cursor: "pointer" }}
+          onClick={() => { setInputs(answers.map(() => "")); setStatus(null); setInputStatuses([]); setShowHint(false); }}>
+          ↩ 초기화
+        </button>
+        <button style={{ flex: 2, padding: "12px 0", background: status === "ok" ? "#34c759" : "var(--blue)", color: "#fff", borderRadius: 12, fontWeight: 700, fontSize: 15, border: "none", cursor: "pointer" }}
+          onClick={check}>
+          {status === "ok" ? "✓ 정답!" : "확인하기 ✓"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ── 랜덤 문제 선택 ── */
+// allCleared: true면 이미 다 풀었을 때 순환용 (다음 문제 버튼 누를 때만)
+function pickRandom(completedStages, solved, currentTitle, allowLoop = false) {
+  const pool = ALL_CODE_CARDS.filter(c => completedStages.includes(c.stage.id));
+  if (pool.length === 0) return null;
+  const uncleared = pool.filter(c => !solved.has(c.card.title) && c.card.title !== currentTitle);
+  if (uncleared.length === 0 && !allowLoop) return "all_cleared"; // 모두 풀었음
+  const candidates = uncleared.length > 0 ? uncleared : pool.filter(c => c.card.title !== currentTitle);
+  const target = candidates.length > 0 ? candidates : pool;
+  const picked = target[Math.floor(Math.random() * target.length)];
+  const format = picked.card.tokenOnly ? "token" : (Math.random() < 0.5 ? "typing" : "token");
+  return { ...picked, format };
+}
+
+/* ── 콤보 색상 ── */
+function comboColor(combo) {
+  if (combo >= 10) return "#ff2d55";
+  if (combo >= 5)  return "#af52de";
+  if (combo >= 3)  return "#ff9500";
+  return "#ffcc00";
+}
+
+/* ── 퀴즈 화면 ── */
+function QuizView({ current, combo, onSolved, onWrong, onNext, onBack }) {
+  // current 먼저 분해 — 아래 useEffect deps에서 format을 사용하기 때문에
+  // hooks보다 먼저 선언해야 TDZ 오류 없이 deps가 올바르게 평가됨
+  const { card, stage, format } = current;
+
+  const [justSolved, setJustSolved] = useState(false);
+  const [answerFlash, setAnswerFlash] = useState(null); // "ok" | "err" | null
+  const [comboToast, setComboToast] = useState(null);
+  const [exiting, setExiting] = useState(false);
+
+  // 카드 바뀔 때마다 justSolved, exiting 초기화
+  useEffect(() => { setJustSolved(false); setExiting(false); }, [current]);
+
+  // 콤보 마일스톤 토스트
+  useEffect(() => {
+    const msgs = { 2: "🔥 2연속!", 3: "🔥 3연속!", 5: "⚡ 5연속!!", 10: "🏆 10연속!!!" };
+    if (!msgs[combo]) return;
+    setComboToast(msgs[combo]);
+    const t = setTimeout(() => setComboToast(null), 1300);
+    return () => clearTimeout(t);
+  }, [combo]);
+
+  // 정답 후 Enter 키로 다음 문제 (토큰 모드만 — 타이핑 모드는 Enter로 정답 제출하므로 충돌 방지)
+  useEffect(() => {
+    if (!justSolved || format === "typing") return;
+    const handler = (e) => { if (e.key === "Enter") handleGoNext(); };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [justSolved, format]);
+
+  const handleGoNext = () => {
+    setExiting(true);
+    setTimeout(() => onNext(), 160);
+  };
+
+  const handleSolvedInner = () => {
+    if (justSolved) return;
+    setJustSolved(true);
+    setAnswerFlash("ok");
+    setTimeout(() => setAnswerFlash(null), 600);
+    onSolved();
+  };
+
+  const handleWrongInner = () => {
+    setAnswerFlash("err");
+    setTimeout(() => setAnswerFlash(null), 400);
+    onWrong();
+  };
+
+  const cc = comboColor(combo);
+
+  return (
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}>
+
+      {/* 정답/오답 플래시 오버레이 */}
+      {answerFlash && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 500, pointerEvents: "none",
+          background: answerFlash === "ok" ? "rgba(52,199,89,0.18)" : "rgba(255,59,48,0.14)",
+          animation: "flashFade 0.5s ease forwards",
+        }} />
+      )}
+
+      {/* 콤보 마일스톤 토스트 */}
+      {comboToast && (
+        <div style={{
+          position: "fixed", top: "32%", left: "50%", transform: "translateX(-50%)",
+          zIndex: 9000, pointerEvents: "none",
+          background: "rgba(0,0,0,0.78)", backdropFilter: "blur(10px)",
+          borderRadius: 22, padding: "14px 30px",
+          fontSize: 22, fontWeight: 900, color: cc,
+          animation: "iosPop 0.35s cubic-bezier(0.2,1,0.2,1)",
+          whiteSpace: "nowrap",
+          boxShadow: `0 4px 24px ${cc}44`,
+        }}>
+          {comboToast}
+        </div>
+      )}
+
+      {/* 상단 바 — 3등분 그리드로 콤보 항상 정중앙 */}
+      <div style={{ padding: "12px 20px", background: "#fff", borderBottom: "0.5px solid var(--sep)", display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", flexShrink: 0 }}>
+        <button style={{ background: "rgba(0,0,0,0.06)", border: "none", borderRadius: 10, padding: "7px 14px", fontSize: 14, fontWeight: 600, color: "#3c3c43", cursor: "pointer", justifySelf: "start" }}
+          onClick={onBack}>← 나가기</button>
+
+        <div style={{ display: "flex", justifyContent: "center", opacity: exiting ? 0 : 1, transition: "opacity 0.15s ease" }}>
+          {combo >= 2 && (
+            <div key={combo} style={{
+              fontSize: 14, fontWeight: 800, color: cc,
+              background: cc + "1a",
+              padding: "5px 14px", borderRadius: 100,
+              animation: "iosPop 0.3s ease",
+              boxShadow: `0 0 10px ${cc}33`,
+              whiteSpace: "nowrap",
+            }}>
+              🔥 {combo}연속
+            </div>
+          )}
+        </div>
+
+        <div style={{ fontSize: 12, color: "var(--label3)", fontWeight: 600, justifySelf: "end" }}>
+          {format === "typing" ? "⌨️ 타이핑" : "🎰 토큰"}
+        </div>
+      </div>
+
+      {/* 콘텐츠 — 다음 문제 이동 시 페이드아웃 */}
+      <div className="page" style={{ padding: "16px 20px var(--nav-h)", opacity: exiting ? 0 : 1, transition: "opacity 0.15s ease" }}>
+        {/* 스테이지 뱃지 + 제목 */}
+        <div style={{ marginBottom: 16 }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6, background: stage.color + "15", color: stage.color, fontSize: 12, fontWeight: 700, padding: "4px 10px", borderRadius: 100, marginBottom: 10 }}>
+            {stage.emoji} {stage.title}
           </span>
-          <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: -0.5, color: "var(--label)", marginBottom: 6 }}>{ch.title}</div>
-          <div style={{ fontSize: 14, color: "var(--label2)", lineHeight: 1.6 }}>{ch.description}</div>
+          <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: -0.5, color: "var(--label)", marginBottom: 6 }}>{card.title}</div>
+          <div style={{ fontSize: 14, color: "var(--label2)", lineHeight: 1.6 }}>{card.description}</div>
         </div>
 
         {/* 출력 결과 */}
-        <div style={{ padding: "16px 20px 0" }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--label3)", letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 8 }}>출력 결과</div>
-          <Terminal expectedOutput={ch.expectedOutput} />
-        </div>
+        {card.expectedOutput && <Terminal expectedOutput={card.expectedOutput} />}
 
-        {/* 타이핑 챌린지 */}
-        <div style={{ padding: "0 20px" }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--label3)", letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 10 }}>빈칸을 직접 입력해봐</div>
+        {/* 문제 형식 */}
+        {format === "typing" ? (
           <CodeTypingChallenge
-            ch={ch}
-            onSave={onSaveInputs}
-            onBecameSolved={() => {
-              solvedNowRef.current = true;
-              if (!alreadySolved) onMarkSolved(); // 정답 즉시 저장
-            }}
-            onNext={goNext}
-            onCorrect={onCorrect}
+            key={card.title}
+            ch={card}
+            onSolved={handleSolvedInner}
+            onWrong={handleWrongInner}
           />
-        </div>
+        ) : (
+          <SlotCodePicker
+            key={card.title}
+            slots={card.slots}
+            color={stage.color}
+            hint={card.hints?.[0] || card.hint}
+            onResult={(ok) => { if (ok) handleSolvedInner(); else handleWrongInner(); }}
+          />
+        )}
 
-        <div style={{ padding: "12px 20px 4px" }}>
+        {/* 정답 후 다음 버튼 */}
+        {justSolved && (
           <button
-            style={{ width: "100%", padding: "14px 0", background: "rgba(118,118,128,0.16)", color: "#3c3c43", borderRadius: 14, fontWeight: 700, fontSize: 17, border: "none", cursor: "pointer" }}
-            onClick={closeSheet}
-          >닫기</button>
-        </div>
+            style={{ width: "100%", marginTop: 14, padding: "14px 0", background: "#34c759", color: "#fff", borderRadius: 14, fontWeight: 700, fontSize: 17, border: "none", cursor: "pointer", boxShadow: "0 4px 14px rgba(52,199,89,0.3)", animation: "iosPop 0.35s ease" }}
+            onClick={handleGoNext}
+          >
+            다음 문제 →
+          </button>
+        )}
       </div>
     </div>
   );
 }
 
-function ChallengeRow({ ch, onSelect, solved }) {
-  return (
-    <div className="ios-cell" style={{ cursor: "pointer" }} onClick={() => onSelect(ch)}>
-      <div style={{ width: 44, height: 44, borderRadius: 12, background: ch.color + "15", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>
-        {solved ? "✅" : ch.stageEmoji}
-      </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 15, fontWeight: 600, color: "var(--label)" }}>{ch.title}</div>
-        <div style={{ fontSize: 12, color: "var(--label2)", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          {ch.stageTitle} · 빈칸 {ch.slots.filter(s => !s.fixed).length}개
-        </div>
-      </div>
-      {solved
-        ? <span style={{ fontSize: 13, color: "var(--green)", fontWeight: 700 }}>완료</span>
-        : <span className="ios-chevron">›</span>
-      }
-    </div>
-  );
-}
+/* ── 메인 ── */
+export default function CodePage({ onCorrect, onNavigate, progress, onCardChange }) {
+  const completedStages = progress?.completedStages || [];
 
-export default function CodePage({ onCorrect, onNavigate }) {
-  const [filter,   setFilter]   = useState("all");
-  const [selected, setSelected] = useState(null);
-  const [solved,   setSolved]   = useState(() => {
+  // mode/current/combo를 하나의 state로 묶어 atomic하게 업데이트 (다시 풀기 버그 방지)
+  const [qs, setQs] = useState({ mode: "home", current: null, combo: 0 });
+  const { mode, current, combo } = qs;
+
+  const [solved, setSolved] = useState(() => {
     const saved = localStorage.getItem("easycCodeSolved");
     return saved ? new Set(JSON.parse(saved)) : new Set();
   });
-  // 챌린지별 입력 답안 저장: { [title]: string[] }
-  const [challengeInputs, setChallengeInputs] = useState(() => {
-    const saved = localStorage.getItem("easycCodeInputs");
-    return saved ? JSON.parse(saved) : {};
-  });
+
+  const pool = ALL_CODE_CARDS.filter(c => completedStages.includes(c.stage.id));
+  const poolSolvedCount = pool.filter(c => solved.has(c.card.title)).length;
 
   const markSolved = (title) => {
     setSolved(prev => {
@@ -328,23 +408,106 @@ export default function CodePage({ onCorrect, onNavigate }) {
     });
   };
 
-  const saveInputs = (title, inputs) => {
-    setChallengeInputs(prev => {
-      const next = { ...prev, [title]: inputs };
-      localStorage.setItem("easycCodeInputs", JSON.stringify(next));
-      return next;
-    });
+  const startQuiz = () => {
+    if (pool.length === 0) return;
+    // 다 풀었으면 solved 초기화 후 처음부터 다시
+    const needsReset = solved.size >= pool.length;
+    if (needsReset) {
+      setSolved(new Set());
+      localStorage.setItem("easycCodeSolved", JSON.stringify([]));
+    }
+    const effectiveSolved = needsReset ? new Set() : solved;
+    const candidates = pool.filter(c => !effectiveSolved.has(c.card.title));
+    const target = candidates.length > 0 ? candidates : pool;
+    const p = target[Math.floor(Math.random() * target.length)];
+    const fmt = p.card.tokenOnly ? "token" : (Math.random() < 0.5 ? "typing" : "token");
+    setQs({ mode: "quiz", current: { ...p, format: fmt }, combo: 0 });
   };
 
-  // 다음 챌린지로 이동 (저장은 onBecameSolved 시점에 이미 완료)
+  const handleSolved = () => {
+    if (!current) return;
+    markSolved(current.card.title);
+    setQs(s => ({ ...s, combo: s.combo + 1 }));
+    onCorrect?.();
+  };
+
+  const handleWrong = () => setQs(s => ({ ...s, combo: 0 }));
+
   const handleNext = () => {
-    const idx = CHALLENGES.findIndex(c => c.title === selected?.title);
-    const next = idx >= 0 && idx < CHALLENGES.length - 1 ? CHALLENGES[idx + 1] : null;
-    setSelected(next);
+    onCardChange?.();
+    const picked = pickRandom(completedStages, solved, current?.card.title);
+    if (!picked) { setQs(s => ({ ...s, mode: "home", current: null })); return; }
+    if (picked === "all_cleared") { setQs(s => ({ ...s, mode: "cleared" })); return; }
+    setQs(s => ({ ...s, current: picked }));
   };
 
-  const filtered = filter === "all" ? CHALLENGES : CHALLENGES.filter(c => `${c.stageId}` === filter);
-  const grouped  = stages.map(st => ({ stage: st, items: filtered.filter(c => c.stageId === st.id) })).filter(g => g.items.length > 0);
+  const handleLoopAgain = () => {
+    // solved 초기화 → 전체 문제 다시 처음부터
+    const emptySolved = new Set();
+    setSolved(emptySolved);
+    localStorage.setItem("easycCodeSolved", JSON.stringify([]));
+    const availablePool = ALL_CODE_CARDS.filter(c => completedStages.includes(c.stage.id));
+    if (availablePool.length === 0) return;
+    const picked = availablePool[Math.floor(Math.random() * availablePool.length)];
+    const format = picked.card.tokenOnly ? "token" : (Math.random() < 0.5 ? "typing" : "token");
+    setQs({ mode: "quiz", current: { ...picked, format }, combo: 0 });
+  };
+
+  const handleBack = () => setQs(s => ({ ...s, mode: "home", current: null }));
+
+  if (mode === "cleared") {
+    return (
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", background: "var(--bg2)", animation: "iosFadeIn 0.3s ease" }}>
+        <div className="ios-nav">
+          <div className="ios-nav-row">
+            <div className="ios-nav-title-group" style={{ gap: 16 }}>
+              <span className="cf-logo" onClick={() => onNavigate("home")} style={{ cursor: "pointer" }}>easy<b>C</b></span>
+              <div className="ios-nav-large-title">코딩 챌린지</div>
+            </div>
+          </div>
+        </div>
+        <div className="page" style={{ padding: "60px 20px var(--nav-h)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20, textAlign: "center" }}>
+          <div style={{ fontSize: 64, animation: "iosBounce 1.2s ease infinite" }}>🏆</div>
+          <div style={{ fontSize: 24, fontWeight: 900, letterSpacing: -0.5, color: "var(--label)" }}>다 풀었어!</div>
+          <div style={{ fontSize: 15, color: "var(--label2)", lineHeight: 1.7 }}>
+            배운 개념 문제를 모두 맞혔어.<br />한 번 더 돌아볼래?
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%" }}>
+            <button
+              style={{ width: "100%", padding: "15px 0", background: "var(--blue)", color: "#fff", borderRadius: 14, fontWeight: 700, fontSize: 16, border: "none", cursor: "pointer", boxShadow: "0 4px 14px rgba(0,122,255,0.3)" }}
+              onClick={handleLoopAgain}
+            >
+              🔄 다시 풀기
+            </button>
+            <button
+              style={{ width: "100%", padding: "15px 0", background: "rgba(0,0,0,0.06)", color: "var(--label)", borderRadius: 14, fontWeight: 600, fontSize: 16, border: "none", cursor: "pointer" }}
+              onClick={() => setQs(s => ({ ...s, mode: "home", current: null }))}
+            >
+              홈으로 가기
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (mode === "quiz" && current) {
+    return (
+      <div key={current.card.title} style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", background: "var(--bg2)", animation: "iosFadeIn 0.25s ease" }}>
+        <QuizView
+          current={current}
+          combo={combo}
+          solved={solved}
+          onSolved={handleSolved}
+          onWrong={handleWrong}
+          onNext={handleNext}
+          onBack={handleBack}
+        />
+      </div>
+    );
+  }
+
+  const hasPool = pool.length > 0;
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", background: "var(--bg2)" }}>
@@ -354,55 +517,66 @@ export default function CodePage({ onCorrect, onNavigate }) {
             <span className="cf-logo" onClick={() => onNavigate("home")} style={{ cursor: "pointer" }}>easy<b>C</b></span>
             <div className="ios-nav-large-title">코딩 챌린지</div>
           </div>
-          <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--label2)" }}>{solved.size}/{CHALLENGES.length}</div>
-            <div style={{ width: 60, height: 4, background: "rgba(0,0,0,0.05)", borderRadius: 2, marginTop: 4 }}>
-              <div style={{ width: `${(solved.size / CHALLENGES.length) * 100}%`, height: "100%", background: "var(--blue)", borderRadius: 2 }} />
+          {hasPool && (
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "var(--label2)" }}>{poolSolvedCount}/{pool.length}</div>
+              <div style={{ width: 60, height: 4, background: "rgba(0,0,0,0.05)", borderRadius: 2, marginTop: 4 }}>
+                <div style={{ width: `${pool.length > 0 ? (poolSolvedCount / pool.length) * 100 : 0}%`, height: "100%", background: "var(--blue)", borderRadius: 2 }} />
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
-      <div style={{ padding: "8px 20px 0" }}>
-        <div className="ios-segment"
-          onMouseDown={e => { e.currentTarget._isDown = true; e.currentTarget._startX = e.pageX - e.currentTarget.offsetLeft; e.currentTarget._scrollLeft = e.currentTarget.scrollLeft; e.currentTarget.style.cursor = 'grabbing'; }}
-          onMouseLeave={e => { e.currentTarget._isDown = false; e.currentTarget.style.cursor = 'grab'; }}
-          onMouseUp={e => { e.currentTarget._isDown = false; e.currentTarget.style.cursor = 'grab'; }}
-          onMouseMove={e => { if (!e.currentTarget._isDown) return; e.preventDefault(); const x = e.pageX - e.currentTarget.offsetLeft; const walk = (x - e.currentTarget._startX) * 2; e.currentTarget.scrollLeft = e.currentTarget._scrollLeft - walk; }}
-          onWheel={e => { if (e.deltaY !== 0) { e.preventDefault(); e.currentTarget.scrollLeft += e.deltaY; } }}
-        >
-          <button className={`ios-seg-item ${filter === "all" ? "active" : ""}`} onClick={() => setFilter("all")}>전체</button>
-          {stages.map(st => (
-            <button key={st.id} className={`ios-seg-item ${filter === `${st.id}` ? "active" : ""}`} onClick={() => setFilter(`${st.id}`)}>
-              {st.emoji}
+      <div className="page" style={{ padding: "32px 20px var(--nav-h)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 24 }}>
+        {hasPool ? (
+          <>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 52, marginBottom: 16 }}>🎲</div>
+              <div style={{ fontSize: 22, fontWeight: 900, letterSpacing: -0.5, color: "var(--label)", marginBottom: 8 }}>랜덤 코딩 챌린지</div>
+              <div style={{ fontSize: 15, color: "var(--label2)", lineHeight: 1.7 }}>
+                지금까지 배운 개념을<br />랜덤으로 테스트해봐!
+              </div>
+            </div>
+
+            <div style={{ width: "100%", background: "#fff", borderRadius: 16, padding: "16px 20px", boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, fontWeight: 700, color: "var(--label)", marginBottom: 10 }}>
+                <span>풀었던 문제</span>
+                <span style={{ color: "var(--blue)" }}>{poolSolvedCount} / {pool.length}</span>
+              </div>
+              <div style={{ height: 6, background: "rgba(0,0,0,0.06)", borderRadius: 3, overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${pool.length > 0 ? (poolSolvedCount / pool.length) * 100 : 0}%`, background: "var(--blue)", borderRadius: 3, transition: "width 0.5s ease" }} />
+              </div>
+              <div style={{ marginTop: 10, fontSize: 12, color: "var(--label3)" }}>
+                {stages.filter(s => completedStages.includes(s.id)).map(s => s.emoji).join("  ")} 챕터 기준
+              </div>
+            </div>
+
+            <button
+              style={{ width: "100%", padding: "16px 0", background: "var(--blue)", color: "#fff", borderRadius: 16, fontWeight: 800, fontSize: 18, border: "none", cursor: "pointer", boxShadow: "0 6px 20px rgba(0,122,255,0.3)" }}
+              onClick={startQuiz}
+            >
+              🎲 랜덤 문제 시작
             </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="page" style={{ padding: "16px 20px var(--nav-h)" }}>
-        {grouped.map(({ stage, items }) => (
-          <div key={stage.id} style={{ marginBottom: 24 }}>
-            <div className="ios-subsection-title">{stage.emoji} {stage.title}</div>
-            <div style={{ background: "#fff", borderRadius: 14, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
-              {items.map(ch => <ChallengeRow key={ch.title} ch={ch} onSelect={setSelected} solved={solved.has(ch.title)} />)}
+          </>
+        ) : (
+          <>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 52, marginBottom: 16 }}>📚</div>
+              <div style={{ fontSize: 22, fontWeight: 900, letterSpacing: -0.5, color: "var(--label)", marginBottom: 8 }}>아직 완료한 챕터가 없어</div>
+              <div style={{ fontSize: 15, color: "var(--label2)", lineHeight: 1.7 }}>
+                학습탭에서 챕터를 먼저 완료하면<br />여기서 테스트할 수 있어!
+              </div>
             </div>
-          </div>
-        ))}
+            <button
+              style={{ padding: "14px 32px", background: "var(--blue)", color: "#fff", borderRadius: 14, fontWeight: 700, fontSize: 16, border: "none", cursor: "pointer" }}
+              onClick={() => onNavigate("learn")}
+            >
+              학습하러 가기 →
+            </button>
+          </>
+        )}
       </div>
-
-      {selected && (
-        <SolveSheet
-          key={selected.title}
-          ch={selected}
-          onClose={() => setSelected(null)}
-          onMarkSolved={() => markSolved(selected.title)}
-          onNext={handleNext}
-          onCorrect={onCorrect}
-          onSaveInputs={(inputs) => saveInputs(selected.title, inputs)}
-          alreadySolved={solved.has(selected.title)}
-        />
-      )}
     </div>
   );
 }
