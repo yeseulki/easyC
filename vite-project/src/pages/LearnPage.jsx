@@ -883,7 +883,6 @@ function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge,
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 11, color: stage.color, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 6 }}>🛠️ 프로젝트</div>
             <h2 style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.5, lineHeight: 1.3, color: "#000", marginBottom: 10 }}>{card.title}</h2>
-            <p style={{ fontSize: 14, color: "#8e8e93", lineHeight: 1.7, marginBottom: 16, whiteSpace: "pre-line" }}>{card.description}</p>
           </div>
           <div className="cf-action-btn" style={{ marginTop: 10 }} onClick={() => onSave?.(card, stageIdx, cardIdx)}>
             <div className="cf-action-icon" style={{ width: 38, height: 38, fontSize: 18, color: isSaved ? stage.color : "#000" }}>{isSaved ? "🔖" : "📌"}</div>
