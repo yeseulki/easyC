@@ -306,7 +306,7 @@ function Explanations({ card, stage }) {
 
       {card.expectedOutput && (
         <div style={{ borderBottom: hintText ? "1px solid rgba(0,0,0,0.07)" : "none", marginBottom: hintText ? 6 : 0, paddingBottom: hintText ? 10 : 0 }}>
-          <OutputBlock label="목표 출력" text={card.expectedOutput} color={stage.color} />
+          <OutputBlock label="예시 출력" text={card.expectedOutput} color={stage.color} />
         </div>
       )}
 
@@ -469,7 +469,7 @@ function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate,
                     </div>
                   )) : (
                     <>
-                      <OutputBlock label="목표 출력" text={card.expectedOutput} color={stage.color} />
+                      <OutputBlock label="예시 출력" text={card.expectedOutput} color={stage.color} />
                       <OutputBlock label="내가 만든 출력" text={checkedOutput} color={stage.color} />
                     </>
                   )}
@@ -566,12 +566,56 @@ function ConceptLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNaviga
           <pre style={{ fontFamily: "monospace", fontSize: 14, color: stage.color, lineHeight: 1.85, margin: 0, whiteSpace: "pre-wrap" }}>{card.metaphor}</pre>
         </div>
 
+        {card.codeExample && (
+          <div className="cf-card" style={{ marginBottom: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "10px 14px 8px" }}>
+              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#ff5f56", flexShrink: 0 }} />
+              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#ffbd2e", flexShrink: 0 }} />
+              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#27c93f", flexShrink: 0 }} />
+              <span style={{ marginLeft: 6, fontSize: 11, color: "#8e8e93", fontFamily: "monospace" }}>코드 예시</span>
+            </div>
+            <div className="cf-code" style={{ paddingBottom: 14 }}>
+              {card.codeExample.split("\n").map((line, i) => {
+                const [code, ...rest] = line.split("←");
+                const annotation = rest.length ? "←" + rest.join("←") : null;
+                const isMain = annotation && annotation.includes("내가 쓰는");
+                return (
+                  <div key={i} style={{ display: "flex", alignItems: "center", whiteSpace: "pre", padding: "0 14px", lineHeight: 2 }}>
+                    <span style={{ color: "#c7c7cc", minWidth: 22, textAlign: "right", marginRight: 14, fontSize: 11, userSelect: "none", flexShrink: 0 }}>{i + 1}</span>
+                    <SyntaxLine raw={code} />
+                    {annotation && (
+                      <span style={{ fontSize: 13, fontWeight: isMain ? 700 : 500, color: isMain ? stage.color : "#3c3c43", marginLeft: 10, flexShrink: 0 }}>
+                        {annotation}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         <div style={{ background: "#fff", borderRadius: 16, padding: "20px 16px", marginBottom: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
           <div style={{ fontSize: 16, color: "#3c3c43", lineHeight: 1.8 }}>{highlight(card.content)}</div>
         </div>
 
-        <div style={{ background: flipped ? stage.color + "10" : "#fff", border: `1px solid ${flipped ? stage.color + "44" : "rgba(0,0,0,0.08)"}`, borderRadius: 16, padding: "14px 16px", cursor: "pointer", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", transition: "all 0.25s", marginBottom: 24 }} onClick={handleFlip}>
-          {!flipped ? <div style={{ textAlign: "center", color: "#8e8e93", fontSize: 14 }}>💡 탭해서 핵심 팁 보기</div> : <div style={{ fontSize: 14, color: stage.color, lineHeight: 1.7, animation: "iosFadeIn 0.2s ease" }}><b>핵심 팁:</b> {card.tip}</div>}
+        <div key={flipped ? "open" : "closed"} style={{ background: flipped ? stage.color + "10" : stage.color + "08", border: `1.5px solid ${flipped ? stage.color + "55" : stage.color + "33"}`, borderRadius: 16, padding: "16px", cursor: "pointer", boxShadow: flipped ? "none" : `0 2px 10px ${stage.color}22`, animation: "iosPop 0.35s cubic-bezier(0.2,1,0.2,1)", marginBottom: 24 }} onClick={handleFlip}>
+          {!flipped ? (
+            <div style={{ textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+              <span style={{ fontSize: 20 }}>💡</span>
+              <span style={{ fontSize: 15, fontWeight: 700, color: stage.color }}>핵심 팁 보기</span>
+              <span style={{ fontSize: 13, color: stage.color, opacity: 0.6 }}>탭!</span>
+            </div>
+          ) : (
+            <div style={{ animation: "iosPop 0.35s cubic-bezier(0.2,1,0.2,1)" }}>
+              <div style={{ fontSize: 12, fontWeight: 800, color: stage.color, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 10 }}>💡 핵심 팁</div>
+              {card.tip.split("\n").map((line, i) => (
+                <div key={i} style={{ fontSize: 16, color: "#1d1d1f", lineHeight: 1.75, marginBottom: i < card.tip.split("\n").length - 1 ? 6 : 0 }}>
+                  {line}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {isLast && (
@@ -951,6 +995,8 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
   const navDirection = useRef(0); // 1=앞으로, -1=뒤로
   const touchY = useRef(null);
   const isScrolling = useRef(false);
+  const [exiting, setExiting] = useState(false);
+  const exitDir = useRef(0);
 
   useEffect(() => {
     setStageIdx(Math.min(initialStage, maxAccessibleStage));
@@ -1037,9 +1083,9 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
         return;
       }
       if (card.type === "project" && solved && !showBadgePage) {
-        onCardChange?.();
-        setShowBadgePage(true);
-        setKey(k => k + 1);
+        exitDir.current = d;
+        setExiting(true);
+        setTimeout(() => { setExiting(false); onCardChange?.(); setShowBadgePage(true); setKey(k => k + 1); }, 120);
         return;
       }
       if (card.type === "project" && !solved) {
@@ -1053,26 +1099,31 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
     } else {
       // 뒤로 가기: 뱃지 페이지 → 프로젝트 폼으로 돌아가기
       if (card.type === "project" && showBadgePage) {
-        onCardChange?.();
-        setShowBadgePage(false);
-        setKey(k => k + 1);
+        exitDir.current = d;
+        setExiting(true);
+        setTimeout(() => { setExiting(false); onCardChange?.(); setShowBadgePage(false); setKey(k => k + 1); }, 120);
         return;
       }
     }
-    onCardChange?.(); // 카드 이동 시 토스트 제거
-    navDirection.current = d;
-    setKey(k => k + 1);
-    if (d > 0) {
-      if (cardIdx < total - 1)               { setCardIdx(c => c + 1); }
-      else if (stageIdx < stages.length - 1) { onComplete?.(stage.id); setStageIdx(s => s + 1); setCardIdx(0); }
-      else                                   { onComplete?.(stage.id); }
-    } else {
-      if (cardIdx > 0)                       { setCardIdx(c => c - 1); }
-      else if (stageIdx > 0)                 { setStageIdx(s => s - 1); setCardIdx(stages[stageIdx - 1].cards.filter(c => !c.tokenOnly).length - 1); }
-    }
+    exitDir.current = d;
+    setExiting(true);
+    setTimeout(() => {
+      setExiting(false);
+      onCardChange?.();
+      navDirection.current = d;
+      setKey(k => k + 1);
+      if (d > 0) {
+        if (cardIdx < total - 1)               { setCardIdx(c => c + 1); }
+        else if (stageIdx < stages.length - 1) { onComplete?.(stage.id); setStageIdx(s => s + 1); setCardIdx(0); }
+        else                                   { onComplete?.(stage.id); }
+      } else {
+        if (cardIdx > 0)                       { setCardIdx(c => c - 1); }
+        else if (stageIdx > 0)                 { setStageIdx(s => s - 1); setCardIdx(stages[stageIdx - 1].cards.filter(c => !c.tokenOnly).length - 1); }
+      }
+    }, 120);
   };
 
-  const onTS = e => { 
+  const onTS = e => {
     touchY.current = e.touches[0].clientY; 
   };
   const onTE = e => {
@@ -1172,7 +1223,7 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
       </div>
 
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        <div key={key} style={{ flex: 1, overflow: "hidden", animation: `${navDirection.current >= 0 ? "cardSlideInUp" : "cardSlideInDown"} 0.3s cubic-bezier(0.25,0.46,0.45,0.94)` }}>
+        <div key={key} style={{ flex: 1, overflow: "hidden", animation: exiting ? `${exitDir.current >= 0 ? "cardSlideOutUp" : "cardSlideOutDown"} 0.12s ease forwards` : `${navDirection.current >= 0 ? "cardSlideInUp" : "cardSlideInDown"} 0.22s cubic-bezier(0.2,0,0,1)` }}>
           {card.type === "concept" && <ConceptLearnCard scrollRef={scrollRef} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={displayTotal} onNavigate={onNavigate} isLast={isLast} onSave={onSave} savedItems={savedItems} onTipViewed={() => onTipViewed?.(stageIdx, cardIdx)} />}
           {card.type === "code"    && <CodeLearnCard scrollRef={scrollRef} key={`code-${stageIdx}-${cardIdx}`} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={displayTotal} onNavigate={onNavigate} isLast={isLast} onSave={onSave} savedItems={savedItems} onSolvedChange={setSolvedSync} onCorrect={onCorrect} onGoNext={() => go(1)} initialAnswer={progress.cardAnswers[`${stage.id}-${cardIdx}`]} onUpdateAnswer={onUpdateAnswer} />}
           {card.type === "project" && <ProjectLearnCard scrollRef={scrollRef} stage={stage} card={card} cardIdx={cardIdx} stageIdx={stageIdx} totalCards={displayTotal} onBadge={onBadge} onNavigate={onNavigate} isLast={isLast} onSolvedChange={setSolvedSync} onCorrect={onCorrect} onGoNext={() => go(1)} initialAnswer={progress.cardAnswers[`${stage.id}-${cardIdx}`]} onUpdateAnswer={onUpdateAnswer} badges={badges} onSave={onSave} savedItems={savedItems} showBadgePage={showBadgePage} onInputFocus={handleInputFocus} onInputBlur={handleInputBlur} />}

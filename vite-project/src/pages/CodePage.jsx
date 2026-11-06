@@ -243,6 +243,8 @@ function QuizView({ current, combo, onSolved, onWrong, onNext, onBack }) {
   const [answerFlash, setAnswerFlash] = useState(null); // "ok" | "err" | null
   const [comboToast, setComboToast] = useState(null);
   const [exiting, setExiting] = useState(false);
+  const touchY = useRef(null);
+  const scrollRef = useRef(null);
 
   // 카드 바뀔 때마다 justSolved, exiting 초기화
   useEffect(() => { setJustSolved(false); setExiting(false); }, [current]);
@@ -266,7 +268,7 @@ function QuizView({ current, combo, onSolved, onWrong, onNext, onBack }) {
 
   const handleGoNext = () => {
     setExiting(true);
-    setTimeout(() => onNext(), 160);
+    setTimeout(() => onNext(), 120);
   };
 
   const handleSolvedInner = () => {
@@ -285,8 +287,31 @@ function QuizView({ current, combo, onSolved, onWrong, onNext, onBack }) {
 
   const cc = comboColor(combo);
 
+  const isScrolling = useRef(false);
+
+  const onTS = e => { touchY.current = e.touches[0].clientY; };
+  const onTE = e => {
+    if (!touchY.current) return;
+    const dy = touchY.current - e.changedTouches[0].clientY;
+    touchY.current = null;
+    if (!justSolved || dy < 45) return;
+    const sc = scrollRef.current;
+    if (sc && sc.scrollHeight - sc.scrollTop > sc.clientHeight + 5) return;
+    handleGoNext();
+  };
+  const onWheel = e => {
+    if (!justSolved || e.deltaY <= 0) return;
+    if (isScrolling.current) return;
+    if (Math.abs(e.deltaY) < 30) return;
+    const sc = scrollRef.current;
+    if (sc && sc.scrollHeight - sc.scrollTop > sc.clientHeight + 5) return;
+    isScrolling.current = true;
+    handleGoNext();
+    setTimeout(() => { isScrolling.current = false; }, 600);
+  };
+
   return (
-    <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}>
+    <div onTouchStart={onTS} onTouchEnd={onTE} onWheel={onWheel} style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}>
 
       {/* 정답/오답 플래시 오버레이 */}
       {answerFlash && (
@@ -338,8 +363,8 @@ function QuizView({ current, combo, onSolved, onWrong, onNext, onBack }) {
         </div>
       </div>
 
-      {/* 콘텐츠 — 다음 문제 이동 시 페이드아웃 */}
-      <div className="page" style={{ padding: "16px 20px var(--nav-h)", opacity: exiting ? 0 : 1, transition: "opacity 0.15s ease" }}>
+      {/* 콘텐츠 — 다음 문제 이동 시 슬라이드아웃 */}
+      <div ref={scrollRef} className="page" style={{ padding: "16px 20px var(--nav-h)", animation: exiting ? "cardSlideOutUp 0.12s ease forwards" : undefined }}>
         {/* 스테이지 뱃지 + 제목 */}
         <div style={{ marginBottom: 16 }}>
           <span style={{ display: "inline-flex", alignItems: "center", gap: 6, background: stage.color + "15", color: stage.color, fontSize: 12, fontWeight: 700, padding: "4px 10px", borderRadius: 100, marginBottom: 10 }}>
@@ -370,14 +395,12 @@ function QuizView({ current, combo, onSolved, onWrong, onNext, onBack }) {
           />
         )}
 
-        {/* 정답 후 다음 버튼 */}
+        {/* 정답 후 스와이프 안내 */}
         {justSolved && (
-          <button
-            style={{ width: "100%", marginTop: 14, padding: "14px 0", background: "#34c759", color: "#fff", borderRadius: 14, fontWeight: 700, fontSize: 17, border: "none", cursor: "pointer", boxShadow: "0 4px 14px rgba(52,199,89,0.3)", animation: "iosPop 0.35s ease" }}
-            onClick={handleGoNext}
-          >
-            다음 문제 →
-          </button>
+          <div style={{ textAlign: "center", marginTop: 20, animation: "iosFadeIn 0.4s ease" }}>
+            <div style={{ fontSize: 22, marginBottom: 6, opacity: 0.5 }}>↑</div>
+            <div style={{ fontSize: 13, color: "var(--label3)", fontWeight: 600 }}>위로 스와이프해서 다음 문제</div>
+          </div>
         )}
       </div>
     </div>
@@ -493,7 +516,7 @@ export default function CodePage({ onCorrect, onNavigate, progress, onCardChange
 
   if (mode === "quiz" && current) {
     return (
-      <div key={current.card.title} style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", background: "var(--bg2)", animation: "iosFadeIn 0.25s ease" }}>
+      <div key={current.card.title} style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", background: "var(--bg2)", animation: "cardSlideInUp 0.22s cubic-bezier(0.2,0,0,1)" }}>
         <QuizView
           current={current}
           combo={combo}

@@ -80,8 +80,10 @@ button:active { opacity: 0.55; transition: opacity 0.08s; }
 @keyframes iosSlideUp   { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 @keyframes iosSlideDown { from { transform: translateY(-18px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 @keyframes iosFadeScale { from { transform: scale(0.94); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-@keyframes cardSlideInUp   { from { transform: translateY(32px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-@keyframes cardSlideInDown { from { transform: translateY(-32px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes cardSlideInUp   { from { transform: translateY(48px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes cardSlideInDown { from { transform: translateY(-48px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes cardSlideOutUp   { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-48px); opacity: 0; } }
+@keyframes cardSlideOutDown { from { transform: translateY(0); opacity: 1; } to { transform: translateY(48px); opacity: 0; } }
 @keyframes iosFadeIn    { from { opacity: 0; } to { opacity: 1; } }
 @keyframes iosPop       { 0% { transform: scale(0.82); opacity: 0; } 65% { transform: scale(1.04); } 100% { transform: scale(1); opacity: 1; } }
 @keyframes iosBounce    { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }

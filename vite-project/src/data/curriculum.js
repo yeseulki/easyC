@@ -11,9 +11,10 @@ export const stages = [
         type: "concept",
         title: "코드는 컴퓨터에게 보내는 편지야",
         content:
-          "C 코드에는 항상 쓰는 틀이 있어. 그 안에 내가 원하는 내용을 채우면 돼.\n\n틀 (항상 같음) → #include / main( ) { } / return 0\n내가 쓰는 줄 → printf 줄\n\n컴퓨터는 위에서 아래로 한 줄씩 실행해.",
-        metaphor: "📬 편지 봉투 (항상 같은 형식) → #include / main( ) { } / return 0\n✏️ 편지 본문 (내가 쓰는 내용) → printf(\"...\");",
-        tip: "#include나 main은 지금 외울 필요 없어. printf 한 줄에만 집중해봐.",
+          "컴퓨터는 코드를 위에서 아래로 한 줄씩 실행해.\n\n틀은 지금 '이런 게 있구나' 정도만 알고 넘어가도 돼.",
+        metaphor: "📬 편지 봉투 (항상 같은 형식) → 틀\n✏️ 편지 본문 (내가 쓰는 내용) → printf(\"...\");",
+        codeExample: "#include <stdio.h>     ← 틀\nint main() {           ← 틀\n  printf(\"안녕!\");   ← ✏️ 내가 쓰는 줄\n  return 0;            ← 틀\n}                      ← 틀",
+        tip: "printf(\"...\")는 화면에 글자를 출력하는 함수야.\n괄호 안 큰따옴표 사이에 원하는 글자를 쓰면 그대로 출력돼.\n문장 끝에는 세미콜론(;)을 꼭 붙여야 해!",
       },
       {
         type: "code",
@@ -164,6 +165,7 @@ export const stages = [
         title: "미니 프로젝트: 나만의 명함 만들기",
         description: "지금까지 배운 걸 써서 직접 완성해봐.\n괄호만 미리 넣어뒀어.",
         badge: "🏆 Hello 마스터",
+        expectedOutput: "=== 나의 명함 ===\n홍길동\n한국중학교",
         displayMode: "cells",
         prefilledCode: '  printf("=== 나의 명함 ===\\n");',
         fullCode: '#include <stdio.h>\nint main() {\n  printf("=== 나의 명함 ===\\n");\n  return 0;\n}',
