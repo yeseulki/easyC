@@ -83,6 +83,22 @@ Single source of truth: an array of 8 `stages`, each with `cards`. Three card ty
 
 정답 후 자동 넘김 없음 — `check()`에서 `status === "ok"` 이면 그냥 return. 사용자가 직접 스와이프/스크롤로 넘겨야 함. 미니프로젝트도 동일.
 
+### dynamicOutput / dynamicHints (2026-11-07 추가)
+
+`curriculum.js` code/project 카드에 선택적으로 추가 가능한 함수 필드:
+
+- **`dynamicOutput(groupValues)`** — `groupId`로 묶인 슬롯의 현재 선택값을 받아 출력 결과를 반환. 정답이면 `string`, 오답이면 `Array<{output: string|null, note: string}>`. `LearnPage`의 오답 해설 카드("🔍 뭐가 틀렸나 봐봐")에서 배열/문자열을 구분해 렌더링.
+- **`dynamicHints(cellStatuses)`** — 미니프로젝트 전용. 셀별 "ok"/"err" 배열을 받아 틀린 범주에 해당하는 힌트 문자열 배열만 반환. `ProjectLearnCard`에서 오답 후 별도 카드로 표시, 타이핑 시 사라짐.
+
+### 코딩탭 (CodePage) 주요 구조 (2026-11-07 정비)
+
+- **문제 형식**: 토큰(슬롯 선택) / 타이핑(직접 입력) 랜덤 출제. `card.tokenOnly: true`면 항상 토큰 모드.
+- **상태 묶음**: `qs = { mode, current, combo }` — 세 값을 하나의 객체로 atomic 업데이트해 흰 화면 버그 방지.
+- **`startQuiz`**: `solved` 초기화가 필요한지 판단 후 `effectiveSolved`로 후보 풀 계산. `pickRandom`을 쓰지 않고 직접 선택.
+- **`QuizView`**: `const { card, stage, format } = current`를 함수 최상단에 선언 (useEffect deps에서 `format` 참조 전에 반드시 선언되어야 TDZ 오류 없음).
+- **콤보**: 연속 정답 시 `combo` 증가, 오답 시 0 초기화. 마일스톤(2/3/5/10)에 토스트 팝업.
+- **칸별 색상**: `CodeTypingChallenge`의 `inputStatuses` / `SlotCodePicker`의 `slotStatuses` — 확인 후 맞은 칸 초록, 틀린 칸 빨간 색상.
+
 ### Deployment
 
 Uses `@vercel/analytics` (auto-injected via `<Analytics />` in `App.jsx`). Deployed to Vercel.
