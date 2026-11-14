@@ -376,7 +376,7 @@ html, body, #root { height: 100%; font-family: -apple-system, BlinkMacSystemFont
 .cf-beta { background: var(--blue); color: #fff; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 100px; }
 .ios-hscroll { display:flex; gap:10px; overflow-x:auto; padding-bottom:2px; -webkit-overflow-scrolling:touch; user-select: none; }
 /* 학습 탭 스테이지 배너: 위아래 여백을 넣어 조금 높게 (세로·가로 공통) */
-.learn-stage-bar .ios-hscroll { padding-top: 10px; padding-bottom: 10px; }
+.learn-stage-bar .ios-hscroll { padding-top: 10px; padding-bottom: 10px; padding-left: 20px; /* 첫 스테이지 버튼이 화면 끝에 붙지 않게 (카드 좌우 여백 20px과 맞춤) */ }
 .ios-chevron { color:rgba(60,60,67,0.25); font-size:19px; margin-left:auto; }
 
 /* iOS Utilities */
