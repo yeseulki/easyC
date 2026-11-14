@@ -158,8 +158,9 @@ export default function ProfilePage({ badges, progress, savedItems = [], onNavig
                   localStorage.removeItem("easycTutorialProject");
                   alert("튜토리얼이 초기화됐어! 다음에 각 카드를 열면 다시 볼 수 있어.");
                 }}
+                className="tutorial-reset-btn"
                 style={{
-                  width: "100%", background: "none", border: "none",
+                  width: "100%", border: "none",
                   padding: "16px", display: "flex", alignItems: "center", gap: 12,
                   cursor: "pointer", textAlign: "left",
                 }}
@@ -171,7 +172,7 @@ export default function ProfilePage({ badges, progress, savedItems = [], onNavig
                   <div style={{ fontSize: 15, fontWeight: 600, color: "var(--label)" }}>튜토리얼 다시 보기</div>
                   <div style={{ fontSize: 12, color: "var(--label2)", marginTop: 2 }}>각 카드에서 처음 안내를 다시 볼 수 있어</div>
                 </div>
-                <span style={{ color: "var(--blue)", fontSize: 18 }}>›</span>
+                <span className="tutorial-reset-pill">다시 보기</span>
               </button>
             </div>
           </div>

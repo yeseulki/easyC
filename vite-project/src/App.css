@@ -213,6 +213,26 @@ html, body, #root { height: 100%; font-family: -apple-system, BlinkMacSystemFont
   user-select: none; -webkit-user-select: none; /* 여러 번 눌러도 글자 선택 안 되게 */
   -webkit-tap-highlight-color: transparent;
 }
+/* 내 정보 탭 "튜토리얼 다시 보기" — 눌리는 버튼 느낌 */
+.tutorial-reset-btn {
+  background: #fff;
+  user-select: none; -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s ease, transform 0.12s ease;
+}
+.tutorial-reset-btn:hover { background: #f7f8fc; }
+.tutorial-reset-btn:active { background: #eef1f8; transform: scale(0.985); }
+.tutorial-reset-pill {
+  flex-shrink: 0; white-space: nowrap;
+  background: var(--blue); color: #fff;
+  font-size: 13px; font-weight: 700;
+  padding: 8px 14px; border-radius: 100px;
+  box-shadow: 0 3px 10px rgba(0,122,255,0.25);
+  transition: transform 0.12s ease, box-shadow 0.15s ease;
+}
+.tutorial-reset-btn:hover .tutorial-reset-pill { box-shadow: 0 4px 14px rgba(0,122,255,0.35); }
+.tutorial-reset-btn:active .tutorial-reset-pill { transform: scale(0.95); }
+
 /* 📌 ↔ 🔖 저장 아이콘 — 서서히 바뀜 */
 .save-icon { position: relative; display: inline-block; width: 1.25em; height: 1.25em; line-height: 1; }
 .save-icon > span {
