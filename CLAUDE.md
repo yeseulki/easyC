@@ -66,7 +66,7 @@ Single source of truth: an array of 8 `stages`, each with `cards`. Three card ty
 - **`OnboardingOverlay`** — first-launch nickname setup modal
 - **`DrumTutorialOverlay`** — code 카드 첫 진입 튜토리얼 (3슬라이드: 토큰탭 / 자연어해석 / 저장). localStorage: `easycDrumTutorialSeen`
 - **`ConceptTutorialOverlay`** — concept 카드 첫 진입 튜토리얼 (1슬라이드: 팁 탭 체험). localStorage: `easycTutorialConcept`
-- **`ProjectTutorialOverlay`** — project 카드 첫 진입 튜토리얼 (1슬라이드: 타이핑 안내). localStorage: `easycTutorialProject`
+- **`ProjectTutorialOverlay`** — project 카드 첫 진입 튜토리얼 (1슬라이드: 타이핑 안내 + 칸 색 설명: 보라색=정답 있음, 하늘색=자유 입력). localStorage: `easycTutorialProject`
 
 ### Hooks (`src/hooks/`, 2026-11-14 추가)
 
@@ -93,10 +93,18 @@ LearnPage와 CodePage 모두 동일한 방식으로 동작. `index.css`에 4개 
 - `showToast(msg, correct)` — 2초 후 자동 페이드아웃 (0.18s)
 - `dismissToast()` — 카드 이동/뱃지 페이지 전환 시 즉시 페이드아웃
 - `onCardChange` prop으로 LearnPage → App에 카드 이동 이벤트 전달
+- 📌 저장/저장 취소 때는 토스트 없음 (2026-11-14 삭제). 저장 아이콘(`.save-icon`, App.css)은 📌↔🔖가 0.25s 동안 서서히 바뀌고, `.cf-action-btn`은 여러 번 눌러도 글자 선택 안 됨(`user-select: none`)
 
 ### 미니프로젝트 셀 검사 (2026-11-05 추가)
 
 `ProjectLearnCard`의 `getCellStatuses(arr)` 함수가 각 입력 칸별 "ok"/"err" 배열을 반환. `CellsDisplay`에 `cellStatuses` prop으로 전달해 맞은 칸은 초록, 틀린 칸은 빨간 테두리/배경으로 표시. 타이핑 시 `setCellStatuses([])` 로 초기화.
+
+- **자유 입력 칸** (2026-11-14): `cell.free: true`인 칸은 `.cf-input-slot.free`(App.css)로 하늘색 표시 → 정답 없이 마음대로 쓰는 칸.
+- **`exampleOutput(inputs)`** (curriculum.js project 카드, 선택): 있으면 `Explanations`의 예시 출력이 입력값으로 바로 바뀜 (명함 카드: 이름/학교 칸 → 비어 있으면 홍길동/한국중학교).
+
+### 자연어 해석 모션 (2026-11-14)
+
+학습 탭 `KoreanLine` 컴포넌트. 가로 화면(`smooth={isWide}`)에선 `grid-template-rows 0fr↔1fr` 전환으로 해석 줄이 0.3s 동안 서서히 늘어나고 줄어듦. 세로 화면은 기존(바로 나타남 + fade).
 
 ### 코드 카드 정답 흐름 (2026-11-05 변경)
 

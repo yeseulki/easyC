@@ -477,8 +477,8 @@ function QuizView({ current, combo, onSolved, onWrong, onNext, onPrev, canPrev, 
             </span>
             {/* 📌 저장 (학습 탭 카드와 같은 아이콘) */}
             <button onClick={handleSaveCard} title={isSaved ? "저장 취소" : "저장하기"}
-              style={{ marginLeft: "auto", width: 30, height: 30, borderRadius: "50%", background: "rgba(255,255,255,0.92)", boxShadow: "0 2px 8px rgba(0,0,0,0.1)", border: "none", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, cursor: "pointer", flexShrink: 0 }}>
-              {isSaved ? "🔖" : "📌"}
+              style={{ userSelect: "none", WebkitUserSelect: "none", marginLeft: "auto", width: 30, height: 30, borderRadius: "50%", background: "rgba(255,255,255,0.92)", boxShadow: "0 2px 8px rgba(0,0,0,0.1)", border: "none", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, cursor: "pointer", flexShrink: 0 }}>
+              <span className="save-icon"><span className={isSaved ? "off" : ""}>📌</span><span className={isSaved ? "" : "off"}>🔖</span></span>
             </button>
             <button style={{ background: "rgba(0,0,0,0.06)", border: "none", borderRadius: 8, padding: "4px 10px", fontSize: 12, fontWeight: 600, color: "#3c3c43", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}
               onClick={onBack}>나가기</button>

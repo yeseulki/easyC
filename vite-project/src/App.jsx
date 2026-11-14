@@ -114,11 +114,9 @@ export default function App() {
     const isAlreadySaved = savedItems.some(item => item.title === card.title);
     if (isAlreadySaved) {
       updateSavedItems(savedItems.filter(item => item.title !== card.title));
-      showToast("🔖 저장이 취소되었습니다.");
     } else {
       // 화면에서 쓰는 값(제목·종류·위치)만 저장 — 카드 전체엔 함수(dynamicOutput 등)가 있어 저장이 안 됨
       updateSavedItems([...savedItems, { title: card.title, type: card.type, stageIdx, cardIdx }]);
-      showToast("🔖 학습 카드가 저장되었습니다.", true);
     }
   };
 

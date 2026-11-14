@@ -204,6 +204,14 @@ export const stages = [
         // flat inputs per slot: printf(0) / "(1) / 자유입력(2) / \n(3) / "(4) / ;(5)
         // 슬롯 0 → index 0~5, 슬롯 1 → index 6~11
         // 자유입력(이름/학교)은 index 2, 8
+        // 예시 출력 — 이름/학교 칸에 쓴 내용이 바로 반영됨 (비어 있으면 기본 예시)
+        exampleOutput: (inputs) => {
+          const name   = (inputs[2] || "").trim() || "홍길동";
+          const school = (inputs[8] || "").trim() || "한국중학교";
+          return `=== 나의 명함 ===
+${name}
+${school}`;
+        },
         dynamicOutput: (inputs) => {
           const name   = inputs[2] || "___";
           const school = inputs[8] || "___";

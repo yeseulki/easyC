@@ -164,7 +164,23 @@ function LineWithSlotsPlaceholder({ raw, nonFixed, sel, onSel, groupColorMap }) 
 }
 
 /* ── Build code lines with inline slots ── */
-function CodeWithSlots({ card, color, sel, onSel, showKorean, nonFixed }) {
+// 자연어 해석 한 줄 — smooth(가로 화면)면 높이가 서서히 늘어나고 줄어듦
+function KoreanLine({ line, show, smooth }) {
+  if (line.trim() === "") return null;
+  const textStyle = { paddingLeft: 36, marginTop: 2, fontSize: 12, color: "var(--blue)", fontWeight: 600, opacity: 0.8 };
+  if (!smooth) {
+    return show ? <div style={{ ...textStyle, animation: "iosFadeIn 0.3s ease" }}>{translateLine(line)}</div> : null;
+  }
+  return (
+    <div style={{ display: "grid", gridTemplateRows: show ? "1fr" : "0fr", opacity: show ? 1 : 0, transition: "grid-template-rows 0.3s ease, opacity 0.3s ease" }}>
+      <div style={{ overflow: "hidden", minHeight: 0 }}>
+        <div style={textStyle}>{translateLine(line)}</div>
+      </div>
+    </div>
+  );
+}
+
+function CodeWithSlots({ card, color, sel, onSel, showKorean, nonFixed, smooth = false }) {
   const slotColors = ["#007aff", "#af52de", "#ff9500", "#34c759", "#30b0c7"];
   // groupId 있으면 같은 groupId끼리 같은 색, 없으면 슬롯 인덱스 기반
   const groupColorMap = {};
@@ -195,7 +211,7 @@ function CodeWithSlots({ card, color, sel, onSel, showKorean, nonFixed }) {
     >
       {fullLines.map((line, li) => {
         return (
-          <div key={li} style={{ display: "flex", flexDirection: "column", width: "max-content", minWidth: "100%", marginBottom: showKorean ? 8 : 0 }}>
+          <div key={li} style={{ display: "flex", flexDirection: "column", width: "max-content", minWidth: "100%", marginBottom: showKorean ? 8 : 0, transition: smooth ? "margin-bottom 0.3s ease" : undefined }}>
             <div style={{ display: "flex", alignItems: "center", gap: 0, whiteSpace: "pre" }}>
               <span style={{ color: "#c7c7cc", minWidth: 22, textAlign: "right", marginRight: 14, fontSize: 11, userSelect: "none", flexShrink: 0 }}>{li + 1}</span>
               {card.useSlotPlaceholders
@@ -203,11 +219,7 @@ function CodeWithSlots({ card, color, sel, onSel, showKorean, nonFixed }) {
                 : <LineWithSlots raw={line} card={card} sel={sel} onSel={onSel} color={color} slotColors={slotColors} />
               }
             </div>
-            {showKorean && line.trim() !== "" && (
-              <div style={{ paddingLeft: 36, marginTop: 2, fontSize: 12, color: "var(--blue)", fontWeight: 600, opacity: 0.8, animation: "iosFadeIn 0.3s ease" }}>
-                {translateLine(line)}
-              </div>
-            )}
+            <KoreanLine line={line} show={showKorean} smooth={smooth} />
           </div>
         );
       })}
@@ -298,7 +310,8 @@ function OutputBlock({ label, text, color }) {
   );
 }
 
-function Explanations({ card, stage }) {
+function Explanations({ card, stage, outputText }) {
+  const shownOutput = outputText ?? card.expectedOutput;
   const hintText = card.hint ?? card.hints?.[0];
 
   return (
@@ -312,7 +325,7 @@ function Explanations({ card, stage }) {
 
       {card.expectedOutput && (
         <div style={{ borderBottom: hintText ? "1px solid rgba(0,0,0,0.07)" : "none", marginBottom: hintText ? 6 : 0, paddingBottom: hintText ? 10 : 0 }}>
-          <OutputBlock label="예시 출력" text={card.expectedOutput} color={stage.color} />
+          <OutputBlock label="예시 출력" text={shownOutput} color={stage.color} />
         </div>
       )}
 
@@ -432,7 +445,7 @@ function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate,
           {showKorean ? "원본 코드" : "자연어 해석"}
         </button>
       </div>
-      <CodeWithSlots card={processedCard} color={stage.color} sel={sel} onSel={pick} showKorean={showKorean} nonFixed={nonFixed} />
+      <CodeWithSlots card={processedCard} color={stage.color} sel={sel} onSel={pick} showKorean={showKorean} nonFixed={nonFixed} smooth={isWide} />
     </div>
   );
 
@@ -495,7 +508,7 @@ function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate,
             <h2 style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.4, lineHeight: 1.3, color: "#000" }}>{card.title}</h2>
           </div>
           <div className="cf-action-btn" style={{ marginTop: 10 }} onClick={() => onSave?.(card, stageIdx, cardIdx)}>
-            <div className="cf-action-icon" style={{ width: 38, height: 38, fontSize: 18, color: isSaved ? stage.color : "#000" }}>{isSaved ? "🔖" : "📌"}</div>
+            <div className="cf-action-icon" style={{ width: 38, height: 38, fontSize: 18, color: isSaved ? stage.color : "#000" }}><span className="save-icon"><span className={isSaved ? "off" : ""}>📌</span><span className={isSaved ? "" : "off"}>🔖</span></span></div>
           </div>
         </div>
 
@@ -676,7 +689,7 @@ function ConceptLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNaviga
             <h2 style={{ fontSize: 22, fontWeight: 900, letterSpacing: -0.5, lineHeight: 1.3, color: "#000", marginBottom: 16, borderLeft: `3px solid ${stage.color}`, paddingLeft: 12 }}>{card.title}</h2>
           </div>
           <div className="cf-action-btn" onClick={() => onSave?.(card, stageIdx, cardIdx)} style={{ marginTop: 4 }}>
-            <div className="cf-action-icon" style={{ width: 38, height: 38, fontSize: 18, color: isSaved ? stage.color : "#000" }}>{isSaved ? "🔖" : "📌"}</div>
+            <div className="cf-action-icon" style={{ width: 38, height: 38, fontSize: 18, color: isSaved ? stage.color : "#000" }}><span className="save-icon"><span className={isSaved ? "off" : ""}>📌</span><span className={isSaved ? "" : "off"}>🔖</span></span></div>
           </div>
         </div>
 
@@ -737,7 +750,7 @@ function LineWithTypingSlots({ raw, onInputChange, inputs }) {
   );
 }
 
-function CodeWithTypingSlots({ card, inputs, onInputChange, showKorean }) {
+function CodeWithTypingSlots({ card, inputs, onInputChange, showKorean, smooth = false }) {
   const fullLines = card.fullCode.split("\n");
   let slotCounter = 0;
 
@@ -758,7 +771,7 @@ function CodeWithTypingSlots({ card, inputs, onInputChange, showKorean }) {
         slotCounter += slotsInLine;
         
         return (
-          <div key={li} style={{ display: "flex", flexDirection: "column", width: "max-content", minWidth: "100%", marginBottom: showKorean ? 8 : 0 }}>
+          <div key={li} style={{ display: "flex", flexDirection: "column", width: "max-content", minWidth: "100%", marginBottom: showKorean ? 8 : 0, transition: smooth ? "margin-bottom 0.3s ease" : undefined }}>
             <div style={{ display: "flex", alignItems: "center", gap: 0, whiteSpace: "pre" }}>
               <span style={{ color: "#c7c7cc", minWidth: 22, textAlign: "right", marginRight: 14, fontSize: 11, userSelect: "none", flexShrink: 0 }}>{li + 1}</span>
               <LineWithTypingSlots
@@ -767,11 +780,7 @@ function CodeWithTypingSlots({ card, inputs, onInputChange, showKorean }) {
                 inputs={lineInputs}
               />
             </div>
-            {showKorean && line.trim() !== "" && (
-              <div style={{ paddingLeft: 36, marginTop: 2, fontSize: 12, color: "var(--blue)", fontWeight: 600, opacity: 0.8, animation: "iosFadeIn 0.3s ease" }}>
-                {translateLine(line)}
-              </div>
-            )}
+            <KoreanLine line={line} show={showKorean} smooth={smooth} />
           </div>
         );
       })}
@@ -825,7 +834,7 @@ function CellsDisplay({ card, inputs, onInputChange, stageColor, onInputFocus, o
                   onBlur={onInputBlur}
                   spellCheck="false"
                   placeholder={cell.placeholder || ""}
-                  className="cf-input-slot"
+                  className={cell.free ? "cf-input-slot free" : "cf-input-slot"}
                   style={{
                     width: w, minWidth: 24, flexShrink: 0,
                     ...(cs === "ok"  ? { borderColor: "#34c759", background: "rgba(52,199,89,0.12)",  color: "#1a7a2e" } : {}),
@@ -899,11 +908,6 @@ function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge,
     return checkAllCells(initialAnswer) ? "ok" : null;
   });
   const pct = Math.round(((cardIdx + 1) / totalCards) * 100);
-
-  const computedOutput = useMemo(() => {
-    if (!card.dynamicOutput) return null;
-    return card.dynamicOutput(inputs);
-  }, [card.dynamicOutput, inputs]);
 
   const handleInputChange = (index, value) => {
     const newInputs = [...inputs];
@@ -1002,7 +1006,7 @@ function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge,
             <h2 style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.5, lineHeight: 1.3, color: "#000", marginBottom: 10 }}>{card.title}</h2>
           </div>
           <div className="cf-action-btn" style={{ marginTop: 10 }} onClick={() => onSave?.(card, stageIdx, cardIdx)}>
-            <div className="cf-action-icon" style={{ width: 38, height: 38, fontSize: 18, color: isSaved ? stage.color : "#000" }}>{isSaved ? "🔖" : "📌"}</div>
+            <div className="cf-action-icon" style={{ width: 38, height: 38, fontSize: 18, color: isSaved ? stage.color : "#000" }}><span className="save-icon"><span className={isSaved ? "off" : ""}>📌</span><span className={isSaved ? "" : "off"}>🔖</span></span></div>
           </div>
         </div>
 
@@ -1022,7 +1026,7 @@ function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge,
           </div>
           {card.displayMode === "cells"
             ? <CellsDisplay card={card} inputs={inputs} onInputChange={handleInputChange} stageColor={stage.color} onInputFocus={onInputFocus} onInputBlur={onInputBlur} cellStatuses={cellStatuses} />
-            : <CodeWithTypingSlots card={card} inputs={inputs} onInputChange={handleInputChange} showKorean={showKorean} />
+            : <CodeWithTypingSlots card={card} inputs={inputs} onInputChange={handleInputChange} showKorean={showKorean} smooth={isWide} />
           }
         </div>
 
@@ -1030,7 +1034,7 @@ function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge,
         {/* 오른쪽: 설명 → 힌트 (가로 화면에선 정답 확인 버튼이 하단 고정) */}
         <div className={isWide ? "split-col grow-first" : undefined} style={isWide ? undefined : contentsStyle}>
         <div className="cf-card" style={{ marginBottom: 16 }}>
-          <Explanations card={card} stage={stage} computedOutput={computedOutput} />
+          <Explanations card={card} stage={stage} outputText={card.exampleOutput?.(inputs)} />
         </div>
 
         {/* 동적 힌트 — 틀린 셀 유형에 해당하는 것만 표시 */}
