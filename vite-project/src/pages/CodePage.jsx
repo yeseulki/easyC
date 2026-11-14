@@ -70,7 +70,7 @@ const SIZE = {
 function Terminal({ expectedOutput, wide = false }) {
   const sz = wide ? SIZE.wide : SIZE.normal;
   return (
-    <div className="code-window" style={{ background: "#1c1c1e", borderRadius: 14, overflow: "hidden", marginBottom: 16 }}>
+    <div className="code-window" style={{ background: "#1c1c1e", borderRadius: 14, overflow: "hidden", marginBottom: 24 }}>
       <div style={{ padding: "8px 14px", background: "#2c2c2e", display: "flex", alignItems: "center", gap: 6 }}>
         <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#ff5f57" }} />
         <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#febc2e" }} />
@@ -142,7 +142,7 @@ function CodeTypingChallenge({ ch, onSolved, onWrong, wide = false, asideTop = n
 
   // 문제(코드) 부분 — code-window: 가로 화면에서 점 줄은 위에 두고 코드만 세로 가운데
   const codeArea = (
-      <div className="code-window" style={{ background: "#1c1c1e", borderRadius: 14, overflow: "hidden", marginBottom: 14 }}>
+      <div className="code-window" style={{ background: "#1c1c1e", borderRadius: 14, overflow: "hidden", marginBottom: 24 }}>
         <div style={{ padding: "8px 14px", background: "#2c2c2e", display: "flex", alignItems: "center", gap: 6 }}>
           <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#ff5f57" }} />
           <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#febc2e" }} />
@@ -197,7 +197,7 @@ function CodeTypingChallenge({ ch, onSolved, onWrong, wide = false, asideTop = n
 
   // 정답 메시지
   const okMsg = (
-    <div style={{ padding: sz.msgPad, background: "rgba(52,199,89,0.1)", border: "0.5px solid rgba(52,199,89,0.3)", borderRadius: 12, fontSize: sz.msg, color: "#30d158", textAlign: "center", marginBottom: 12, fontWeight: 700, animation: "iosPop 0.35s ease" }}>
+    <div style={{ padding: sz.msgPad, background: "rgba(52,199,89,0.1)", border: "0.5px solid rgba(52,199,89,0.3)", borderRadius: 12, fontSize: sz.msg, color: "#30d158", textAlign: "center", marginBottom: 16, fontWeight: 700, animation: "iosPop 0.35s ease" }}>
       🎉 완벽해! 정답이야!
     </div>
   );
@@ -207,12 +207,12 @@ function CodeTypingChallenge({ ch, onSolved, onWrong, wide = false, asideTop = n
     <>
       {status === "ok" && okMsg}
       {status === "err" && (
-        <div style={{ padding: sz.msgPad, background: "rgba(255,59,48,0.06)", border: "0.5px solid rgba(255,59,48,0.2)", borderRadius: 12, fontSize: sz.msg, color: "#ff453a", textAlign: "center", marginBottom: 12, animation: "iosShake 0.4s ease" }}>
+        <div style={{ padding: sz.msgPad, background: "rgba(255,59,48,0.06)", border: "0.5px solid rgba(255,59,48,0.2)", borderRadius: 12, fontSize: sz.msg, color: "#ff453a", textAlign: "center", marginBottom: 16, animation: "iosShake 0.4s ease" }}>
           🤔 틀렸어! 다시 확인해봐.
         </div>
       )}
       {showHint && (
-        <div style={{ padding: sz.msgPad, background: "rgba(88,86,214,0.08)", border: "0.5px solid rgba(88,86,214,0.2)", borderRadius: 12, fontSize: sz.hint, color: "#7c7cff", marginBottom: 12, lineHeight: 1.6, whiteSpace: "pre-line" }}>
+        <div style={{ padding: sz.msgPad, background: "rgba(88,86,214,0.08)", border: "0.5px solid rgba(88,86,214,0.2)", borderRadius: 12, fontSize: sz.hint, color: "#7c7cff", marginBottom: 16, lineHeight: 1.6, whiteSpace: "pre-line" }}>
           💡 {ch.hints?.[0] || ch.hint || "고정된 슬롯은 이미 맞아. 나머지를 바꿔봐!"}
         </div>
       )}
@@ -289,11 +289,22 @@ function comboColor(combo) {
 }
 
 /* ── 퀴즈 화면 ── */
-function QuizView({ current, combo, onSolved, onWrong, onNext, onPrev, canPrev, onBack }) {
+function QuizView({ current, combo, onSolved, onWrong, onNext, onPrev, canPrev, onBack, onSave, savedItems }) {
   // current 먼저 분해 — 아래 useEffect deps에서 format을 사용하기 때문에
   // hooks보다 먼저 선언해야 TDZ 오류 없이 deps가 올바르게 평가됨
   const { card, stage, format } = current;
   const isWide = useIsWide();
+
+  // 📌 저장 — 학습 탭 카드 위치(stageIdx, cardIdx)로 저장해서 내 정보 탭에서 누르면 학습 탭 그 카드로 이동
+  // tokenOnly 문제는 학습 탭에 없어서, 같은 단원에서 바로 다음에 보이는 카드 위치로 저장
+  const isSaved = savedItems?.some(i => i.title === card.title);
+  const handleSaveCard = () => {
+    const stageIdx = stages.indexOf(stage);
+    const before = stage.cards.slice(0, stage.cards.indexOf(card)).filter(c => !c.tokenOnly).length;
+    const visibleCount = stage.cards.filter(c => !c.tokenOnly).length;
+    const cardIdx = Math.min(before, visibleCount - 1);
+    onSave?.(card, stageIdx, cardIdx);
+  };
 
   // 전 문제로 돌아온 경우 이미 푼 문제면 바로 다음으로 넘어갈 수 있게 (wasSolved)
   const [justSolved, setJustSolved] = useState(!!current.wasSolved);
@@ -369,7 +380,7 @@ function QuizView({ current, combo, onSolved, onWrong, onNext, onPrev, canPrev, 
 
   const terminalEl = card.expectedOutput ? <Terminal expectedOutput={card.expectedOutput} wide={isWide} /> : null;
   const swipeGuideEl = justSolved ? (
-    <div style={{ textAlign: "center", marginTop: isWide ? 32 : 20, animation: "iosFadeIn 0.4s ease" }}>
+    <div style={{ textAlign: "center", marginTop: 32, animation: "iosFadeIn 0.4s ease" }}>
       <div style={{ fontSize: 22, marginBottom: 6, opacity: 0.5 }}>↑</div>
       <div style={{ fontSize: 13, color: "var(--label3)", fontWeight: 600 }}>위로 스와이프해서 다음 문제</div>
     </div>
@@ -442,10 +453,10 @@ function QuizView({ current, combo, onSolved, onWrong, onNext, onPrev, canPrev, 
       )}
 
       {/* 콘텐츠 — 다음 문제 이동 시 슬라이드아웃 */}
-      <div ref={scrollRef} className="page" style={{ padding: isWide ? "40px 20px 40px" : "16px 20px var(--nav-h)", ...wideSide(isWide, 20), animation: exiting ? `${exitDir.current < 0 ? "cardSlideOutDown" : "cardSlideOutUp"} 0.12s ease forwards` : undefined }}>
+      <div ref={scrollRef} className="page" style={{ padding: isWide ? "40px 20px 40px" : "36px 20px var(--nav-h)", ...wideSide(isWide, 20), animation: exiting ? `${exitDir.current < 0 ? "cardSlideOutDown" : "cardSlideOutUp"} 0.12s ease forwards` : undefined }}>
         {/* 스테이지 뱃지 · 콤보 · 문제 형식 + 오른쪽 위 작은 나가기 버튼 (상단 바 없앰) */}
-        <div style={{ marginBottom: isWide ? 48 : 16 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: isWide ? 14 : 10 }}>
+        <div style={{ marginBottom: isWide ? 48 : 28 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: isWide ? 14 : 12 }}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 6, background: stage.color + "15", color: stage.color, fontSize: 12, fontWeight: 700, padding: "4px 10px", borderRadius: 100 }}>
               {stage.emoji} {stage.title}
             </span>
@@ -464,7 +475,12 @@ function QuizView({ current, combo, onSolved, onWrong, onNext, onPrev, canPrev, 
             <span style={{ fontSize: 12, color: "var(--label3)", fontWeight: 600, whiteSpace: "nowrap" }}>
               {format === "typing" ? "⌨️ 타이핑" : "🎰 토큰"}
             </span>
-            <button style={{ marginLeft: "auto", background: "rgba(0,0,0,0.06)", border: "none", borderRadius: 8, padding: "4px 10px", fontSize: 12, fontWeight: 600, color: "#3c3c43", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}
+            {/* 📌 저장 (학습 탭 카드와 같은 아이콘) */}
+            <button onClick={handleSaveCard} title={isSaved ? "저장 취소" : "저장하기"}
+              style={{ marginLeft: "auto", width: 30, height: 30, borderRadius: "50%", background: "rgba(255,255,255,0.92)", boxShadow: "0 2px 8px rgba(0,0,0,0.1)", border: "none", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, cursor: "pointer", flexShrink: 0 }}>
+              {isSaved ? "🔖" : "📌"}
+            </button>
+            <button style={{ background: "rgba(0,0,0,0.06)", border: "none", borderRadius: 8, padding: "4px 10px", fontSize: 12, fontWeight: 600, color: "#3c3c43", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}
               onClick={onBack}>나가기</button>
           </div>
           <div style={{ fontSize: isWide ? 22 : 19, fontWeight: 800, letterSpacing: -0.5, color: "var(--label)", marginBottom: 6 }}>{card.title}</div>
@@ -508,8 +524,9 @@ function QuizView({ current, combo, onSolved, onWrong, onNext, onPrev, canPrev, 
 }
 
 /* ── 메인 ── */
-export default function CodePage({ onCorrect, onNavigate, progress, onCardChange }) {
+export default function CodePage({ onCorrect, onNavigate, progress, onCardChange, onSave, savedItems }) {
   const completedStages = progress?.completedStages || [];
+  const isWide = useIsWide();
 
   // mode/current/combo를 하나의 state로 묶어 atomic하게 업데이트 (다시 풀기 버그 방지)
   // history: 지나온 문제들, forward: 전 문제로 돌아갔을 때 다시 앞으로 갈 문제들, dir: 카드 진입 방향(1=아래에서 위, -1=위에서 아래)
@@ -648,6 +665,8 @@ export default function CodePage({ onCorrect, onNavigate, progress, onCardChange
           onPrev={handlePrev}
           canPrev={history.length > 0}
           onBack={handleBack}
+          onSave={onSave}
+          savedItems={savedItems}
         />
       </div>
     );
@@ -674,7 +693,7 @@ export default function CodePage({ onCorrect, onNavigate, progress, onCardChange
         </div>
       </div>
 
-      <div className="page" style={{ padding: "32px 20px var(--nav-h)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 24 }}>
+      <div className="page" style={{ padding: "32px 20px var(--nav-h)", ...wideSide(isWide, 20), display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 24 }}>
         {hasPool ? (
           <>
             <div style={{ textAlign: "center" }}>

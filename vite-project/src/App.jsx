@@ -184,7 +184,7 @@ export default function App() {
               onCardChange={dismissToast}
             />
           )}
-          {tab === "code"    && <CodePage onCorrect={() => showToast("코드가 실행되었습니다!", true)} onNavigate={handleNavigate} progress={progress} onCardChange={dismissToast} />}
+          {tab === "code"    && <CodePage onCorrect={() => showToast("코드가 실행되었습니다!", true)} onNavigate={handleNavigate} progress={progress} onCardChange={dismissToast} onSave={handleSave} savedItems={savedItems} />}
           {tab === "profile" && <ProfilePage badges={badges} progress={progress} savedItems={savedItems} onNavigate={handleNavigate} nickname={nickname} />}
 
           {/* Global Toast */}

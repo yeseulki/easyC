@@ -1,4 +1,5 @@
 import { stages } from "../data/curriculum";
+import { useIsWide, wideSide } from "../hooks/useIsWide";
 
 const ALL_BADGES = stages.map(st => ({
   badge: st.cards.find(c => c.type === "project")?.badge || `Stage ${st.id}`,
@@ -19,6 +20,7 @@ export default function ProfilePage({ badges, progress, savedItems = [], onNavig
   const done  = progress.completedStages || [];
   const level = getLevel(badges.length);
   const next  = LEVELS.find(l => l.min > badges.length);
+  const isWide = useIsWide();
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", background: "var(--bg2)" }}>
@@ -33,7 +35,7 @@ export default function ProfilePage({ badges, progress, savedItems = [], onNavig
       </div>
 
       <div className="page" style={{ padding: "0 0 var(--nav-h)" }}>
-        <div className="profile-content-inner">
+        <div className="profile-content-inner" style={wideSide(isWide, 20)}>
           {/* Hero & Level Card */}
           <div className="ios-section">
             <div style={{ background: "#fff", padding: "24px", borderRadius: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.07)", display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 28 }}>

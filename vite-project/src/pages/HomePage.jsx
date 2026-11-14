@@ -1,8 +1,10 @@
 import { stages } from "../data/curriculum";
+import { useIsWide, wideSide } from "../hooks/useIsWide";
 
 export default function HomePage({ onNavigate, progress, nickname }) {
   const done = progress.completedStages || [];
   const pct  = Math.round((done.length / stages.length) * 100);
+  const isWide = useIsWide();
 
   // Stage i is accessible only if all previous stages are completed
   const isStageAccessible = (i) => i <= done.length;
@@ -29,41 +31,8 @@ export default function HomePage({ onNavigate, progress, nickname }) {
         </div>
       </div>
 
-      <div style={{ background: "#fff", borderBottom: "1px solid rgba(0,0,0,0.08)", padding: "8px 20px", flexShrink: 0 }}>
-        <div className="ios-hscroll"
-          onMouseDown={e => { e.currentTarget._isDown = true; e.currentTarget._startX = e.pageX - e.currentTarget.offsetLeft; e.currentTarget._scrollLeft = e.currentTarget.scrollLeft; e.currentTarget.style.cursor = 'grabbing'; }}
-          onMouseLeave={e => { e.currentTarget._isDown = false; e.currentTarget.style.cursor = 'grab'; }}
-          onMouseUp={e => { e.currentTarget._isDown = false; e.currentTarget.style.cursor = 'grab'; }}
-          onMouseMove={e => { if (!e.currentTarget._isDown) return; e.preventDefault(); const x = e.pageX - e.currentTarget.offsetLeft; const walk = (x - e.currentTarget._startX) * 2; e.currentTarget.scrollLeft = e.currentTarget._scrollLeft - walk; }}
-          onWheel={e => { if (e.deltaY !== 0) { e.preventDefault(); e.currentTarget.scrollLeft += e.deltaY; } }}
-          style={{ cursor: 'grab' }}
-        >
-          {["전체", "기초", "조건/반복", "배열/함수", "포인터", "심화"].map((t, i) => {
-            const targetIdx = i === 0 ? 0 : [0, 0, 2, 3, 4, 5][i];
-            const locked = !isStageAccessible(targetIdx);
-            const s = stages[targetIdx];
-            return (
-              <button key={t}
-                className={`cf-tab ${i === 0 ? "active" : "inactive"}`}
-                style={{
-                  ...(i === 0 ? { background: "var(--blue)" } : {}),
-                  ...(locked ? { opacity: 0.4, cursor: "default" } : {})
-                }}
-                onClick={() => {
-                  if (locked) return;
-                  onNavigate("learn", { stageIdx: targetIdx });
-                }}
-              >
-                {locked ? "🔒" : (i === 0 ? "🏠" : s.emoji)} {t}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
       {/* Scrollable content */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px var(--nav-h)" }}>
-
+      <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px var(--nav-h)", ...wideSide(isWide, 20), ...(isWide ? { paddingTop: 32 } : {}) }}>
         {/* Hero card */}
         <div style={heroStyles.card}>
           <div style={heroStyles.blob1} /><div style={heroStyles.blob2} />
@@ -117,7 +86,7 @@ export default function HomePage({ onNavigate, progress, nickname }) {
         {/* Curriculum stage grid */}
         <div style={{ marginBottom: 24 }}>
           <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: -0.5, marginBottom: 12, color: "#000" }}>스테이지</div>
-          <div className="responsive-grid grid-2">
+          <div className="responsive-grid grid-2" style={isWide ? { gridTemplateColumns: "repeat(4, minmax(0, 1fr))" } : undefined}>
             {stages.map((stage, i) => {
               const completed = done.includes(stage.id);
               const accessible = isStageAccessible(i);
@@ -128,7 +97,7 @@ export default function HomePage({ onNavigate, progress, nickname }) {
                   style={{
                     background: locked ? "rgba(0,0,0,0.03)" : "#fff",
                     border: `1px solid ${completed ? stage.color + "55" : locked ? "rgba(0,0,0,0.05)" : "rgba(0,0,0,0.07)"}`,
-                    borderRadius: 18, padding: "16px",
+                    borderRadius: 18, padding: isWide ? "20px 18px" : "16px",
                     cursor: locked ? "default" : "pointer",
                     boxShadow: completed ? `0 2px 12px ${stage.color}22` : "0 1px 4px rgba(0,0,0,0.06)",
                     opacity: locked ? 0.5 : 1,
@@ -138,7 +107,7 @@ export default function HomePage({ onNavigate, progress, nickname }) {
                   onClick={() => { if (!locked) onNavigate("learn", { stageIdx: i }); }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontSize: 26 }}>{locked ? "🔒" : stage.emoji}</span>
+                    <span style={{ fontSize: isWide ? 34 : 26 }}>{locked ? "🔒" : stage.emoji}</span>
                     {completed
                       ? <span style={{ fontSize: 11, color: stage.color, fontWeight: 700, background: stage.color + "15", padding: "3px 8px", borderRadius: 100 }}>완료 ✓</span>
                       : locked
@@ -146,11 +115,8 @@ export default function HomePage({ onNavigate, progress, nickname }) {
                         : <span style={{ fontSize: 18, fontWeight: 900, color: "rgba(0,0,0,0.07)", letterSpacing: -1 }}>{`0${stage.id}`}</span>
                     }
                   </div>
-                  <div style={{ marginTop: 10, fontSize: 14, fontWeight: 800, letterSpacing: -0.3, color: locked ? "#8e8e93" : "#000" }}>{stage.title}</div>
-                  <div style={{ fontSize: 12, color: locked ? "#b0b0b5" : stage.color, marginTop: 3, fontWeight: 600 }}>{stage.subtitle}</div>
-                  <div style={{ fontSize: 11, color: "#8e8e93", marginTop: 8 }}>
-                    {locked ? "이전 단계를 완료하세요" : `카드 ${stage.cards.length + stage.cards.filter(c => c.type === "project").length}개`}
-                  </div>
+                  <div style={{ marginTop: isWide ? 14 : 10, fontSize: isWide ? 16 : 14, fontWeight: 800, letterSpacing: -0.3, color: locked ? "#8e8e93" : "#000" }}>{stage.title}</div>
+                  <div style={{ fontSize: isWide ? 13.5 : 12, color: locked ? "#b0b0b5" : stage.color, marginTop: 3, fontWeight: 600 }}>{stage.subtitle}</div>
                 </div>
               );
             })}

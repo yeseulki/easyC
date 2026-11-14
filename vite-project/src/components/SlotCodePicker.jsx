@@ -78,8 +78,11 @@ function Drum({ options, selected, onSelect, fixed, color, status, big = false }
       }}
       onClick={next} onTouchStart={onTS} onTouchEnd={onTE}
     >
-      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 10, background: `linear-gradient(to bottom,${fixed ? "rgba(0,0,0,0.04)" : "#fff"},transparent)`, zIndex: 2, pointerEvents: "none" }} />
-      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 10, background: `linear-gradient(to top,${fixed ? "rgba(0,0,0,0.04)" : "#fff"},transparent)`, zIndex: 2, pointerEvents: "none" }} />
+      {/* 드럼 느낌의 위·아래 흰 그라데이션 — 정답/오답 색이 칠해졌을 땐 끝까지 칠해지도록 숨김 */}
+      {!status && <>
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 10, background: `linear-gradient(to bottom,${fixed ? "rgba(0,0,0,0.04)" : "#fff"},transparent)`, zIndex: 2, pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 10, background: `linear-gradient(to top,${fixed ? "rgba(0,0,0,0.04)" : "#fff"},transparent)`, zIndex: 2, pointerEvents: "none" }} />
+      </>}
       <span style={{ fontFamily: "monospace", fontSize: big ? 16.5 : 14, fontWeight: 700, color: fixed ? "rgba(60,60,67,0.3)" : (displayColor ?? color), padding: "0 8px", display: "inline-block" }}>
         {label}
       </span>
@@ -153,12 +156,12 @@ export default function SlotCodePicker({ slots, color = "var(--blue)", onResult,
   // 문제(슬롯) 부분
   const pickerArea = (
     <>
-      <div style={{ fontSize: wide ? 13.5 : 12, color: "var(--label3)", fontWeight: 500, marginBottom: 12, textAlign: "center" }}>
+      <div style={{ fontSize: wide ? 13.5 : 12, color: "var(--label3)", fontWeight: 500, marginBottom: 16, textAlign: "center" }}>
         슬롯을 탭해서 올바른 코드를 조합해봐!
       </div>
 
       {/* Drums */}
-      <div style={{ display: "flex", gap: wide ? 8 : 6, justifyContent: "center", flexWrap: "wrap", marginBottom: 14 }}>
+      <div style={{ display: "flex", gap: wide ? 8 : 6, justifyContent: "center", flexWrap: "wrap", marginBottom: wide ? 14 : 24 }}>
         {processedSlots.map((s, i) => (
           <Drum key={i} options={s.options} selected={sel[i]} onSelect={v => pick(i, v)} fixed={s.fixed} color={color} status={slotStatuses[i] ?? null} big={wide} />
         ))}
@@ -168,7 +171,7 @@ export default function SlotCodePicker({ slots, color = "var(--blue)", onResult,
 
   // 정답 메시지
   const okMsg = (
-    <div style={{ padding: wide ? "12px 16px" : "10px 14px", background: "rgba(52,199,89,0.08)", border: "0.5px solid rgba(52,199,89,0.25)", borderRadius: 12, fontSize: wide ? 15.5 : 14, color: "var(--green)", textAlign: "center", marginBottom: 12, fontWeight: 600, animation: "iosPop 0.35s ease" }}>
+    <div style={{ padding: wide ? "12px 16px" : "10px 14px", background: "rgba(52,199,89,0.08)", border: "0.5px solid rgba(52,199,89,0.25)", borderRadius: 12, fontSize: wide ? 15.5 : 14, color: "var(--green)", textAlign: "center", marginBottom: 16, fontWeight: 600, animation: "iosPop 0.35s ease" }}>
       🎉 완벽해! 정답이야!
     </div>
   );
@@ -178,7 +181,7 @@ export default function SlotCodePicker({ slots, color = "var(--blue)", onResult,
     <>
       {result === "ok" && okMsg}
       {result === "err" && (
-        <div style={{ padding: wide ? "12px 16px" : "10px 14px", background: "rgba(255,59,48,0.06)", border: "0.5px solid rgba(255,59,48,0.2)", borderRadius: 12, fontSize: wide ? 15.5 : 14, color: "var(--red)", textAlign: "center", marginBottom: 12, animation: "iosShake 0.4s ease" }}>
+        <div style={{ padding: wide ? "12px 16px" : "10px 14px", background: "rgba(255,59,48,0.06)", border: "0.5px solid rgba(255,59,48,0.2)", borderRadius: 12, fontSize: wide ? 15.5 : 14, color: "var(--red)", textAlign: "center", marginBottom: 16, animation: "iosShake 0.4s ease" }}>
           <div style={{ fontWeight: 700 }}>🤔 틀렸어!</div>
           {/* 해석이 안 되는 경우의 기본 문구("👉 코드 실행")는 도움이 안 돼서 안 보여줌 */}
           {translateLine(assembled) !== "👉 코드 실행" && (
@@ -188,7 +191,7 @@ export default function SlotCodePicker({ slots, color = "var(--blue)", onResult,
         </div>
       )}
       {showHint && (
-        <div style={{ padding: wide ? "12px 16px" : "10px 14px", background: "rgba(88,86,214,0.06)", border: "0.5px solid rgba(88,86,214,0.2)", borderRadius: 12, fontSize: wide ? 14.5 : 13, color: "var(--indigo)", marginBottom: 12, animation: "iosFadeScale 0.2s ease", whiteSpace: "pre-line", lineHeight: 1.6 }}>
+        <div style={{ padding: wide ? "12px 16px" : "10px 14px", background: "rgba(88,86,214,0.06)", border: "0.5px solid rgba(88,86,214,0.2)", borderRadius: 12, fontSize: wide ? 14.5 : 13, color: "var(--indigo)", marginBottom: 16, animation: "iosFadeScale 0.2s ease", whiteSpace: "pre-line", lineHeight: 1.6 }}>
           💡 {hint || "고정된 슬롯은 이미 맞아. 나머지 슬롯을 바꿔봐!"}
         </div>
       )}
