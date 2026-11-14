@@ -3,6 +3,12 @@ import { stages } from "../data/curriculum";
 import DrumTutorialOverlay from "../components/DrumTutorialOverlay";
 import ConceptTutorialOverlay from "../components/ConceptTutorialOverlay";
 import ProjectTutorialOverlay from "../components/ProjectTutorialOverlay";
+import { useIsWide, splitGrid, wideSide } from "../hooks/useIsWide";
+import { useKeydown, isTypingTarget, isButtonTarget } from "../hooks/useKeydown";
+
+// 하단 확인 버튼: cf-cta 기본 좌우 margin(16px)을 없애서 흰 박스(카드) 좌우 끝과 맞춤
+const ctaFullWidth = { width: "100%", margin: 0 };
+const contentsStyle = { display: "contents" };         // 세로 화면: 감싸는 div가 레이아웃에 영향 없음
 
 function translateLine(raw) {
   let text = raw.trim();
@@ -323,6 +329,7 @@ function Explanations({ card, stage }) {
 /* ── One full code card ── */
 function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate, isLast, onSave, savedItems, onSolvedChange, onCorrect, onGoNext, initialAnswer, onUpdateAnswer, scrollRef }) {
   const isSaved = savedItems?.some(i => i.title === card.title);
+  const isWide = useIsWide();
   const [showKorean, setShowKorean] = useState(false);
   const processedSlots = useMemo(() => {
     return card.slots.map(s => {
@@ -401,9 +408,69 @@ function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate,
     }
   };
 
+  // Enter → 확인하기 (튜토리얼이 떠 있거나 버튼에 포커스가 있을 땐 제외)
+  useKeydown(e => {
+    if (e.key !== "Enter" || e.repeat || showTutorial || isButtonTarget(e)) return;
+    e.preventDefault();
+    check();
+  });
+
   const handleNavigate = () => {
     onNavigate("code");
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const ctaLabel = status === "ok" ? "정답이야! 완벽해!" : status === "err" ? "틀렸어! 다시 생각해봐!" : "확인하기";
+
+  const codeBox = (
+    <div className="cf-card code-window">
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px 8px" }}>
+        <div style={{ display: "flex", gap: 6 }}>
+          <div className="cf-dot red" /><div className="cf-dot yellow" /><div className="cf-dot green" />
+        </div>
+        <button onClick={() => setShowKorean(!showKorean)} style={{ background: showKorean ? stage.color : "rgba(0,0,0,0.07)", color: showKorean ? "#fff" : "#555", padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700, border: "none", cursor: "pointer", transition: "all 0.2s" }}>
+          {showKorean ? "원본 코드" : "자연어 해석"}
+        </button>
+      </div>
+      <CodeWithSlots card={processedCard} color={stage.color} sel={sel} onSel={pick} showKorean={showKorean} nonFixed={nonFixed} />
+    </div>
+  );
+
+  const explainBox = <div className="cf-card"><Explanations card={card} stage={stage} /></div>;
+
+  const finishBtn = (
+    <button onClick={handleNavigate} className="ios-btn ios-btn-fill" style={{ width: "100%", background: "var(--blue)", borderRadius: 16, padding: "18px", fontSize: 18, fontWeight: 800, boxShadow: "0 8px 24px rgba(0,122,255,0.25)" }}>
+      학습 완료! 코딩 시작하기
+    </button>
+  );
+
+  // 오답 비교 해설 카드 (wrapStyle: 바깥 여백)
+  const renderWrongBox = (wrapStyle) => {
+    if (checkedOutput == null || !card.dynamicOutput) return null;
+    const isArr = Array.isArray(checkedOutput);
+    if (!isArr && checkedOutput === card.expectedOutput) return null;
+    if (isArr && checkedOutput.length === 0) return null;
+    const divKey = isArr ? checkedOutput.map(e => e.note).join('|') : checkedOutput;
+    return (
+      <div key={divKey} style={{ ...wrapStyle, animation: "iosFadeScale 0.25s ease" }}>
+        <div className="cf-card">
+          <div style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: "var(--label3)", letterSpacing: 0.5, textTransform: "uppercase" }}>🔍 뭐가 틀렸나 봐봐</div>
+            {isArr ? checkedOutput.map((err, i) => (
+              <div key={i} style={{ display: "flex", flexDirection: "column", gap: 6, paddingTop: i > 0 ? 10 : 0, borderTop: i > 0 ? "1px solid rgba(0,0,0,0.07)" : "none" }}>
+                {err.output != null && <OutputBlock label="내가 만든 출력" text={err.output} color={stage.color} />}
+                <div style={{ fontSize: 13, color: "var(--label2)", fontWeight: 500, lineHeight: 1.5 }}>💬 {err.note}</div>
+              </div>
+            )) : (
+              <>
+                <OutputBlock label="예시 출력" text={card.expectedOutput} color={stage.color} />
+                <OutputBlock label="내가 만든 출력" text={checkedOutput} color={stage.color} />
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -416,13 +483,12 @@ function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate,
         <div style={{ height: "100%", width: `${pct}%`, background: stage.color, transition: "width 0.4s" }} />
       </div>
 
-      <div style={{ padding: "10px 20px", display: "flex", alignItems: "center", gap: 8, background: "#f2f2f7" }}>
+      <div style={{ padding: "10px 20px", display: "flex", alignItems: "center", gap: 8, background: "#f2f2f7", ...wideSide(isWide, 20) }}>
         <span style={{ fontSize: 18 }}>{stage.emoji}</span>
         <span style={{ fontWeight: 700, fontSize: 14, color: "#000" }}>{stage.title}</span>
-        <span style={{ marginLeft: "auto", fontSize: 12, color: "#8e8e93" }}>{cardIdx + 1} / {totalCards}</span>
       </div>
 
-      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto" }}>
+      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", ...wideSide(isWide, 0) }}>
         <div style={{ padding: "0 20px 12px", background: "#f2f2f7", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 11, color: stage.color, fontWeight: 800, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 4 }}>💻 실습</div>
@@ -433,65 +499,43 @@ function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate,
           </div>
         </div>
 
-        <div style={{ margin: "0 20px", position: "relative" }}>
-          <div className="cf-card">
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px 8px" }}>
-              <div style={{ display: "flex", gap: 6 }}>
-                <div className="cf-dot red" /><div className="cf-dot yellow" /><div className="cf-dot green" />
-              </div>
-              <button onClick={() => setShowKorean(!showKorean)} style={{ background: showKorean ? stage.color : "rgba(0,0,0,0.07)", color: showKorean ? "#fff" : "#555", padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700, border: "none", cursor: "pointer", transition: "all 0.2s" }}>
-                {showKorean ? "원본 코드" : "자연어 해석"}
-              </button>
+        {isWide ? (
+          <div className="split-text" style={{ ...splitGrid, padding: "0 20px 24px" }}>
+            {/* 왼쪽: 코드 */}
+            <div className="split-col grow-last">
+              {codeBox}
             </div>
-            <CodeWithSlots card={processedCard} color={stage.color} sel={sel} onSel={pick} showKorean={showKorean} nonFixed={nonFixed} />
+            {/* 오른쪽: 설명 → 오답 해설 → 학습 완료 */}
+            <div className="split-col grow-first">
+              {explainBox}
+              {renderWrongBox({})}
+              {isLast && status === "ok" && finishBtn}
+            </div>
           </div>
+        ) : (<>
+        <div style={{ margin: "0 20px", position: "relative" }}>
+          {codeBox}
         </div>
 
         <div style={{ margin: "12px 20px 0" }}>
-          <div className="cf-card"><Explanations card={card} stage={stage} /></div>
+          {explainBox}
         </div>
 
         {/* 오답 비교 해설 — 힌트 아래 별도 카드 */}
-        {checkedOutput != null && card.dynamicOutput && (() => {
-          const isArr = Array.isArray(checkedOutput);
-          if (!isArr && checkedOutput === card.expectedOutput) return null;
-          if (isArr && checkedOutput.length === 0) return null;
-          const divKey = isArr ? checkedOutput.map(e => e.note).join('|') : checkedOutput;
-          return (
-            <div key={divKey} style={{ margin: "12px 20px 0", animation: "iosFadeScale 0.25s ease" }}>
-              <div className="cf-card">
-                <div style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: 12 }}>
-                  <div style={{ fontSize: 11, fontWeight: 800, color: "var(--label3)", letterSpacing: 0.5, textTransform: "uppercase" }}>🔍 뭐가 틀렸나 봐봐</div>
-                  {isArr ? checkedOutput.map((err, i) => (
-                    <div key={i} style={{ display: "flex", flexDirection: "column", gap: 6, paddingTop: i > 0 ? 10 : 0, borderTop: i > 0 ? "1px solid rgba(0,0,0,0.07)" : "none" }}>
-                      {err.output != null && <OutputBlock label="내가 만든 출력" text={err.output} color={stage.color} />}
-                      <div style={{ fontSize: 13, color: "var(--label2)", fontWeight: 500, lineHeight: 1.5 }}>💬 {err.note}</div>
-                    </div>
-                  )) : (
-                    <>
-                      <OutputBlock label="예시 출력" text={card.expectedOutput} color={stage.color} />
-                      <OutputBlock label="내가 만든 출력" text={checkedOutput} color={stage.color} />
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-          );
-        })()}
+        {renderWrongBox({ margin: "12px 20px 0" })}
 
         {isLast && status === "ok" && (
           <div style={{ margin: "24px 20px 0", paddingBottom: 20 }}>
-            <button onClick={handleNavigate} className="ios-btn ios-btn-fill" style={{ width: "100%", background: "var(--blue)", borderRadius: 16, padding: "18px", fontSize: 18, fontWeight: 800, boxShadow: "0 8px 24px rgba(0,122,255,0.25)" }}>
-              학습 완료! 코딩 시작하기
-            </button>
+            {finishBtn}
           </div>
         )}
         <div style={{ height: 100 }} />
+        </>)}
       </div>
 
-      <div style={{ position: "sticky", bottom: 0, background: "#f2f2f7", padding: "12px 20px 16px", borderTop: "0.5px solid rgba(0,0,0,0.08)", display: "flex", justifyContent: "center" }}>
-        <button className={`cf-cta ${status === "ok" ? "success" : status === "err" ? "error" : ""}`} onClick={check}>
-          {status === "ok" ? "정답이야! 완벽해!" : status === "err" ? "틀렸어! 다시 생각해봐!" : "확인하기"}
+      <div style={{ position: "sticky", bottom: 0, background: "#f2f2f7", padding: "12px 20px 16px", borderTop: "0.5px solid rgba(0,0,0,0.08)", display: "flex", justifyContent: "center", ...wideSide(isWide, 20) }}>
+        <button className={`cf-cta ${status === "ok" ? "success" : status === "err" ? "error" : ""}`} onClick={check} style={ctaFullWidth}>
+          {ctaLabel}
         </button>
       </div>
     </div>
@@ -502,6 +546,7 @@ function CodeLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate,
 function ConceptLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNavigate, isLast, onSave, savedItems, onTipViewed, scrollRef }) {
   const [flipped, setFlipped] = useState(false);
   const isSaved = savedItems?.some(i => i.title === card.title);
+  const isWide = useIsWide();
   const [showConceptTutorial, setShowConceptTutorial] = useState(
     () => !localStorage.getItem("easycTutorialConcept")
   );
@@ -536,29 +581,8 @@ function ConceptLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNaviga
     ));
   };
 
-  return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column", background: "#f2f2f7" }}>
-      {showConceptTutorial && <ConceptTutorialOverlay color={stage.color} onDismiss={dismissConceptTutorial} />}
-      <div style={{ height: 3, background: "rgba(0,0,0,0.06)" }}>
-        <div style={{ height: "100%", width: `${pct}%`, background: stage.color, transition: "width 0.4s" }} />
-      </div>
-      <div style={{ padding: "10px 20px", display: "flex", alignItems: "center", gap: 8, background: "#f2f2f7" }}>
-        <span style={{ fontSize: 18 }}>{stage.emoji}</span>
-        <span style={{ fontWeight: 700, fontSize: 14, color: "#000" }}>{stage.title}</span>
-        <span style={{ marginLeft: "auto", fontSize: 12, color: "#8e8e93" }}>{cardIdx + 1} / {totalCards}</span>
-      </div>
-
-      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "0 20px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <div>
-            <div style={{ fontSize: 11, color: stage.color, fontWeight: 800, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 6 }}>📖 개념</div>
-            <h2 style={{ fontSize: 22, fontWeight: 900, letterSpacing: -0.5, lineHeight: 1.3, color: "#000", marginBottom: 16, borderLeft: `3px solid ${stage.color}`, paddingLeft: 12 }}>{card.title}</h2>
-          </div>
-          <div className="cf-action-btn" onClick={() => onSave?.(card, stageIdx, cardIdx)} style={{ marginTop: 4 }}>
-            <div className="cf-action-icon" style={{ width: 38, height: 38, fontSize: 18, color: isSaved ? stage.color : "#000" }}>{isSaved ? "🔖" : "📌"}</div>
-          </div>
-        </div>
-
+  const leftBlocks = (
+    <>
         {card.visualization === "memory" && <MemoryMap color={stage.color} />}
 
         <div style={{ background: "#fff", borderRadius: 16, padding: "16px", marginBottom: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
@@ -567,7 +591,7 @@ function ConceptLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNaviga
         </div>
 
         {card.codeExample && (
-          <div className="cf-card" style={{ marginBottom: 12 }}>
+          <div className="cf-card code-window" style={{ marginBottom: 12 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "10px 14px 8px" }}>
               <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#ff5f56", flexShrink: 0 }} />
               <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#ffbd2e", flexShrink: 0 }} />
@@ -594,20 +618,19 @@ function ConceptLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNaviga
             </div>
           </div>
         )}
+    </>
+  );
 
+  const rightBlocks = (
+    <>
         <div style={{ background: "#fff", borderRadius: 16, padding: "20px 16px", marginBottom: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
           <div style={{ fontSize: 16, color: "#3c3c43", lineHeight: 1.8 }}>{highlight(card.content)}</div>
         </div>
 
         <div key={flipped ? "open" : "closed"} style={{ background: flipped ? stage.color + "10" : stage.color + "08", border: `1.5px solid ${flipped ? stage.color + "55" : stage.color + "33"}`, borderRadius: 16, padding: "16px", cursor: "pointer", boxShadow: flipped ? "none" : `0 2px 10px ${stage.color}22`, animation: "iosPop 0.35s cubic-bezier(0.2,1,0.2,1)", marginBottom: 24 }} onClick={handleFlip}>
-          {!flipped ? (
-            <div style={{ textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-              <span style={{ fontSize: 20 }}>💡</span>
-              <span style={{ fontSize: 15, fontWeight: 700, color: stage.color }}>핵심 팁 보기</span>
-              <span style={{ fontSize: 13, color: stage.color, opacity: 0.6 }}>탭!</span>
-            </div>
-          ) : (
-            <div style={{ animation: "iosPop 0.35s cubic-bezier(0.2,1,0.2,1)" }}>
+          {/* 팁 내용은 항상 자리를 차지(닫혀 있을 땐 안 보이게) → 처음부터 펼친 크기 그대로 */}
+          <div style={{ display: "grid" }}>
+            <div style={{ gridArea: "1 / 1", visibility: flipped ? "visible" : "hidden", animation: flipped ? "iosPop 0.35s cubic-bezier(0.2,1,0.2,1)" : "none" }}>
               <div style={{ fontSize: 12, fontWeight: 800, color: stage.color, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 10 }}>💡 핵심 팁</div>
               {card.tip.split("\n").map((line, i) => (
                 <div key={i} style={{ fontSize: 16, color: "#1d1d1f", lineHeight: 1.75, marginBottom: i < card.tip.split("\n").length - 1 ? 6 : 0 }}>
@@ -615,20 +638,61 @@ function ConceptLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onNaviga
                 </div>
               ))}
             </div>
-          )}
+            {!flipped && (
+              <div style={{ gridArea: "1 / 1", textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                <span style={{ fontSize: 20 }}>💡</span>
+                <span style={{ fontSize: 15, fontWeight: 700, color: stage.color }}>핵심 팁 보기</span>
+                <span style={{ fontSize: 13, color: stage.color, opacity: 0.6 }}>탭!</span>
+              </div>
+            )}
+          </div>
         </div>
 
         {isLast && (
-          <div style={{ marginTop: 8, paddingBottom: 24 }}>
+          <div style={{ marginTop: 8, paddingBottom: isWide ? 0 : 24 }}>
             <button onClick={handleNavigate} className="ios-btn ios-btn-fill" style={{ width: "100%", background: "var(--blue)", borderRadius: 16, padding: "18px", fontSize: 18, fontWeight: 800, boxShadow: "0 8px 24px rgba(0,122,255,0.25)" }}>
               학습 완료! 코딩 시작하기
             </button>
           </div>
         )}
+    </>
+  );
+
+  return (
+    <div style={{ height: "100%", display: "flex", flexDirection: "column", background: "#f2f2f7" }}>
+      {showConceptTutorial && <ConceptTutorialOverlay color={stage.color} onDismiss={dismissConceptTutorial} />}
+      <div style={{ height: 3, background: "rgba(0,0,0,0.06)" }}>
+        <div style={{ height: "100%", width: `${pct}%`, background: stage.color, transition: "width 0.4s" }} />
+      </div>
+      <div style={{ padding: "10px 20px", display: "flex", alignItems: "center", gap: 8, background: "#f2f2f7", ...wideSide(isWide, 20) }}>
+        <span style={{ fontSize: 18 }}>{stage.emoji}</span>
+        <span style={{ fontWeight: 700, fontSize: 14, color: "#000" }}>{stage.title}</span>
+      </div>
+
+      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "0 20px", ...wideSide(isWide, 20) }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div>
+            <div style={{ fontSize: 11, color: stage.color, fontWeight: 800, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 6 }}>📖 개념</div>
+            <h2 style={{ fontSize: 22, fontWeight: 900, letterSpacing: -0.5, lineHeight: 1.3, color: "#000", marginBottom: 16, borderLeft: `3px solid ${stage.color}`, paddingLeft: 12 }}>{card.title}</h2>
+          </div>
+          <div className="cf-action-btn" onClick={() => onSave?.(card, stageIdx, cardIdx)} style={{ marginTop: 4 }}>
+            <div className="cf-action-icon" style={{ width: 38, height: 38, fontSize: 18, color: isSaved ? stage.color : "#000" }}>{isSaved ? "🔖" : "📌"}</div>
+          </div>
+        </div>
+
+        {isWide ? (
+          <div style={{ ...splitGrid, paddingBottom: 24 }}>
+            {/* 왼쪽: 메모리 그림 → 비유 → 코드 예시 */}
+            <div className="split-col grow-last">{leftBlocks}</div>
+            {/* 오른쪽: 설명 → 핵심 팁 → 학습 완료 */}
+            <div className="split-col grow-first">{rightBlocks}</div>
+          </div>
+        ) : (<>{leftBlocks}{rightBlocks}</>)}
       </div>
     </div>
   );
 }
+
 
 
 
@@ -781,6 +845,7 @@ function CellsDisplay({ card, inputs, onInputChange, stageColor, onInputFocus, o
 function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge, onNavigate, isLast, onSolvedChange, onCorrect, onGoNext, initialAnswer, onUpdateAnswer, badges, scrollRef, onSave, savedItems, showBadgePage, onInputFocus, onInputBlur }) {
   const isClaimed = badges?.includes(card.badge);
   const isSaved = savedItems?.some(i => i.title === card.title);
+  const isWide = useIsWide();
   const [showKorean, setShowKorean] = useState(false);
   const [showProjectTutorial, setShowProjectTutorial] = useState(
     () => !localStorage.getItem("easycTutorialProject")
@@ -862,6 +927,15 @@ function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge,
     }
   };
 
+  // Enter → 정답 확인 (뱃지 화면·튜토리얼·버튼 포커스일 땐 제외). 입력칸에서 쳐도 확인
+  useKeydown(e => {
+    if (e.key !== "Enter" || e.repeat || showBadgePage || showProjectTutorial || isButtonTarget(e)) return;
+    e.preventDefault();
+    check();
+  });
+
+  const projectCtaLabel = status === "ok" ? "다 채웠어! 잘했어!" : status === "err" ? (inputs.some(v => !(v || "").trim()) ? "빈 칸이 있어. 다시 확인해봐!" : "틀린 칸이 있어. 다시 확인해봐!") : "정답 확인";
+
   const handleClaim = () => {
     const items = Array.from({ length: 16 }, (_, i) => ({ id: i, x: Math.random() * 100, c: ["#007aff","#af52de","#ff9500","#34c759","#ff2d55"][i % 5], d: Math.random() * 0.3 }));
     setConfetti(items);
@@ -916,13 +990,12 @@ function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge,
       <div style={{ height: 3, background: "rgba(0,0,0,0.06)" }}>
         <div style={{ height: "100%", width: `${pct}%`, background: stage.color, transition: "width 0.4s" }} />
       </div>
-      <div style={{ padding: "10px 20px", display: "flex", alignItems: "center", gap: 8, background: "#f2f2f7" }}>
+      <div style={{ padding: "10px 20px", display: "flex", alignItems: "center", gap: 8, background: "#f2f2f7", ...wideSide(isWide, 20) }}>
         <span style={{ fontSize: 18 }}>{stage.emoji}</span>
         <span style={{ fontWeight: 700, fontSize: 14, color: "#000" }}>{stage.title}</span>
-        <span style={{ marginLeft: "auto", fontSize: 12, color: "#8e8e93" }}>{cardIdx + 1} / {totalCards}</span>
       </div>
 
-      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "0 20px 20px" }}>
+      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "0 20px 20px", ...wideSide(isWide, 20) }}>
         <div style={{ paddingTop: 12, paddingBottom: 12, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 11, color: stage.color, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 6 }}>🛠️ 프로젝트</div>
@@ -933,7 +1006,10 @@ function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge,
           </div>
         </div>
 
-        <div className="cf-card" style={{ marginBottom: 16 }}>
+        <div className={isWide ? "split-text" : undefined} style={isWide ? splitGrid : contentsStyle}>
+        {/* 왼쪽: 코드 입력 */}
+        <div className={isWide ? "split-col grow-last" : undefined} style={isWide ? undefined : contentsStyle}>
+        <div className="cf-card code-window" style={{ marginBottom: 16 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px 8px" }}>
             <div style={{ display: "flex", gap: 6 }}>
               <div className="cf-dot red" /><div className="cf-dot yellow" /><div className="cf-dot green" />
@@ -950,6 +1026,9 @@ function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge,
           }
         </div>
 
+        </div>
+        {/* 오른쪽: 설명 → 힌트 (가로 화면에선 정답 확인 버튼이 하단 고정) */}
+        <div className={isWide ? "split-col grow-first" : undefined} style={isWide ? undefined : contentsStyle}>
         <div className="cf-card" style={{ marginBottom: 16 }}>
           <Explanations card={card} stage={stage} computedOutput={computedOutput} />
         </div>
@@ -970,10 +1049,23 @@ function ProjectLearnCard({ stage, card, cardIdx, stageIdx, totalCards, onBadge,
           );
         })()}
 
+        {!isWide && (
         <button className={`cf-cta ${status === "ok" ? "success" : status === "err" ? "error" : ""}`} onClick={check} style={{ width: '100%', borderRadius: 16, padding: "16px", fontSize: 17, fontWeight: 800, margin: "0 0 16px 0" }}>
-          {status === "ok" ? "다 채웠어! 잘했어!" : status === "err" ? (inputs.some(v => !(v || "").trim()) ? "빈 칸이 있어. 다시 확인해봐!" : "틀린 칸이 있어. 다시 확인해봐!") : "정답 확인"}
+          {projectCtaLabel}
+        </button>
+        )}
+        </div>
+        </div>
+      </div>
+
+      {/* 가로 화면: 문제 카드처럼 하단에 길게 고정 */}
+      {isWide && (
+      <div style={{ position: "sticky", bottom: 0, background: "#f2f2f7", padding: "12px 20px 16px", borderTop: "0.5px solid rgba(0,0,0,0.08)", display: "flex", justifyContent: "center", ...wideSide(isWide, 20) }}>
+        <button className={`cf-cta ${status === "ok" ? "success" : status === "err" ? "error" : ""}`} onClick={check} style={isWide ? ctaFullWidth : undefined}>
+          {projectCtaLabel}
         </button>
       </div>
+      )}
     </div>
   );
 }
@@ -1171,6 +1263,14 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
 
   const isFirst = stageIdx === 0 && cardIdx === 0;
   const isLast  = stageIdx === stages.length - 1 && cardIdx === total - 1;
+
+  // ↑/↓ 키 → 이전/다음 카드 (스와이프·휠과 같은 go 사용, 입력 중엔 제외)
+  useKeydown(e => {
+    if (e.repeat || isTypingTarget(e)) return;
+    // 화면의 ↑↓ 버튼처럼 첫 카드에선 ↑, 마지막 카드에선 ↓ 막음
+    if (e.key === "ArrowDown") { e.preventDefault(); if (!isLast) go(1); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); if (!isFirst) go(-1); }
+  });
   const scrollRef = useRef(null);
   const hasBadgeStep  = visibleCards.some(c => c.type === "project");
   const displayTotal   = hasBadgeStep ? total + 1 : total;
@@ -1194,7 +1294,7 @@ export default function LearnPage({ initialStage = 0, initialCard = 0, onBadge, 
         </div>
       </div>
 
-      <div style={{ background: "#fff", borderBottom: "1px solid rgba(0,0,0,0.08)", overflow: "hidden", maxHeight: inputFocused ? 0 : 200, transition: "max-height 0.28s ease", flexShrink: 0 }}>
+      <div className="learn-stage-bar" style={{ background: "#fff", borderBottom: "1px solid rgba(0,0,0,0.08)", overflow: "hidden", maxHeight: inputFocused ? 0 : 200, transition: "max-height 0.28s ease", flexShrink: 0 }}>
         <div className="ios-hscroll"
           onMouseDown={e => { e.currentTarget._isDown = true; e.currentTarget._startX = e.pageX - e.currentTarget.offsetLeft; e.currentTarget._scrollLeft = e.currentTarget.scrollLeft; e.currentTarget.style.cursor = 'grabbing'; }}
           onMouseLeave={e => { e.currentTarget._isDown = false; e.currentTarget.style.cursor = 'grab'; }}

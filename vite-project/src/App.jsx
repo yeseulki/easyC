@@ -38,7 +38,15 @@ export default function App() {
     cardAnswers: JSON.parse(localStorage.getItem("easycCardAnswers") || "{}"),
     viewedTips:   JSON.parse(localStorage.getItem("easycViewedTips")   || "{}"),
   }));
-  const [savedItems, setSavedItems] = useState([]);
+  // 저장한 학습 카드 — 새로고침해도 남도록 localStorage(easycSavedItems)에 보관
+  const [savedItems, setSavedItems] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("easycSavedItems") || "[]"); }
+    catch { return []; }
+  });
+  const updateSavedItems = (list) => {
+    setSavedItems(list);
+    localStorage.setItem("easycSavedItems", JSON.stringify(list));
+  };
   const [toast, setToast] = useState(null);
   const [isCorrectToast, setIsCorrectToast] = useState(false);
   const [toastFading, setToastFading] = useState(false);
@@ -105,10 +113,11 @@ export default function App() {
   const handleSave = (card, stageIdx, cardIdx) => {
     const isAlreadySaved = savedItems.some(item => item.title === card.title);
     if (isAlreadySaved) {
-      setSavedItems(savedItems.filter(item => item.title !== card.title));
+      updateSavedItems(savedItems.filter(item => item.title !== card.title));
       showToast("🔖 저장이 취소되었습니다.");
     } else {
-      setSavedItems([...savedItems, { ...card, stageIdx, cardIdx }]);
+      // 화면에서 쓰는 값(제목·종류·위치)만 저장 — 카드 전체엔 함수(dynamicOutput 등)가 있어 저장이 안 됨
+      updateSavedItems([...savedItems, { title: card.title, type: card.type, stageIdx, cardIdx }]);
       showToast("🔖 학습 카드가 저장되었습니다.", true);
     }
   };
@@ -176,7 +185,7 @@ export default function App() {
             />
           )}
           {tab === "code"    && <CodePage onCorrect={() => showToast("코드가 실행되었습니다!", true)} onNavigate={handleNavigate} progress={progress} onCardChange={dismissToast} />}
-          {tab === "profile" && <ProfilePage badges={badges} progress={progress} savedItems={savedItems} onNavigate={handleNavigate} />}
+          {tab === "profile" && <ProfilePage badges={badges} progress={progress} savedItems={savedItems} onNavigate={handleNavigate} nickname={nickname} />}
 
           {/* Global Toast */}
           {toast && (

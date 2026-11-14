@@ -15,9 +15,8 @@ const LEVELS = [
 ];
 const getLevel = n => [...LEVELS].reverse().find(l => n >= l.min) || LEVELS[0];
 
-export default function ProfilePage({ badges, progress, savedItems = [], onNavigate }) {
+export default function ProfilePage({ badges, progress, savedItems = [], onNavigate, nickname }) {
   const done  = progress.completedStages || [];
-  const pct   = Math.round((done.length / stages.length) * 100);
   const level = getLevel(badges.length);
   const next  = LEVELS.find(l => l.min > badges.length);
 
@@ -37,11 +36,11 @@ export default function ProfilePage({ badges, progress, savedItems = [], onNavig
         <div className="profile-content-inner">
           {/* Hero & Level Card */}
           <div className="ios-section">
-            <div style={{ background: "#fff", padding: "24px", borderRadius: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.07)", display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 16 }}>
+            <div style={{ background: "#fff", padding: "24px", borderRadius: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.07)", display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 28 }}>
               <div style={{ width: 88, height: 88, borderRadius: "50%", background: "linear-gradient(135deg,rgba(0,122,255,0.12),rgba(88,86,214,0.1))", border: `2.5px solid ${level.color}55`, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 0 20px ${level.color}22` }}>
                 <span style={{ fontSize: 44 }}>🧑‍💻</span>
               </div>
-              <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.5, marginTop: 14, color: "var(--label)" }}>코딩 학생</div>
+              <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.5, marginTop: 14, color: "var(--label)" }}>{nickname || "코딩 학생"}</div>
               <div style={{ 
                 display: "flex", alignItems: "center", gap: 6, marginTop: 12,
                 background: level.color + "12", border: `1.5px solid ${level.color}33`,
@@ -61,24 +60,6 @@ export default function ProfilePage({ badges, progress, savedItems = [], onNavig
                   </div>
                 </div>
               )}
-            </div>
-          </div>
-
-          {/* Stats */}
-          <div className="ios-section" style={{ marginBottom: 28 }}>
-            <div className="responsive-grid grid-2">
-              {[
-                { icon: "🏅", val: badges.length, label: "획득 뱃지",    c: "var(--orange)" },
-                { icon: "📚", val: done.length,   label: "완료 스테이지", c: "var(--blue)"   },
-                { icon: "💯", val: `${pct}%`,     label: "전체 진도",    c: "var(--green)"  },
-                { icon: "🗺️", val: stages.length, label: "전체 스테이지", c: "var(--purple)" },
-              ].map(st => (
-                <div key={st.label} style={{ background: "#fff", borderRadius: 16, padding: "18px 16px", boxShadow: "0 1px 4px rgba(0,0,0,0.07)", display: "flex", flexDirection: "column", gap: 4 }}>
-                  <div style={{ fontSize: 28 }}>{st.icon}</div>
-                  <div style={{ fontSize: 28, fontWeight: 900, color: st.c, letterSpacing: -1 }}>{st.val}</div>
-                  <div style={{ fontSize: 12, color: "var(--label2)" }}>{st.label}</div>
-                </div>
-              ))}
             </div>
           </div>
 
@@ -164,21 +145,8 @@ export default function ProfilePage({ badges, progress, savedItems = [], onNavig
             </div>
           </div>
 
-          {/* Motivational */}
-          <div className="ios-section">
-            <div style={{ background: "linear-gradient(145deg,#f0f4ff,#f7f7ff)", border: "0.5px solid rgba(0,0,0,0.12)", borderRadius: 20, padding: "24px 20px", textAlign: "center", boxShadow: "0 1px 8px rgba(0,0,0,0.05)" }}>
-              <div style={{ fontSize: 34, marginBottom: 10 }}>{badges.length === 0 ? "💪" : badges.length < 3 ? "🔥" : "🏆"}</div>
-              <div style={{ fontSize: 18, fontWeight: 900, letterSpacing: -0.4, color: "var(--label)", marginBottom: 8 }}>
-                {badges.length === 0 ? "첫 번째 뱃지를 획득해봐!" : badges.length < 3 ? "훌륭해! 계속 도전해봐!" : "정말 대단해!"}
-              </div>
-              <div style={{ fontSize: 14, color: "var(--label2)", lineHeight: 1.7 }}>
-                C언어를 배운다는 건 컴퓨터와 직접 대화하는 법을 익히는 것.{"\n"}너는 지금 그 언어를 배우고 있어! ⚡
-              </div>
-            </div>
-          </div>
-
           {/* Tutorial Reset */}
-          <div className="ios-section" style={{ marginBottom: 8 }}>
+          <div className="ios-section" style={{ marginBottom: 28 }}>
             <div className="ios-section-title">도움말</div>
             <div style={{ background: "#fff", borderRadius: 14, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
               <button
@@ -203,6 +171,19 @@ export default function ProfilePage({ badges, progress, savedItems = [], onNavig
                 </div>
                 <span style={{ color: "var(--blue)", fontSize: 18 }}>›</span>
               </button>
+            </div>
+          </div>
+
+          {/* Motivational */}
+          <div className="ios-section" style={{ marginBottom: 8 }}>
+            <div style={{ background: "linear-gradient(145deg,#f0f4ff,#f7f7ff)", border: "0.5px solid rgba(0,0,0,0.12)", borderRadius: 20, padding: "24px 20px", textAlign: "center", boxShadow: "0 1px 8px rgba(0,0,0,0.05)" }}>
+              <div style={{ fontSize: 34, marginBottom: 10 }}>{badges.length === 0 ? "💪" : badges.length < 3 ? "🔥" : "🏆"}</div>
+              <div style={{ fontSize: 18, fontWeight: 900, letterSpacing: -0.4, color: "var(--label)", marginBottom: 8 }}>
+                {badges.length === 0 ? "첫 번째 뱃지를 획득해봐!" : badges.length < 3 ? "훌륭해! 계속 도전해봐!" : "정말 대단해!"}
+              </div>
+              <div style={{ fontSize: 14, color: "var(--label2)", lineHeight: 1.7 }}>
+                C언어를 배운다는 건 컴퓨터와 직접 대화하는 법을 익히는 것.{"\n"}너는 지금 그 언어를 배우고 있어! ⚡
+              </div>
             </div>
           </div>
         </div>

@@ -69,7 +69,7 @@ function Slide1({ color, onReady }) {
 function Slide2({ color }) {
   return (
     <>
-      <div style={{ fontSize: 32, marginBottom: 10 }}>🈯</div>
+      <div style={{ fontSize: 32, marginBottom: 10 }}>❓</div>
       <div style={{ fontWeight: 900, fontSize: 19, marginBottom: 6, letterSpacing: -0.4 }}>
         코드가 무슨 뜻인지 모르겠으면?
       </div>

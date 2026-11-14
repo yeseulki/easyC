@@ -11,7 +11,7 @@
   --label2: #3c3c4399;
   --label3: #3c3c434d;
   --sep: #c6c6c8;
-  --nav-h: 60px;
+  --nav-h: 50px;   /* 세로 화면 하단 탭 바 높이 (가로 화면 탭 배너처럼 낮춤) */
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -42,6 +42,37 @@ html, body, #root { height: 100%; font-family: -apple-system, BlinkMacSystemFont
     padding-bottom: 0;
   }
 }
+
+/* 학습 탭 가로 화면 2단: 블록 간격을 gap 하나로 통일하고,
+   한 블록이 남는 높이를 채워 좌우 위·아래 끝선을 맞춤 */
+.split-col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.split-col > * { margin: 0 !important; }
+.split-col.grow-last  > :last-child  { flex: 1 1 auto; }
+.split-col.grow-first > :first-child { flex: 1 1 auto; }
+
+/* 늘어난 박스 속 내용을 세로 가운데로(위·아래 여백 같게). 글자는 왼쪽 정렬 그대로 */
+.split-col.grow-last  > :last-child,
+.split-col.grow-first > :first-child {
+  display: flex; flex-direction: column; justify-content: center;
+}
+/* 코드 창 박스: 빨/노/초 점 줄은 맨 위에 두고, 그 아래 코드만 가운데로 */
+.split-col > .code-window { justify-content: flex-start !important; }
+.split-col > .code-window > :last-child { margin-top: auto; margin-bottom: auto; }
+/* 설명 박스 윗선이 가운데 정렬 후 박스 중간에 떠 보이지 않게 */
+.split-col > .cf-card > .cf-explain { border-top: none; }
+
+/* 코딩 탭 가로 화면: 2단 아래 전체 폭 메시지(정답·오답·힌트) 묶음 */
+.wide-msgs { display: flex; flex-direction: column; gap: 12px; margin-top: 28px; }
+.wide-msgs:empty { display: none; }
+.wide-msgs > * { margin: 0 !important; }
+
+/* 가로 화면 문제 카드(실습·미니프로젝트): 글자 조금 크게, 줄간격 조금 넓게 */
+.split-text .cf-code { font-size: 15px; line-height: 2.3; }
+.split-text .cf-slot { font-size: 13.5px; }
+.split-text .cf-input-slot { font-size: 14.5px; }
+.split-text .cf-explain { padding: 16px 18px; }
+.split-text .cf-explain-item { font-size: 14.5px; line-height: 1.85; padding: 6px 0; }
+.split-text .cf-explain-item span { line-height: 1.85 !important; }
 
 .profile-content-inner {
   width: 100%;
@@ -239,9 +270,9 @@ html, body, #root { height: 100%; font-family: -apple-system, BlinkMacSystemFont
 
 .tab-item {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 3px; height: 100%; min-width: 60px; background: transparent; border: none; cursor: pointer;
+  gap: 2px; height: 100%; min-width: 60px; background: transparent; border: none; cursor: pointer;
 }
-.tab-icon { font-size: 24px; line-height: 1; }
+.tab-icon { font-size: 22px; line-height: 1; }
 .tab-label { font-size: 10px; font-weight: 600; color: #8e8e93; }
 .tab-item.active .tab-label { color: var(--blue); }
 
@@ -267,19 +298,21 @@ html, body, #root { height: 100%; font-family: -apple-system, BlinkMacSystemFont
   
   .main-content {
     background: linear-gradient(180deg, #f2f2f7 0%, #e8ecf3 100%);
-    height: calc(100vh - 100px); width: 100%; padding: 0;
+    height: calc(100vh - 62px); width: 100%; padding: 0;
   }
   .main-content .ios-nav { display: none; }
 
   .tab-bar {
     position: sticky; top: 0; left: 0; transform: none;
-    width: 100%; max-width: none; height: 100px;
+    width: 100%; max-width: none; height: 62px;
     flex-direction: row; justify-content: space-between; align-items: center;
     padding: 0 48px; border-top: none; border-bottom: 1px solid rgba(0,0,0,0.08);
     background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    /* 왼쪽(로고·페이지 제목) | 가운데(탭) | 오른쪽(빈칸) 3칸 → 탭은 가운데 두되 왼쪽 글자와 절대 안 겹침 */
+    display: grid; grid-template-columns: 1fr auto 1fr; column-gap: 24px;
   }
 
-  .sidebar-logo-group { display: flex; align-items: center; gap: 20px; padding-top: 12px; }
+  .sidebar-logo-group { display: flex; align-items: center; gap: 20px; padding-top: 4px; }
   .sidebar-logo { display: flex; align-items: center; cursor: pointer; }
   .desktop-page-title {
     display: block; font-size: 24px; font-weight: 800; letter-spacing: -0.5px;
@@ -289,19 +322,20 @@ html, body, #root { height: 100%; font-family: -apple-system, BlinkMacSystemFont
   .tab-items-wrapper {
     display: flex !important; flex-direction: row !important;
     align-items: center !important; justify-content: center !important;
-    gap: 60px !important; position: absolute; left: 50%; transform: translateX(-50%);
+    gap: 60px !important; position: static; grid-column: 2;
     width: auto !important; height: 100%;
   }
+  .sidebar-logo-group { grid-column: 1; justify-self: start; white-space: nowrap; }
 
   .tab-item {
     flex-direction: row !important; display: flex !important; align-items: center !important;
     gap: 12px !important; padding: 0 20px !important;
-    height: 64px !important; width: auto !important;
+    height: 44px !important; width: auto !important;
     white-space: nowrap !important; border-radius: 14px;
   }
   .tab-item.active { background: rgba(0,122,255,0.08); }
   
-  .tab-icon { font-size: 42px !important; line-height: 1 !important; display: block !important; }
+  .tab-icon { font-size: 28px !important; line-height: 1 !important; display: block !important; }
   .tab-label { font-size: 19px !important; font-weight: 800 !important; display: block !important; line-height: 1 !important; color: #000; }
   .tab-item.active .tab-label { color: var(--blue); }
 
@@ -327,11 +361,22 @@ html, body, #root { height: 100%; font-family: -apple-system, BlinkMacSystemFont
   }
 }
 
+/* 가로 화면 중 좁은 폭(1024~1279px): 탭 사이 간격·좌우 여백을 줄여서 로고·제목과 겹치지 않게 */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .tab-bar { padding: 0 24px; column-gap: 16px; }
+  .tab-items-wrapper { gap: 16px !important; }
+  .tab-item { padding: 0 14px !important; gap: 8px !important; }
+  .sidebar-logo-group { gap: 14px; }
+  .desktop-page-title { padding-left: 14px; }
+}
+
 /* ══════════════════════════════════════
    Helper Classes & Animations
 ══════════════════════════════════════ */
 .cf-beta { background: var(--blue); color: #fff; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 100px; }
 .ios-hscroll { display:flex; gap:10px; overflow-x:auto; padding-bottom:2px; -webkit-overflow-scrolling:touch; user-select: none; }
+/* 학습 탭 스테이지 배너: 위아래 여백을 넣어 조금 높게 (세로·가로 공통) */
+.learn-stage-bar .ios-hscroll { padding-top: 10px; padding-bottom: 10px; }
 .ios-chevron { color:rgba(60,60,67,0.25); font-size:19px; margin-left:auto; }
 
 /* iOS Utilities */
@@ -392,6 +437,11 @@ html, body, #root { height: 100%; font-family: -apple-system, BlinkMacSystemFont
 .ios-sheet-handle {
   width: 36px; height: 4px; border-radius: 2px;
   background: rgba(0,0,0,0.18); margin: 12px auto 8px;
+}
+/* 내 정보 탭 칸 제목(저장된 학습·뱃지·스테이지·도움말) — 홈 '핵심 기능' 제목과 같은 스타일 */
+.ios-section-title {
+  font-size: 20px; font-weight: 800; letter-spacing: -0.5px;
+  color: #000; margin-bottom: 12px;
 }
 .ios-subsection-title {
   font-size: 13px; font-weight: 700; color: var(--label2);

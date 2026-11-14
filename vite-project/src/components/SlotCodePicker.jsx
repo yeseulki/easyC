@@ -1,4 +1,5 @@
 import { useState, useRef, useMemo, useEffect } from "react";
+import { useKeydown, isButtonTarget } from "../hooks/useKeydown";
 
 function translateLine(raw) {
   let text = raw.trim();
@@ -33,12 +34,14 @@ function translateLine(raw) {
   return "👉 코드 실행";
 }
 
-function Drum({ options, selected, onSelect, fixed, color, status }) {
+function Drum({ options, selected, onSelect, fixed, color, status, big = false }) {
   const startY = useRef(null);
   const label  = options[selected];
   const [tick, setTick] = useState(0);
   // 같은 슬롯의 모든 선지 중 가장 긴 것으로 너비 고정
-  const fixedWidth = Math.max(52, ...options.map(o => o.length * 9 + 22));
+  const fixedWidth = big
+    ? Math.max(62, ...options.map(o => o.length * 10.5 + 28))   // 가로 화면: 조금 크게
+    : Math.max(52, ...options.map(o => o.length * 9 + 22));
 
   const next = () => { if (!fixed) { onSelect((selected + 1) % options.length); setTick(t => t + 1); } };
   const onTS = e => { if (!fixed) startY.current = e.touches[0].clientY; };
@@ -58,7 +61,7 @@ function Drum({ options, selected, onSelect, fixed, color, status }) {
       className={fixed ? undefined : "drum-btn"}
       style={{
         position: "relative",
-        height: 44,
+        height: big ? 54 : 44,
         width: fixedWidth,
         background: fixed ? "rgba(0,0,0,0.04)" : status === "ok" ? "rgba(52,199,89,0.08)" : status === "err" ? "rgba(255,59,48,0.06)" : "#fff",
         border: `${status ? "1.5px" : "0.5px"} solid ${fixed ? "rgba(0,0,0,0.08)" : status === "ok" ? "rgba(52,199,89,0.6)" : status === "err" ? "rgba(255,59,48,0.5)" : color + "55"}`,
@@ -77,7 +80,7 @@ function Drum({ options, selected, onSelect, fixed, color, status }) {
     >
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 10, background: `linear-gradient(to bottom,${fixed ? "rgba(0,0,0,0.04)" : "#fff"},transparent)`, zIndex: 2, pointerEvents: "none" }} />
       <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 10, background: `linear-gradient(to top,${fixed ? "rgba(0,0,0,0.04)" : "#fff"},transparent)`, zIndex: 2, pointerEvents: "none" }} />
-      <span style={{ fontFamily: "monospace", fontSize: 14, fontWeight: 700, color: fixed ? "rgba(60,60,67,0.3)" : (displayColor ?? color), padding: "0 8px", display: "inline-block" }}>
+      <span style={{ fontFamily: "monospace", fontSize: big ? 16.5 : 14, fontWeight: 700, color: fixed ? "rgba(60,60,67,0.3)" : (displayColor ?? color), padding: "0 8px", display: "inline-block" }}>
         {label}
       </span>
       {!fixed && <div style={{ position: "absolute", bottom: 2, right: 5, fontSize: 8, color: displayColor ?? color, opacity: 0.45 }}>↑↓</div>}
@@ -85,7 +88,8 @@ function Drum({ options, selected, onSelect, fixed, color, status }) {
   );
 }
 
-export default function SlotCodePicker({ slots, color = "var(--blue)", onResult, hint }) {
+// wide/gridStyle/asideTop/asideBottom: 코딩 탭 가로 화면 2단용 (안 넘기면 기존과 똑같이 동작)
+export default function SlotCodePicker({ slots, color = "var(--blue)", onResult, hint, wide = false, gridStyle, asideTop = null, asideBottom = null, enterToCheck = false }) {
   const processedSlots = useMemo(() => {
     return slots.map(s => {
       if (s.fixed || s.options.length <= 1) return s;
@@ -127,6 +131,13 @@ export default function SlotCodePicker({ slots, color = "var(--blue)", onResult,
     onResult?.(ok);
   };
 
+  // Enter → 확인 (코딩 탭에서만 켬). 이미 맞힌 뒤엔 코딩 탭이 Enter로 다음 문제로 넘김
+  useKeydown(e => {
+    if (!enterToCheck || e.key !== "Enter" || e.repeat || isButtonTarget(e) || result === "ok") return;
+    e.preventDefault();
+    check();
+  });
+
   // 전체 조합 (translateLine용) — 비고정 슬롯 선택값만
   const assembled = processedSlots.filter(s => !s.fixed).map((s, i) => {
     const globalIdx = processedSlots.indexOf(s);
@@ -135,52 +146,99 @@ export default function SlotCodePicker({ slots, color = "var(--blue)", onResult,
   // 화면에 보여줄 조합 — 전체 슬롯
   const assembledDisplay = processedSlots.map((s, i) => s.options[sel[i]]).join("");
 
-  return (
-    <div style={{ position: "relative" }}>
-      {confetti.map(c => (
-        <div key={c.id} style={{ position: "absolute", left: `${c.x}%`, top: "30%", width: 8, height: 8, borderRadius: 2, background: c.c, animation: `iosConfetti 0.8s ease ${c.d}s forwards`, pointerEvents: "none", zIndex: 100 }} />
-      ))}
+  const confettiEls = confetti.map(c => (
+    <div key={c.id} style={{ position: "absolute", left: `${c.x}%`, top: "30%", width: 8, height: 8, borderRadius: 2, background: c.c, animation: `iosConfetti 0.8s ease ${c.d}s forwards`, pointerEvents: "none", zIndex: 100 }} />
+  ));
 
-      <div style={{ fontSize: 12, color: "var(--label3)", fontWeight: 500, marginBottom: 12, textAlign: "center" }}>
+  // 문제(슬롯) 부분
+  const pickerArea = (
+    <>
+      <div style={{ fontSize: wide ? 13.5 : 12, color: "var(--label3)", fontWeight: 500, marginBottom: 12, textAlign: "center" }}>
         슬롯을 탭해서 올바른 코드를 조합해봐!
       </div>
 
       {/* Drums */}
-      <div style={{ display: "flex", gap: 6, justifyContent: "center", flexWrap: "wrap", marginBottom: 14 }}>
+      <div style={{ display: "flex", gap: wide ? 8 : 6, justifyContent: "center", flexWrap: "wrap", marginBottom: 14 }}>
         {processedSlots.map((s, i) => (
-          <Drum key={i} options={s.options} selected={sel[i]} onSelect={v => pick(i, v)} fixed={s.fixed} color={color} status={slotStatuses[i] ?? null} />
+          <Drum key={i} options={s.options} selected={sel[i]} onSelect={v => pick(i, v)} fixed={s.fixed} color={color} status={slotStatuses[i] ?? null} big={wide} />
         ))}
       </div>
+    </>
+  );
 
-      {result === "ok" && (
-        <div style={{ padding: "10px 14px", background: "rgba(52,199,89,0.08)", border: "0.5px solid rgba(52,199,89,0.25)", borderRadius: 12, fontSize: 14, color: "var(--green)", textAlign: "center", marginBottom: 12, fontWeight: 600, animation: "iosPop 0.35s ease" }}>
-          🎉 완벽해! 정답이야!
-        </div>
-      )}
+  // 정답 메시지
+  const okMsg = (
+    <div style={{ padding: wide ? "12px 16px" : "10px 14px", background: "rgba(52,199,89,0.08)", border: "0.5px solid rgba(52,199,89,0.25)", borderRadius: 12, fontSize: wide ? 15.5 : 14, color: "var(--green)", textAlign: "center", marginBottom: 12, fontWeight: 600, animation: "iosPop 0.35s ease" }}>
+      🎉 완벽해! 정답이야!
+    </div>
+  );
+
+  // 정답/오답 메시지 + 힌트 — 가로 화면에선 2단 아래에 전체 폭으로 (wide-msgs)
+  const feedback = (
+    <>
+      {result === "ok" && okMsg}
       {result === "err" && (
-        <div style={{ padding: "10px 14px", background: "rgba(255,59,48,0.06)", border: "0.5px solid rgba(255,59,48,0.2)", borderRadius: 12, fontSize: 14, color: "var(--red)", textAlign: "center", marginBottom: 12, animation: "iosShake 0.4s ease" }}>
+        <div style={{ padding: wide ? "12px 16px" : "10px 14px", background: "rgba(255,59,48,0.06)", border: "0.5px solid rgba(255,59,48,0.2)", borderRadius: 12, fontSize: wide ? 15.5 : 14, color: "var(--red)", textAlign: "center", marginBottom: 12, animation: "iosShake 0.4s ease" }}>
           <div style={{ fontWeight: 700 }}>🤔 틀렸어!</div>
-          <div style={{ fontSize: 13, fontWeight: 800, marginTop: 4, color: "var(--red)" }}>{translateLine(assembled)}</div>
+          {/* 해석이 안 되는 경우의 기본 문구("👉 코드 실행")는 도움이 안 돼서 안 보여줌 */}
+          {translateLine(assembled) !== "👉 코드 실행" && (
+            <div style={{ fontSize: 13, fontWeight: 800, marginTop: 4, color: "var(--red)" }}>{translateLine(assembled)}</div>
+          )}
           <div style={{ fontSize: 12, opacity: 0.7, marginTop: 3 }}>다시 생각해봐.</div>
         </div>
       )}
       {showHint && (
-        <div style={{ padding: "10px 14px", background: "rgba(88,86,214,0.06)", border: "0.5px solid rgba(88,86,214,0.2)", borderRadius: 12, fontSize: 13, color: "var(--indigo)", marginBottom: 12, animation: "iosFadeScale 0.2s ease", whiteSpace: "pre-line", lineHeight: 1.6 }}>
+        <div style={{ padding: wide ? "12px 16px" : "10px 14px", background: "rgba(88,86,214,0.06)", border: "0.5px solid rgba(88,86,214,0.2)", borderRadius: 12, fontSize: wide ? 14.5 : 13, color: "var(--indigo)", marginBottom: 12, animation: "iosFadeScale 0.2s ease", whiteSpace: "pre-line", lineHeight: 1.6 }}>
           💡 {hint || "고정된 슬롯은 이미 맞아. 나머지 슬롯을 바꿔봐!"}
         </div>
       )}
+    </>
+  );
 
+  const bigBtn = wide ? { padding: "12px 18px", fontSize: 15.5 } : {};
+  const buttons = (
       <div style={{ display: "flex", gap: 8 }}>
-        <button className="ios-btn ios-btn-gray ios-btn-sm" style={{ flex: 1 }} onClick={() => setShowHint(h => !h)}>
+        <button className="ios-btn ios-btn-gray ios-btn-sm" style={{ flex: 1, ...bigBtn }} onClick={() => setShowHint(h => !h)}>
           {showHint ? "힌트 숨기기" : "💡 힌트"}
         </button>
-        <button className="ios-btn ios-btn-gray ios-btn-sm" onClick={() => { setSel(processedSlots.map(() => 0)); setResult(null); setSlotStatuses([]); setShowHint(false); }}>
+        <button className="ios-btn ios-btn-gray ios-btn-sm" style={bigBtn} onClick={() => { setSel(processedSlots.map(() => 0)); setResult(null); setSlotStatuses([]); setShowHint(false); }}>
           ↩
         </button>
-        <button className="ios-btn ios-btn-sm" style={{ flex: 1, background: color, color: "#fff" }} onClick={check}>
+        <button className="ios-btn ios-btn-sm" style={{ flex: 1, background: color, color: "#fff", ...bigBtn }} onClick={check}>
           확인 ✓
         </button>
       </div>
+  );
+
+  // 가로 화면: 왼쪽 = asideTop(출력 결과 등) / 오른쪽 = 슬롯 문제(흰 박스)
+  // 그 아래 전체 폭으로 버튼 → 정답·오답·힌트 → asideBottom(스와이프 안내) 가운데. 슬롯 칸이 넓은 쪽(1.15fr)에 오도록 열 비율도 뒤집음
+  if (wide) {
+    return (
+      <>
+        <div style={{ position: "relative", ...gridStyle, gridTemplateColumns: "minmax(0,1fr) minmax(0,1.15fr)" }}>
+          {confettiEls}
+          <div className="split-col grow-first">
+            {asideTop}
+          </div>
+          <div className="split-col grow-first">
+            <div style={{ background: "#fff", borderRadius: 14, border: "0.5px solid rgba(0,0,0,0.08)", boxShadow: "0 2px 12px rgba(0,0,0,0.07)", padding: "20px 16px 6px" /* 슬롯 줄 아래 margin 14px 고려 → 위아래 여백 같게 */ }}>
+              {pickerArea}
+            </div>
+          </div>
+        </div>
+        <div style={{ marginTop: 16 }}>{buttons}</div>
+        <div className="wide-msgs">{feedback}</div>
+        {asideBottom}
+      </>
+    );
+  }
+
+  return (
+    <div style={{ position: "relative" }}>
+      {confettiEls}
+      {pickerArea}
+      {feedback}
+      {buttons}
     </div>
   );
 }

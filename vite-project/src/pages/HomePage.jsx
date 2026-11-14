@@ -1,130 +1,8 @@
-import { useState } from "react";
 import { stages } from "../data/curriculum";
-
-const CORE_FEATURES = [
-  {
-    icon: "📖", type: "concept", title: "개념 학습", sub: "핵심 개념부터 차근차근",
-    color: "#007aff",
-    desc: "C언어의 핵심 개념을 쉬운 비유와 그림으로 배워요.\n카드를 학습하고 핵심 팁을 확인하면 다음 단계로 넘어갈 수 있어요.",
-  },
-  {
-    icon: "💻", type: "code", title: "실습", sub: "코드를 직접 완성하며 학습",
-    color: "#5856d6",
-    desc: "코드 속 빈 토큰을 눌러 직접 수정하며 완성해요.\n정답을 맞혀야 다음 단계로 진행할 수 있어요.",
-  },
-  {
-    icon: "🛠️", type: "project", title: "프로젝트", sub: "만들며 배우는 커리큘럼",
-    color: "#ff9500",
-    desc: "배운 개념으로 미니 프로젝트를 완성해요.\n완성하면 특별한 뱃지를 획득할 수 있어요!",
-  },
-];
-
-function ConceptPreview() {
-  return (
-    <div style={{ background: "#f0f4ff", borderRadius: 16, padding: 18, border: "1px solid rgba(0,122,255,0.12)" }}>
-      <div style={{ fontSize: 12, fontWeight: 700, color: "#007aff", letterSpacing: 0.4, marginBottom: 10 }}>개념 카드 예시</div>
-      <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 10, color: "#000" }}>변수란 무엇일까?</div>
-      <div style={{ fontSize: 14, color: "#3c3c43", lineHeight: 1.75, marginBottom: 14 }}>
-        변수는 컴퓨터의 <b>'기억 상자'</b>예요.<br />
-        <code style={{ background: "rgba(0,0,0,0.07)", padding: "2px 6px", borderRadius: 5, fontFamily: "monospace", fontSize: 13 }}>int x = 10;</code>은<br />
-        x라는 상자에 10을 넣는 것이에요. 📦
-      </div>
-      <div style={{ background: "rgba(0,122,255,0.09)", borderRadius: 10, padding: "10px 14px", borderLeft: "3px solid #007aff" }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: "#007aff", marginBottom: 4 }}>핵심 팁 💡</div>
-        <div style={{ fontSize: 13, color: "#3c3c43", lineHeight: 1.6 }}>int, float, char 등 상자의 종류(타입)를 꼭 지정해야 해요!</div>
-      </div>
-    </div>
-  );
-}
-
-function CodePreview() {
-  return (
-    <div style={{ background: "#1c1c1e", borderRadius: 16, padding: 18 }}>
-      <div style={{ fontSize: 12, fontWeight: 700, color: "#8e8e93", letterSpacing: 0.4, marginBottom: 12 }}>실습 카드 예시</div>
-      <div style={{ fontFamily: "'Menlo','Monaco','Courier New',monospace", fontSize: 13, lineHeight: 2.1, color: "#d4d4d4" }}>
-        <div><span style={{ color: "#569cd6" }}>int</span> main() {"{"}</div>
-        <div>&nbsp;&nbsp;<span style={{ color: "#dcdcaa" }}>printf</span>(<span style={{ color: "#ce9178" }}>"Hello!\n"</span>);</div>
-        <div>
-          &nbsp;&nbsp;
-          <span style={{ display: "inline-block", background: "rgba(0,122,255,0.5)", color: "#fff", padding: "1px 10px", borderRadius: 5, fontWeight: 700, cursor: "pointer", border: "1.5px solid rgba(0,122,255,0.8)" }}>return</span>
-          {" "}0;
-        </div>
-        <div>{"}"}</div>
-      </div>
-      <div style={{ marginTop: 12, fontSize: 12, color: "#8e8e93" }}>👆 파란 토큰을 눌러 값을 수정해요</div>
-    </div>
-  );
-}
-
-function ProjectPreview() {
-  return (
-    <div style={{ background: "#fff", borderRadius: 16, padding: 18, border: "1px solid rgba(0,0,0,0.07)", boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}>
-      <div style={{ fontSize: 12, fontWeight: 700, color: "#ff9500", letterSpacing: 0.4, marginBottom: 10 }}>프로젝트 카드 예시</div>
-      <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 14, color: "#000" }}>나만의 인사 프로그램 만들기</div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
-        {["출력 함수 작성하기", "이름 변수 만들기", "프로그램 완성하기"].map((step, i) => (
-          <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 22, height: 22, borderRadius: "50%", background: "rgba(52,199,89,0.12)", border: "1.5px solid #34c759", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#34c759", flexShrink: 0 }}>✓</div>
-            <span style={{ fontSize: 13, color: "#3c3c43" }}>{step}</span>
-          </div>
-        ))}
-      </div>
-      <div style={{ background: "linear-gradient(135deg,#ff9500,#ff6b00)", borderRadius: 12, padding: "12px 16px", display: "flex", alignItems: "center", gap: 12 }}>
-        <span style={{ fontSize: 26 }}>🏆</span>
-        <div>
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>뱃지 획득!</div>
-          <div style={{ fontSize: 14, fontWeight: 800, color: "#fff" }}>Hello World 마스터</div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function FeaturePopup({ feature, onClose }) {
-  const [sheetHeight] = useState(() => `${Math.floor(window.innerHeight * 0.96)}px`);
-  return (
-    <div
-      style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "flex-end", backdropFilter: "blur(6px)" }}
-      onClick={onClose}
-    >
-      <div
-        style={{ background: "#f2f2f7", borderRadius: "24px 24px 0 0", width: "100%", height: sheetHeight, overflowY: "auto", paddingBottom: 40 }}
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Drag handle */}
-        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: "12px 16px 4px", position: "relative" }}>
-          <div style={{ width: 36, height: 4, background: "rgba(0,0,0,0.18)", borderRadius: 2 }} />
-          <button
-            onClick={onClose}
-            style={{ position: "absolute", right: 16, width: 28, height: 28, borderRadius: "50%", background: "rgba(118,118,128,0.12)", border: "none", cursor: "pointer", fontSize: 20, color: "#6c6c70", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}
-          >×</button>
-        </div>
-
-        {/* Header */}
-        <div style={{ padding: "16px 24px 20px", textAlign: "center" }}>
-          <div style={{ fontSize: 52, marginBottom: 10 }}>{feature.icon}</div>
-          <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: -0.5, color: "#000", marginBottom: 8 }}>{feature.title}</div>
-          <div style={{ fontSize: 15, color: "#6c6c70", lineHeight: 1.7, whiteSpace: "pre-line" }}>{feature.desc}</div>
-        </div>
-
-        {/* Preview section */}
-        <div style={{ margin: "0 16px 40px" }}>
-          <div style={{ background: "#fff", borderRadius: 18, padding: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#8e8e93", letterSpacing: 0.3, marginBottom: 14 }}>화면 예시</div>
-            {feature.type === "concept" && <ConceptPreview />}
-            {feature.type === "code"    && <CodePreview />}
-            {feature.type === "project" && <ProjectPreview />}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export default function HomePage({ onNavigate, progress, nickname }) {
   const done = progress.completedStages || [];
   const pct  = Math.round((done.length / stages.length) * 100);
-  const [featurePopup, setFeaturePopup] = useState(null);
 
   // Stage i is accessible only if all previous stages are completed
   const isStageAccessible = (i) => i <= done.length;
@@ -140,14 +18,6 @@ export default function HomePage({ onNavigate, progress, nickname }) {
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", background: "#f2f2f7" }}>
-
-      {/* Feature popup */}
-      {featurePopup && (
-        <FeaturePopup
-          feature={featurePopup}
-          onClose={() => setFeaturePopup(null)}
-        />
-      )}
 
       {/* Nav */}
       <div className="ios-nav">
@@ -284,23 +154,6 @@ export default function HomePage({ onNavigate, progress, nickname }) {
                 </div>
               );
             })}
-          </div>
-        </div>
-
-        {/* Core features */}
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: -0.5, marginBottom: 12, color: "#000" }}>핵심 기능</div>
-          <div style={{ background: "#fff", borderRadius: 16, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
-            {CORE_FEATURES.map((f) => (
-              <div key={f.title} className="ios-cell" style={{ cursor: "pointer" }} onClick={() => setFeaturePopup(f)}>
-                <div style={{ width: 42, height: 42, borderRadius: 10, background: f.color + "18", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>{f.icon}</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 600, fontSize: 15, color: "#000" }}>{f.title}</div>
-                  <div style={{ fontSize: 13, color: "#8e8e93", marginTop: 1 }}>{f.sub}</div>
-                </div>
-                <span className="ios-chevron">›</span>
-              </div>
-            ))}
           </div>
         </div>
 
